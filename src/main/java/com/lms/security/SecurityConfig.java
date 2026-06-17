@@ -60,6 +60,9 @@ public class SecurityConfig {
         "/signup.html",
         "/dashboard.html",
         "/exam.html",
+        "/student/studentdashboard.html",
+        "/student/my-courses.html",
+        "/student/study-material.html",
         "/css/**",
         "/js/**",
         "/images/**"
@@ -67,6 +70,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
+                .requestMatchers("/api/student/courses/**").permitAll()
+                .requestMatchers("/api/materials/course/**").permitAll()
+
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/faculty/**").hasRole("FACULTY")
                 .requestMatchers("/api/student/**").hasRole("STUDENT")

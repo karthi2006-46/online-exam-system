@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+
+    <link rel="stylesheet" href="../css/student/studentdashboard.css">
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+
+            <h2>LMS</h2>
+
+            <ul>
+                <li><a href="studentdashboard.html">Dashboard</a></li>
+                <li><a href="my-courses.html">My Courses</a></li>
+                <li><a href="study-material.html">Study Materials</a></li>
+                <li><a href="profile.html">Profile</a></li>
+                <li><a href="../login.html">Logout</a></li>
+            </ul>
+
+        </div>
+
+        <!-- Main Content -->
+
+        <div class="main-content">
+
+            <div class="header">
+                <h1>Welcome, Student</h1>
+            </div>
+
+            <!-- Cards -->
+
+            <div class="cards">
+
+                <div class="card">
+                    <h3>Total Courses</h3>
+                    <p id="totalCourses">5</p>
+                </div>
+
+                <div class="card">
+                    <h3>Completed</h3>
+                    <p id="completedCourses">2</p>
+                </div>
+
+                <div class="card">
+                    <h3>Pending Exams</h3>
+                    <p id="pendingExams">3</p>
+                </div>
+
+                <div class="card">
+                    <h3>Progress</h3>
+                    <p id="overallProgress">70%</p>
+                </div>
+
+            </div>
+
+            <!-- Recent Courses -->
+
+            <div class="table-section">
+
+                <h2>My Courses</h2>
+
+                <table>
+
+                    <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="courseTableBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+<script src="../js/student/studentdashboard.js"></script>
+
+</body>
+</html>

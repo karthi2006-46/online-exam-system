@@ -9,7 +9,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         if (response.success) {
             localStorage.setItem('token', response.token);
             localStorage.setItem('userId', response.userId);
-            window.location.href = '/dashboard.html';
+            window.location.href = '/student/studentdashboard.html';
         } else {
             showError(response.message || 'Login failed');
         }
