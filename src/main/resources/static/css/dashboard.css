@@ -1,0 +1,131 @@
+/* Dashboard Styles */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.navbar {
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.navbar-list {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #667eea;
+}
+
+.dashboard-content {
+    flex: 1;
+    padding: 40px 20px;
+    background-color: #f5f5f5;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.dashboard-header h1 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.dashboard-header p {
+    font-size: 16px;
+    color: #666;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+}
+
+.dashboard-card h2 {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.courses-list,
+.enrollments-list,
+.exams-list,
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.course-item,
+.enrollment-item,
+.exam-item,
+.result-item {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border-left: 4px solid #667eea;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.course-item:hover,
+.enrollment-item:hover,
+.exam-item:hover,
+.result-item:hover {
+    background-color: #e9ecef;
+    transform: translateX(5px);
+}
+
+.item-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.item-subtitle {
+    font-size: 12px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .navbar-list {
+        gap: 15px;
+    }
+}

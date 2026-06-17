@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Online Exam System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="navbar-brand">Online Exam System</div>
+            <div class="navbar-menu">
+                <ul class="navbar-list">
+                    <li><a href="#" class="nav-link">Dashboard</a></li>
+                    <li><a href="#courses" class="nav-link">Courses</a></li>
+                    <li><a href="#profile" class="nav-link">Profile</a></li>
+                    <li><a href="#" id="logout" class="nav-link">Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="dashboard-content">
+            <div class="dashboard-header">
+                <h1>Welcome to Online Exam System</h1>
+                <p>Manage your courses, exams, and progress</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <section id="courses" class="dashboard-card">
+                    <h2>Available Courses</h2>
+                    <div id="coursesList" class="courses-list"></div>
+                </section>
+
+                <section id="enrollments" class="dashboard-card">
+                    <h2>My Enrollments</h2>
+                    <div id="enrollmentsList" class="enrollments-list"></div>
+                </section>
+
+                <section id="exams" class="dashboard-card">
+                    <h2>Available Exams</h2>
+                    <div id="examsList" class="exams-list"></div>
+                </section>
+
+                <section id="results" class="dashboard-card">
+                    <h2>My Results</h2>
+                    <div id="resultsList" class="results-list"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam - Online Exam System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/exam.css">
+</head>
+<body>
+    <div class="exam-container">
+        <div class="exam-header">
+            <h1 id="examTitle"></h1>
+            <div class="exam-timer">
+                <span>Time Remaining: </span>
+                <span id="timer">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="exam-content">
+            <div class="exam-instructions">
+                <h2>Instructions</h2>
+                <p id="examDescription"></p>
+                <div class="exam-details">
+                    <p>Total Questions: <span id="totalQuestions"></span></p>
+                    <p>Total Marks: <span id="totalMarks"></span></p>
+                    <p>Passing Marks: <span id="passingMarks"></span></p>
+                </div>
+            </div>
+
+            <div class="questions-container">
+                <div id="questionsList" class="questions-list"></div>
+            </div>
+
+            <div class="exam-actions">
+                <button id="submitBtn" class="btn btn-primary">Submit Exam</button>
+                <button id="saveBtn" class="btn btn-secondary">Save Answers</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/exam.js"></script>
+</body>
+</html>
