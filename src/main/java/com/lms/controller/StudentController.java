@@ -1,5 +1,6 @@
 package com.lms.controller;
 
+import com.lms.dto.DashboardDTO;
 import com.lms.dto.MyCourseDTO;
 import com.lms.entity.Enrollment;
 import com.lms.repository.EnrollmentRepository;
@@ -15,7 +16,30 @@ import java.util.stream.Collectors;
 public class StudentController {
 
     private final EnrollmentRepository enrollmentRepository;
+@GetMapping("/dashboard")
+public DashboardDTO getDashboard() {
 
+    DashboardDTO dto = new DashboardDTO();
+
+    dto.setTotalCourses(
+            enrollmentRepository.count()
+    );
+
+    dto.setCompletedCourses(
+            enrollmentRepository
+                    .findAll()
+                    .stream()
+                    .filter(e -> "COMPLETED"
+                            .equalsIgnoreCase(e.getStatus()))
+                    .count()
+    );
+
+    dto.setPendingExams(1);
+
+    dto.setOverallProgress(70);
+
+    return dto;
+}
     @GetMapping("/courses/{studentId}")
     public List<MyCourseDTO> getStudentCourses(
             @PathVariable Long studentId) {
@@ -46,6 +70,7 @@ public class StudentController {
                             dto.setDueDate(
     enrollment.getDueDate()
 );
+
 
                     return dto;
 

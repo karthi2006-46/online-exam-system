@@ -1,0 +1,67 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+}
+
+.exam-container{
+    width:90%;
+    margin:auto;
+    padding:20px;
+}
+
+.exam-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+}
+
+.timer-box{
+    background:red;
+    color:white;
+    padding:10px 20px;
+    border-radius:5px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.question-card{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+}
+
+.question{
+    font-size:18px;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+.option{
+    margin:10px 0;
+}
+
+.submit-section{
+    text-align:center;
+    margin-top:20px;
+}
+
+#submitBtn{
+    background:#16a34a;
+    color:white;
+    border:none;
+    padding:12px 30px;
+    font-size:18px;
+    border-radius:8px;
+    cursor:pointer;
+}

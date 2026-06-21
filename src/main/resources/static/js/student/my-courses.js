@@ -2,18 +2,28 @@ async function loadCourses() {
 
     try {
 
+        const studentId =
+            localStorage.getItem("userId") || 1;
+
+        console.log("Student ID:", studentId);
+
         const response =
             await fetch(
-                "http://localhost:8080/api/student/courses/1"
+                `http://localhost:8080/api/student/courses/${studentId}`
             );
 
         const courses =
             await response.json();
 
+        console.log("Courses:", courses);
+
         const container =
-            document.getElementById(
-                "coursesContainer"
-            );
+            document.getElementById("coursesContainer");
+
+        if (!container) {
+            console.error("coursesContainer not found");
+            return;
+        }
 
         container.innerHTML = "";
 
@@ -23,48 +33,27 @@ async function loadCourses() {
 
             <div class="course-card">
 
-                <div class="course-title">
-                    ${course.courseTitle}
-                </div>
+                <h3>${course.courseTitle}</h3>
 
-                <div class="course-info">
+                <p>
                     Duration :
                     ${course.durationDays} Days
-                </div>
+                </p>
 
-                <div class="course-info">
+                <p>
                     Progress :
                     ${course.progress}%
-                </div>
+                </p>
 
-                <div class="progress-bar">
-                    <div class="progress"
-                         style="width:${course.progress}%">
-                    </div>
-                </div>
-
-                <div class="status">
+                <p>
+                    Status :
                     ${course.status}
-                </div>
+                </p>
 
-                <div class="buttons">
-
-                    <button
-                        class="btn material-btn">
-                        Study Materials
-                    </button>
-
-                    <button
-                        class="btn exam-btn">
-                        Start Exam
-                    </button>
-
-                    <button
-                        class="btn extension-btn">
-                        Request Extension
-                    </button>
-
-                </div>
+                <button
+                    onclick="startExam(${course.courseId})">
+                    Start Exam
+                </button>
 
             </div>
 
@@ -73,8 +62,56 @@ async function loadCourses() {
 
     } catch(error) {
 
-        console.error(error);
+        console.error(
+            "Load Courses Error:",
+            error
+        );
+    }
+}
 
+async function startExam(courseId) {
+
+    try {
+
+        const response =
+            await fetch(
+                `http://localhost:8080/api/exams/course/${courseId}/published`
+            );
+
+        const result =
+            await response.json();
+
+        console.log("Exam Result:", result);
+
+        const exams =
+            result.data;
+
+        if (!exams || exams.length === 0) {
+
+            alert(
+                "No published exam found"
+            );
+
+            return;
+        }
+
+        const examId =
+            exams[0].id;
+
+        localStorage.setItem(
+            "examId",
+            examId
+        );
+
+        window.location.href =
+            `exam.html?examId=${examId}`;
+
+    } catch(error) {
+
+        console.error(
+            "Exam Error:",
+            error
+        );
     }
 }
 

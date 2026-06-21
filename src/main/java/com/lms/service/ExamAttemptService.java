@@ -55,9 +55,17 @@ public class ExamAttemptService {
         }
 
         // Check if student already has an in-progress attempt
-        if (examAttemptRepository.findByExam_IdAndStudent_IdAndStatusNot(examId, studentId, "SUBMITTED").isPresent()) {
-            throw new BadRequestException("You already have an in-progress attempt for this exam");
-        }
+       if (examAttemptRepository
+    .findByExam_IdAndStudent_IdAndStatus(
+        examId,
+        studentId,
+        "IN_PROGRESS"
+    ).isPresent()) {
+
+    throw new BadRequestException(
+        "You already have an in-progress attempt for this exam"
+    );
+}
 
         ExamAttempt attempt = new ExamAttempt();
         attempt.setExam(exam);

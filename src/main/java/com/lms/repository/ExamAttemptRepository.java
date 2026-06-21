@@ -12,4 +12,10 @@ public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, Long> 
     List<ExamAttempt> findByStudent_Id(Long studentId);
     List<ExamAttempt> findByExam_Id(Long examId);
     List<ExamAttempt> findByStudent_IdAndExam_Id(Long studentId, Long examId);
+    Optional<ExamAttempt>
+findByExam_IdAndStudent_IdAndStatus(
+        Long examId,
+        Long studentId,
+        String status
+);
 }

@@ -15,4 +15,13 @@ public class SignupRequest {
     private String phone;
     private String address;
     private Long roleId;
+    private Long courseId;
+
+    public Long getCourseId() {
+    return courseId;
+}
+
+public void setCourseId(Long courseId) {
+    this.courseId = courseId;
+}
 }

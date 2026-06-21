@@ -4,10 +4,14 @@ import com.lms.dto.AuthRequest;
 import com.lms.dto.AuthResponse;
 import com.lms.dto.SignupRequest;
 import com.lms.dto.UserDTO;
+import com.lms.entity.Course;
+import com.lms.entity.Enrollment;
 import com.lms.entity.Role;
 import com.lms.entity.User;
 import com.lms.exception.BadRequestException;
 import com.lms.exception.ResourceNotFoundException;
+import com.lms.repository.CourseRepository;
+import com.lms.repository.EnrollmentRepository;
 import com.lms.repository.RoleRepository;
 import com.lms.repository.UserRepository;
 import com.lms.security.JwtTokenProvider;
@@ -19,8 +23,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Service
 @Transactional
@@ -40,6 +46,12 @@ public class AuthService {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+private CourseRepository courseRepository;
+
+@Autowired
+private EnrollmentRepository enrollmentRepository;
+
 
     public UserDTO signup(SignupRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -59,9 +71,40 @@ Role role = roleRepository.findById(request.getRoleId())
         user.setAddress(request.getAddress());
         user.setRole(role);
         user.setActive(true);
+User savedUser = userRepository.save(user);
 
-        User savedUser = userRepository.save(user);
-        return convertToDTO(savedUser);
+if(role.getName().equals("STUDENT")) {
+
+    Course course =
+        courseRepository.findById(
+            request.getCourseId()
+        ).orElseThrow(
+            () -> new ResourceNotFoundException("Course not found")
+        );
+
+    Enrollment enrollment =
+        new Enrollment();
+
+    enrollment.setStudent(savedUser);
+    enrollment.setCourse(course);
+    enrollment.setStatus("ACTIVE");
+    enrollment.setCompletionPercentage(0.0);
+
+    enrollment.setEnrollmentDate(
+        LocalDateTime.now()
+    );
+
+    enrollment.setDueDate(
+        LocalDateTime.now()
+            .plusDays(course.getDurationDays())
+    );
+
+    enrollmentRepository.save(
+        enrollment
+    );
+}
+
+return convertToDTO(savedUser);
     }
 
     public AuthResponse login(AuthRequest request) {
@@ -79,6 +122,7 @@ Role role = roleRepository.findById(request.getRoleId())
                 )
         );
 
+
         String token = jwtTokenProvider.generateToken(authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.User
                 ? (org.springframework.security.core.userdetails.User) authentication.getPrincipal()
                 : org.springframework.security.core.userdetails.User.builder()
@@ -95,10 +139,15 @@ Role role = roleRepository.findById(request.getRoleId())
                     .build());
 
         AuthResponse response = new AuthResponse();
-        response.setToken(token);
-        response.setRefreshToken(refreshToken);
-        response.setSuccess(true);
-        response.setMessage("Login successful");
+
+response.setToken(token);
+response.setRefreshToken(refreshToken);
+response.setSuccess(true);
+response.setMessage("Login successful");
+
+response.setUserId(user.getId());
+response.setFirstName(user.getFirstName());
+response.setRole(user.getRole().getName());
         return response;
     }
 
@@ -153,5 +202,6 @@ Role role = roleRepository.findById(request.getRoleId())
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
+        
     }
 }

@@ -9,6 +9,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
         phone: document.getElementById('phone').value,
         address: document.getElementById('address').value,
         roleId: parseInt(document.getElementById('roleId').value),
+         courseId: parseInt(document.getElementById('courseId').value)
     };
 
     try {
