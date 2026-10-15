@@ -12,6 +12,8 @@ import com.lms.repository.ExamRepository;
 import com.lms.repository.QuestionRepository;
 import com.lms.repository.UserRepository;
 import com.google.gson.Gson;
+
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,17 +55,34 @@ public class ExamAttemptService {
         if (!exam.getPublished()) {
             throw new BadRequestException("Exam is not published yet");
         }
+        Optional<ExamAttempt> submittedAttempt =
+        examAttemptRepository
+                .findByExam_IdAndStudent_IdAndStatus(
+                        examId,
+                        studentId,
+                        "SUBMITTED"
+                );
 
-        // Check if student already has an in-progress attempt
-       if (examAttemptRepository
-    .findByExam_IdAndStudent_IdAndStatus(
-        examId,
-        studentId,
-        "IN_PROGRESS"
-    ).isPresent()) {
+if (submittedAttempt.isPresent()) {
 
     throw new BadRequestException(
-        "You already have an in-progress attempt for this exam"
+            "You have already completed this exam"
+    );
+}       
+
+        // Check if student already has an in-progress attempt
+Optional<ExamAttempt> existingAttempt =
+        examAttemptRepository
+                .findByExam_IdAndStudent_IdAndStatus(
+                        examId,
+                        studentId,
+                        "IN_PROGRESS"
+                );
+
+if (existingAttempt.isPresent()) {
+
+    return convertToDTO(
+            existingAttempt.get()
     );
 }
 

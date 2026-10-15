@@ -84,14 +84,19 @@ async function loadQuestions() {
             `http://localhost:8080/api/questions/exam/${examId}`
         );
 
-        const result = await response.json();
+     const result = await response.json();
 
-        console.log("Questions Response:", result);
+console.log("Questions Response:", result);
+console.log("Questions Data:", result.data);
+console.log("Questions Length:", result.data?.length);
+        
 
         const questions = result.data;
 
         const container =
-            document.getElementById("questionsContainer");
+    document.getElementById("questionsContainer");
+
+console.log("Container:", container);
 
         container.innerHTML = "";
 

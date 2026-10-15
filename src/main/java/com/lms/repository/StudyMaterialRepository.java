@@ -10,4 +10,5 @@ public interface StudyMaterialRepository extends JpaRepository<StudyMaterial, Lo
     List<StudyMaterial> findByCourse_Id(Long courseId);
     List<StudyMaterial> findByCourse_IdAndFileType(Long courseId, String fileType);
     List<StudyMaterial> findByActiveTrue();
+    long countByCourse_Id(Long courseId);
 }

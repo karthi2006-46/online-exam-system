@@ -19,6 +19,7 @@ public class EnrollmentController {
 
     @Autowired
     private EnrollmentService enrollmentService;
+    
 
     @PostMapping
     @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
@@ -60,4 +61,5 @@ public class EnrollmentController {
         EnrollmentDTO enrollmentDTO = enrollmentService.updateCompletionPercentage(enrollmentId, percentage);
         return ApiResponseUtil.success("Progress updated successfully", enrollmentDTO);
     }
+    
 }

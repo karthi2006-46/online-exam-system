@@ -63,7 +63,10 @@ public class SecurityConfig {
         "/student/studentdashboard.html",
         "/student/my-courses.html",
         "/student/study-material.html",
+        "/faculty/exam-approval-requests.html",
         "/student/**",
+        "faculty/**",
+        "/admin/**",
         "/css/**",
         "/js/**",
         "/images/**"
@@ -73,12 +76,18 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
                 .requestMatchers("/api/student/courses/**").permitAll()
                 .requestMatchers("/api/materials/course/**").permitAll()
+                .requestMatchers("/api/materials/**").permitAll()
+                .requestMatchers("/api/material-progress/**").permitAll()
                 .requestMatchers("/api/exams/**").permitAll()
                 .requestMatchers("/api/questions/exam/**").permitAll()
                 .requestMatchers("/api/student/dashboard/**").permitAll()
                 .requestMatchers("/api/results/attempt/**").permitAll()
                 .requestMatchers("/api/results/student/**").permitAll()
 
+.requestMatchers("/api/coding-challenges/**").permitAll()
+.requestMatchers("/api/coding-challenge-progress/**").permitAll()
+.requestMatchers("/api/exam-eligibility/**").permitAll()
+.requestMatchers("/api/exam-approval/**").permitAll()
 
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/faculty/**").hasRole("FACULTY")

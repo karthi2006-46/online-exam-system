@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Coding Challenges | LMS</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #1e293b;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: #1e293b;
+            color: white;
+            padding: 25px 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 13px 10px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #334155;
+            color: #60a5fa;
+        }
+
+        .main {
+            flex: 1;
+            min-width: 0;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .summary {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #0000000d;
+            margin-bottom: 25px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 15px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #16a34a;
+            transition: width 0.3s;
+        }
+
+        .challenge-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 12px #0000000d;
+        }
+
+        .challenge-card h2 {
+            margin-top: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .description {
+            white-space: pre-wrap;
+            line-height: 1.7;
+            margin: 18px 0;
+        }
+
+        .editor-label {
+            display: block;
+            margin: 15px 0 8px;
+            font-weight: bold;
+        }
+
+        .code-editor {
+            width: 100%;
+            min-height: 230px;
+            padding: 15px;
+            resize: vertical;
+            background: #0f172a;
+            color: #e2e8f0;
+            border: none;
+            border-radius: 8px;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            border: none;
+            border-radius: 7px;
+            padding: 11px 18px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .message {
+            margin-top: 12px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .empty {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 700px) {
+            .layout {
+                display: block;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .main {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <h2>LMS</h2>
+
+        <a href="studentdashboard.html">Dashboard</a>
+        <a href="my-courses.html">My Courses</a>
+        <a href="study-material.html">Study Materials</a>
+
+        <a href="coding-challenges.html" class="active">
+            Coding Challenges
+        </a>
+
+        <a href="#" onclick="logout()">Logout</a>
+    </aside>
+
+    <main class="main">
+
+        <div class="header">
+            <h1>Coding Challenges</h1>
+
+            <button class="btn-secondary" onclick="loadChallenges()">
+                Refresh
+            </button>
+        </div>
+
+        <div class="summary">
+
+            <h3 id="courseTitle">Loading course...</h3>
+
+            <p>
+                Completed Challenges:
+                <strong id="completedCount">0 / 0</strong>
+            </p>
+
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <p id="progressText">Progress: 0%</p>
+
+            <p id="eligibilityText">
+                Checking exam eligibility...
+            </p>
+
+        </div>
+
+        <div id="challengesContainer">
+            <div class="empty">Loading coding challenges...</div>
+        </div>
+
+    </main>
+
+</div>
+
+<script src="../js/student/coding-challenges.js"></script>
+
+</body>
+</html>
