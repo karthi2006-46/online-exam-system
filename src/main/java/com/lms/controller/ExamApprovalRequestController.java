@@ -4,7 +4,8 @@ import com.lms.entity.ExamApprovalRequest;
 import com.lms.service.ExamApprovalRequestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -60,42 +61,40 @@ public ResponseEntity<?> getApprovalStatus(
 }
 
     // FACULTY - VIEW PENDING REQUESTS
-    @GetMapping("/pending")
-    public ResponseEntity<?> getPendingRequests() {
+  @GetMapping("/pending")
+@PreAuthorize("hasRole('FACULTY')")
+public ResponseEntity<?> getPendingRequests(
+        Authentication authentication) {
 
-        List<ExamApprovalRequest> requests =
-                service.getPendingRequests();
+    List<ExamApprovalRequest> requests =
+            service.getPendingRequests(authentication);
 
-        return ResponseEntity.ok(requests);
-    }
+    return ResponseEntity.ok(requests);
+}
 
     // FACULTY - APPROVE
-    @PutMapping("/{requestId}/approve")
-    public ResponseEntity<?> approve(
-            @PathVariable Long requestId,
-            @RequestParam(required = false) String comment
-    ) {
+@PutMapping("/{requestId}/approve")
+@PreAuthorize("hasRole('FACULTY')")
+public ResponseEntity<?> approve(
+        @PathVariable Long requestId,
+        @RequestParam(required = false) String comment,
+        Authentication authentication) {
 
-        return ResponseEntity.ok(
-                service.approve(
-                        requestId,
-                        comment
-                )
-        );
-    }
+    return ResponseEntity.ok(
+            service.approve(requestId, comment, authentication)
+    );
+}
 
     // FACULTY - REJECT
-    @PutMapping("/{requestId}/reject")
-    public ResponseEntity<?> reject(
-            @PathVariable Long requestId,
-            @RequestParam(required = false) String comment
-    ) {
+   @PutMapping("/{requestId}/reject")
+@PreAuthorize("hasRole('FACULTY')")
+public ResponseEntity<?> reject(
+        @PathVariable Long requestId,
+        @RequestParam(required = false) String comment,
+        Authentication authentication) {
 
-        return ResponseEntity.ok(
-                service.reject(
-                        requestId,
-                        comment
-                )
-        );
-    }
+    return ResponseEntity.ok(
+            service.reject(requestId, comment, authentication)
+    );
+}
 }

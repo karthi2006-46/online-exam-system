@@ -1,84 +1,75 @@
 package com.lms.service;
 
 import com.lms.dto.ExamEligibilityDTO;
-import com.lms.repository.MaterialProgressRepository;
+import com.lms.repository.StudyMaterialProgressRepository;
 import com.lms.repository.StudyMaterialRepository;
 import com.lms.repository.CodingChallengeProgressRepository;
 import com.lms.repository.CodingChallengeRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ExamEligibilityService {
 
+    private final StudyMaterialRepository studyMaterialRepository;
 
-   @Autowired
-private StudyMaterialRepository studyMaterialRepository;
+    private final StudyMaterialProgressRepository studyMaterialProgressRepository;
 
+    private final CodingChallengeRepository codingChallengeRepository;
 
-    @Autowired
-    private MaterialProgressRepository materialProgressRepository;
+    private final CodingChallengeProgressRepository codingChallengeProgressRepository;
 
-
-    @Autowired
-    private CodingChallengeRepository codingChallengeRepository;
-
-
-    @Autowired
-    private CodingChallengeProgressRepository codingChallengeProgressRepository;
-
-
-    // =====================================================
+    // ==========================================
     // CHECK EXAM ELIGIBILITY
-    // =====================================================
+    // ==========================================
 
     public ExamEligibilityDTO checkEligibility(
             Long studentId,
             Long courseId
     ) {
 
-        ExamEligibilityDTO dto =
-                new ExamEligibilityDTO();
-
+        ExamEligibilityDTO dto = new ExamEligibilityDTO();
 
         dto.setStudentId(studentId);
-
         dto.setCourseId(courseId);
 
-
-        // =================================================
-        // MATERIALS
-        // =================================================
+        // ==========================================
+        // 1. STUDY MATERIALS
+        // ==========================================
 
         long totalMaterials =
-              studyMaterialRepository.countByCourse_Id(courseId);
-
+                studyMaterialRepository
+                        .countByCourse_IdAndActiveTrue(courseId);
 
         long completedMaterials =
-                materialProgressRepository
-                        .countByStudent_IdAndMaterial_Course_IdAndCompleted(
+                studyMaterialProgressRepository
+                        .countCompletedActiveMaterials(
                                 studentId,
-                                courseId,
-                                true
+                                courseId
                         );
 
+        // Prevent completed count from exceeding total.
+        completedMaterials = Math.min(
+                completedMaterials,
+                totalMaterials
+        );
 
-        double materialPercentage = 0;
+        double materialPercentage = totalMaterials == 0
+                ? 0.0
+                : completedMaterials * 100.0 / totalMaterials;
 
+        boolean materialsCompleted =
+                totalMaterials > 0
+                && completedMaterials == totalMaterials;
 
-        if (totalMaterials > 0) {
-
-            materialPercentage =
-                    ((double) completedMaterials
-                            / totalMaterials)
-                            * 100;
-        }
-
-
-        // =================================================
-        // CODING CHALLENGES
-        // =================================================
+        // ==========================================
+        // 2. CODING CHALLENGES
+        // ==========================================
 
         long totalCodingChallenges =
                 codingChallengeRepository
@@ -86,7 +77,6 @@ private StudyMaterialRepository studyMaterialRepository;
                                 courseId,
                                 true
                         );
-
 
         long completedCodingChallenges =
                 codingChallengeProgressRepository
@@ -96,86 +86,42 @@ private StudyMaterialRepository studyMaterialRepository;
                                 true
                         );
 
-
-        double codingPercentage = 0;
-
-
-        if (totalCodingChallenges > 0) {
-
-            codingPercentage =
-                    ((double) completedCodingChallenges
-                            / totalCodingChallenges)
-                            * 100;
-        }
-
-
-        // =================================================
-        // CHECK 100%
-        // =================================================
-
-        boolean materialsCompleted =
-                totalMaterials > 0
-                &&
-                completedMaterials == totalMaterials;
-
-
-        boolean codingCompleted =
-                totalCodingChallenges > 0
-                &&
-                completedCodingChallenges
-                    == totalCodingChallenges;
-
-
-        // =================================================
-        // FINAL ELIGIBILITY
-        // =================================================
-
-        boolean eligibleForExamApproval =
-                materialsCompleted
-                &&
-                codingCompleted;
-
-
-        // =================================================
-        // SET RESPONSE
-        // =================================================
-
-        dto.setTotalMaterials(
-                totalMaterials
-        );
-
-        dto.setCompletedMaterials(
-                completedMaterials
-        );
-
-        dto.setMaterialPercentage(
-                materialPercentage
-        );
-
-        dto.setTotalCodingChallenges(
+        completedCodingChallenges = Math.min(
+                completedCodingChallenges,
                 totalCodingChallenges
         );
 
-        dto.setCompletedCodingChallenges(
-                completedCodingChallenges
-        );
+        double codingPercentage = totalCodingChallenges == 0
+                ? 0.0
+                : completedCodingChallenges * 100.0
+                        / totalCodingChallenges;
 
-        dto.setCodingPercentage(
-                codingPercentage
-        );
+        boolean codingCompleted =
+                totalCodingChallenges > 0
+                && completedCodingChallenges == totalCodingChallenges;
 
-        dto.setMaterialsCompleted(
-                materialsCompleted
-        );
+        // ==========================================
+        // 3. FINAL ELIGIBILITY
+        // ==========================================
 
-        dto.setCodingCompleted(
-                codingCompleted
-        );
+        boolean eligibleForExamApproval =
+                materialsCompleted && codingCompleted;
 
-        dto.setEligibleForExamApproval(
-                eligibleForExamApproval
-        );
+        // ==========================================
+        // 4. RETURN ELIGIBILITY DETAILS
+        // ==========================================
 
+        dto.setTotalMaterials(totalMaterials);
+        dto.setCompletedMaterials(completedMaterials);
+        dto.setMaterialPercentage(materialPercentage);
+        dto.setMaterialsCompleted(materialsCompleted);
+
+        dto.setTotalCodingChallenges(totalCodingChallenges);
+        dto.setCompletedCodingChallenges(completedCodingChallenges);
+        dto.setCodingPercentage(codingPercentage);
+        dto.setCodingCompleted(codingCompleted);
+
+        dto.setEligibleForExamApproval(eligibleForExamApproval);
 
         return dto;
     }

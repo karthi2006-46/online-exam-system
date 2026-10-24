@@ -9,5 +9,4 @@ public class DashboardDTO {
     private long completedCourses;
     private long pendingExams;
     private int overallProgress;
-
 }

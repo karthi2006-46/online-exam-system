@@ -1,21 +1,156 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Exam Result</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Exam Result | Student Portal</title>
+
+    <link rel="stylesheet" href="../css/student/result.css">
 </head>
+
 <body>
 
-<h1>Exam Result</h1>
+<div class="result-page">
 
-<div>
-    <p>Exam: <span id="examTitle"></span></p>
-    <p>Marks: <span id="marks"></span></p>
-    <p>Percentage: <span id="percentage"></span>%</p>
-    <p>Status: <span id="status"></span></p>
-    <p>Correct: <span id="correct"></span></p>
-    <p>Wrong: <span id="wrong"></span></p>
-    <p>Skipped: <span id="skipped"></span></p>
+    <header class="result-header">
+        <div>
+            <span class="eyebrow">STUDENT PORTAL</span>
+            <h1>Exam Result</h1>
+            <p>Review your performance and answers.</p>
+        </div>
+
+        <button class="btn btn-secondary"
+                id="backBtn"
+                type="button">
+            ← Back to Exam Portal
+        </button>
+    </header>
+
+    <div id="loadingMessage" class="message">
+        Loading your exam result...
+    </div>
+
+    <div id="errorMessage" class="message error hidden"></div>
+
+    <main id="resultContent" class="hidden">
+
+        <section class="exam-summary card">
+
+            <div class="summary-heading">
+                <div>
+                    <span class="eyebrow">EXAMINATION SUMMARY</span>
+                    <h2 id="examTitle">Exam</h2>
+                    <p>Your examination performance</p>
+                </div>
+
+                <span id="statusBadge" class="status-badge">
+                    Completed
+                </span>
+            </div>
+
+            <div class="score-overview">
+
+                <div class="score-circle" id="scoreCircle">
+                    <div>
+                        <strong id="percentage">0%</strong>
+                        <span>Percentage</span>
+                    </div>
+                </div>
+
+                <div class="score-details">
+                    <span class="detail-label">TOTAL SCORE</span>
+                    <h3 id="marks">0 / 0</h3>
+                    <p id="performanceMessage">
+                        Your result is ready.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="stats-grid">
+
+            <article class="stat-card">
+                <div class="stat-icon correct-icon">✓</div>
+                <div>
+                    <p>Correct Answers</p>
+                    <h3 id="correct">0</h3>
+                </div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon wrong-icon">✕</div>
+                <div>
+                    <p>Wrong Answers</p>
+                    <h3 id="wrong">0</h3>
+                </div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon skipped-icon">↷</div>
+                <div>
+                    <p>Skipped Questions</p>
+                    <h3 id="skipped">0</h3>
+                </div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon total-icon">▤</div>
+                <div>
+                    <p>Total Questions</p>
+                    <h3 id="totalQuestions">0</h3>
+                </div>
+            </article>
+
+        </section>
+
+        <section class="answer-review card">
+
+            <div class="section-heading">
+                <span class="eyebrow">DETAILED REVIEW</span>
+                <h2>Question &amp; Answer Review</h2>
+                <p>
+                    Compare your submitted answers with the correct answers.
+                </p>
+            </div>
+
+            <div class="review-legend">
+                <span class="legend-item">
+                    <span class="legend-dot correct-dot"></span>
+                    Correct
+                </span>
+
+                <span class="legend-item">
+                    <span class="legend-dot wrong-dot"></span>
+                    Incorrect
+                </span>
+
+                <span class="legend-item">
+                    <span class="legend-dot skipped-dot"></span>
+                    Skipped
+                </span>
+            </div>
+
+            <div id="answersContainer" class="answers-container"></div>
+
+            <div id="reviewMessage" class="review-message hidden"></div>
+
+        </section>
+
+        <div class="result-actions">
+            <button class="btn btn-primary"
+                    id="backToPortalBtn"
+                    type="button">
+                Back to Exam Portal
+            </button>
+        </div>
+
+    </main>
+
 </div>
+<script src="/js/api-config.js"></script>
 
 <script src="../js/student/result.js"></script>
 

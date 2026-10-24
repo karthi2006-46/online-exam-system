@@ -1,26 +1,195 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Student Profile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Student Profile | LMS</title>
+
+    <!-- Inter font (falls back to Segoe UI / system fonts if offline) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- 1. Shared theme  2. Sidebar  3. Profile styles -->
+    <link rel="stylesheet" href="../css/student/student-theme.css">
+    <link rel="stylesheet" href="../css/student/student-sidebar.css">
     <link rel="stylesheet" href="../css/student/profile.css">
 </head>
 <body>
+<div class="profile-page">
 
-<div class="container">
-    <h1>My Profile</h1>
+    <!-- Shared Student Sidebar -->
+    <div id="studentSidebar"></div>
 
-    <div class="card">
-        <p><strong>First Name:</strong> <span id="firstName"></span></p>
-        <p><strong>Last Name:</strong> <span id="lastName"></span></p>
-        <p><strong>Email:</strong> <span id="email"></span></p>
-        <p><strong>Phone:</strong> <span id="phone"></span></p>
-        <p><strong>Address:</strong> <span id="address"></span></p>
-        <p><strong>Role:</strong> <span id="role"></span></p>
-        <p><strong>Status:</strong> <span id="status"></span></p>
-    </div>
+    <main class="main-content">
+
+        <header class="page-heading">
+            <p class="eyebrow">Student portal</p>
+            <h1>My Profile</h1>
+            <p class="page-subtitle">View your personal information and manage your account security.</p>
+        </header>
+
+        <!-- Account overview -->
+        <section class="profile-hero" aria-label="Account overview">
+            <div class="avatar-wrap">
+                <img class="profile-avatar-image" id="profilePicture" alt="Student profile picture" hidden>
+                <div class="profile-avatar" id="profileAvatar" aria-hidden="true">S</div>
+
+                <label class="avatar-upload" id="avatarUploadLabel" for="profilePictureInput" title="Upload profile picture" tabindex="0" role="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>
+                    <span class="sr-only">Change photo</span>
+                </label>
+                <input type="file" id="profilePictureInput" accept="image/*" hidden>
+            </div>
+
+            <div class="profile-hero-content">
+                <span class="eyebrow">Your account</span>
+                <h2 id="profileHeroName">Loading profile...</h2>
+                <p>View your account details and update your password securely.</p>
+                <div class="profile-badges">
+                    <span class="badge" id="heroRole">Student</span>
+                    <span class="badge status-badge" id="heroStatus">Checking status</span>
+                </div>
+                <p id="profilePictureMessage" class="small-message" role="status" aria-live="polite"></p>
+            </div>
+        </section>
+
+        <!-- Personal information -->
+        <section class="info-card">
+            <div class="section-heading">
+                <span class="section-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                </span>
+                <div>
+                    <h2>Personal Information</h2>
+                    <p>Your registered account information</p>
+                </div>
+            </div>
+            <div class="information-list">
+                <div class="info-item"><span class="info-label">Full Name</span><span class="info-value" id="fullNameValue">Loading...</span></div>
+                <div class="info-item"><span class="info-label">Email Address</span><span class="info-value" id="email">Loading...</span></div>
+                <div class="info-item"><span class="info-label">Phone Number</span><span class="info-value" id="phone">Loading...</span></div>
+                <div class="info-item"><span class="info-label">Address</span><span class="info-value" id="address">Loading...</span></div>
+                <div class="info-item"><span class="info-label">Role</span><span class="info-value" id="role">Loading...</span></div>
+                <div class="info-item"><span class="info-label">Account Status</span><span class="info-value status-value" id="status">Loading...</span></div>
+                <div class="info-item"><span class="info-label">Registered On</span><span class="info-value" id="createdAt">Not provided</span></div>
+            </div>
+        </section>
+
+        <!-- Course information -->
+        <section class="info-card">
+            <div class="section-heading">
+                <span class="section-icon green-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg>
+                </span>
+                <div>
+                    <h2>My Course Information</h2>
+                    <p>Details of your enrolled courses</p>
+                </div>
+            </div>
+            <div id="courseContainer"><p class="loading-text">Loading course information...</p></div>
+        </section>
+
+        <!-- Account security -->
+        <section class="info-card security-card">
+            <div class="section-heading security-heading">
+                <span class="section-icon purple-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+                </span>
+                <div>
+                    <h2>Account Security</h2>
+                    <p>Change your password to help keep your account secure.</p>
+                </div>
+            </div>
+
+            <div class="security-notice">
+                <span class="notice-icon" aria-hidden="true">i</span>
+                <p>Your current password is required. Choose a strong password you do not use on other websites.</p>
+            </div>
+
+            <form id="passwordForm" novalidate>
+                <div class="password-grid">
+                    <div class="form-group">
+                        <label for="currentPassword">Current password</label>
+                        <div class="password-input-wrapper"><input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password" autocomplete="current-password" required><button type="button" class="toggle-password" data-target="currentPassword" aria-label="Show current password">Show</button></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New password</label>
+                        <div class="password-input-wrapper"><input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" autocomplete="new-password" minlength="8" required><button type="button" class="toggle-password" data-target="newPassword" aria-label="Show new password">Show</button></div>
+                        <small>Use at least 8 characters.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm new password</label>
+                        <div class="password-input-wrapper"><input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter new password" autocomplete="new-password" minlength="8" required><button type="button" class="toggle-password" data-target="confirmPassword" aria-label="Show password confirmation">Show</button></div>
+                    </div>
+                </div>
+
+                <div id="passwordMessage" class="form-message" role="status" aria-live="polite" hidden></div>
+                <button type="submit" id="changePasswordBtn" class="btn-change-password">Change Password</button>
+            </form>
+        </section>
+
+    </main>
 </div>
 
-<script src="../js/student/profile.js"></script>
+<!-- Load shared sidebar -->
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+    const sidebarContainer = document.getElementById("studentSidebar");
 
+    if (!sidebarContainer) {
+        console.error("Sidebar container not found.");
+        return;
+    }
+
+    try {
+        const response = await fetch("student-sidebar.html");
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        sidebarContainer.innerHTML = await response.text();
+
+        const script = document.createElement("script");
+        script.src = "../js/student/student-sidebar.js";
+
+        script.onload = function () {
+            if (typeof window.initializeStudentSidebar === "function") {
+                window.initializeStudentSidebar();
+            }
+        };
+
+        script.onerror = function () {
+            console.error("Unable to load student-sidebar.js");
+        };
+
+        document.body.appendChild(script);
+
+    } catch (error) {
+        console.error("Sidebar loading failed:", error);
+        sidebarContainer.innerHTML =
+            "<p>Unable to load navigation. Please refresh the page.</p>";
+    }
+});
+</script>
+
+<!-- Make the camera button keyboard-accessible -->
+<script>
+    (function () {
+        var label = document.getElementById("avatarUploadLabel");
+        var input = document.getElementById("profilePictureInput");
+        if (!label || !input) return;
+        label.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                input.click();
+            }
+        });
+    })();
+</script>
+
+<script src="/js/api-config.js"></script>
+<script src="../../js/student/profile.js"></script>
 </body>
 </html>

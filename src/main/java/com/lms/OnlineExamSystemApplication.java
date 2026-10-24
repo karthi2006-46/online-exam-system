@@ -4,10 +4,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.lms.repository")
 @ComponentScan(basePackages = "com.lms")
+@EnableAsync
 public class OnlineExamSystemApplication {
 
     public static void main(String[] args) {

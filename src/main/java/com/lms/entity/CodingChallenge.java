@@ -29,10 +29,21 @@ public class CodingChallenge {
     @Column(columnDefinition = "TEXT")
     private String expectedOutput;
 
+    @Column(columnDefinition = "TEXT")
+    private String sampleInput;
+
+    @Column(columnDefinition = "TEXT")
+    private String sampleOutput;
+
+    @Column(columnDefinition = "TEXT")
+    private String constraints;
+
+    @Column(length = 20)
+    private String difficulty = "EASY";
+
     private Integer marks;
 
     private Boolean active = true;
-
 
     // =========================
     // GETTERS AND SETTERS
@@ -92,6 +103,38 @@ public class CodingChallenge {
 
     public void setExpectedOutput(String expectedOutput) {
         this.expectedOutput = expectedOutput;
+    }
+
+    public String getSampleInput() {
+        return sampleInput;
+    }
+
+    public void setSampleInput(String sampleInput) {
+        this.sampleInput = sampleInput;
+    }
+
+    public String getSampleOutput() {
+        return sampleOutput;
+    }
+
+    public void setSampleOutput(String sampleOutput) {
+        this.sampleOutput = sampleOutput;
+    }
+
+    public String getConstraints() {
+        return constraints;
+    }
+
+    public void setConstraints(String constraints) {
+        this.constraints = constraints;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
     }
 
     public Integer getMarks() {

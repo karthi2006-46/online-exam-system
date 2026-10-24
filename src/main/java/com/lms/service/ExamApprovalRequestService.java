@@ -7,6 +7,11 @@ import com.lms.repository.CourseRepository;
 import com.lms.repository.ExamApprovalRequestRepository;
 import com.lms.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -108,64 +113,81 @@ public class ExamApprovalRequestService {
     }
 
     // FACULTY VIEW REQUESTS
-    public List<ExamApprovalRequest> getPendingRequests() {
+   @Transactional(readOnly = true)
+public List<ExamApprovalRequest> getPendingRequests(
+        Authentication authentication) {
 
-        return requestRepository.findByStatus(
-                ExamApprovalRequest.Status.PENDING
+    User faculty = getAuthenticatedUser(authentication);
+
+    if (!hasRole(faculty, "FACULTY")) {
+        throw new AccessDeniedException(
+                "Only faculty members can view pending requests"
         );
     }
+
+    return requestRepository.findByCourse_Faculty_IdAndStatus(
+            faculty.getId(),
+            ExamApprovalRequest.Status.PENDING
+    );
+}
 
     // FACULTY APPROVE
     public ExamApprovalRequest approve(
-            Long requestId,
-            String comment
-    ) {
+        Long requestId,
+        String comment,
+        Authentication authentication) {
 
-        ExamApprovalRequest request =
-                requestRepository
-                        .findById(requestId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Approval request not found"
-                                ));
+    User faculty = getAuthenticatedUser(authentication);
 
-        request.setStatus(
-                ExamApprovalRequest.Status.APPROVED
+    ExamApprovalRequest request = requestRepository.findById(requestId)
+            .orElseThrow(() ->
+                    new IllegalArgumentException(
+                            "Approval request not found"
+                    ));
+
+    verifyFacultyCourseAccess(faculty, request.getCourse());
+
+    if (request.getStatus() != ExamApprovalRequest.Status.PENDING) {
+        throw new IllegalStateException(
+                "Only pending requests can be approved"
         );
-
-        request.setFacultyComment(comment);
-        request.setReviewedAt(
-                java.time.LocalDateTime.now()
-        );
-
-        return requestRepository.save(request);
     }
+
+    request.setStatus(ExamApprovalRequest.Status.APPROVED);
+    request.setFacultyComment(comment);
+    request.setReviewedAt(java.time.LocalDateTime.now());
+
+    return requestRepository.save(request);
+}
 
     // FACULTY REJECT
-    public ExamApprovalRequest reject(
-            Long requestId,
-            String comment
-    ) {
+public ExamApprovalRequest reject(
+        Long requestId,
+        String comment,
+        Authentication authentication) {
 
-        ExamApprovalRequest request =
-                requestRepository
-                        .findById(requestId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Approval request not found"
-                                ));
+    User faculty = getAuthenticatedUser(authentication);
 
-        request.setStatus(
-                ExamApprovalRequest.Status.REJECTED
+    ExamApprovalRequest request = requestRepository.findById(requestId)
+            .orElseThrow(() ->
+                    new IllegalArgumentException(
+                            "Approval request not found"
+                    ));
+
+    verifyFacultyCourseAccess(faculty, request.getCourse());
+
+    if (request.getStatus() != ExamApprovalRequest.Status.PENDING) {
+        throw new IllegalStateException(
+                "Only pending requests can be rejected"
         );
-
-        request.setFacultyComment(comment);
-        request.setReviewedAt(
-                java.time.LocalDateTime.now()
-        );
-
-        return requestRepository.save(request);
     }
+
+    request.setStatus(ExamApprovalRequest.Status.REJECTED);
+    request.setFacultyComment(comment);
+    request.setReviewedAt(java.time.LocalDateTime.now());
+
+    return requestRepository.save(request);
+}
     // STUDENT - CHECK APPROVAL STATUS
 public String getApprovalStatus(
         Long studentId,
@@ -184,5 +206,44 @@ public String getApprovalStatus(
     }
 
     return request.get().getStatus().name();
+}
+private User getAuthenticatedUser(Authentication authentication) {
+
+    if (authentication == null
+            || !authentication.isAuthenticated()
+            || !(authentication.getPrincipal() instanceof UserDetails)) {
+        throw new AccessDeniedException("Authentication is required");
+    }
+
+    UserDetails userDetails =
+            (UserDetails) authentication.getPrincipal();
+
+    return userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() ->
+                    new IllegalStateException(
+                            "Authenticated user was not found"
+                    ));
+}
+
+private boolean hasRole(User user, String roleName) {
+    return user.getRole() != null
+            && user.getRole().getName() != null
+            && user.getRole().getName().equalsIgnoreCase(roleName);
+}
+
+private void verifyFacultyCourseAccess(User faculty, Course course) {
+
+    if (!hasRole(faculty, "FACULTY")) {
+        throw new AccessDeniedException(
+                "Only faculty members can review exam approval requests"
+        );
+    }
+
+    if (course.getFaculty() == null
+            || !course.getFaculty().getId().equals(faculty.getId())) {
+        throw new AccessDeniedException(
+                "You are not assigned to this course"
+        );
+    }
 }
 }

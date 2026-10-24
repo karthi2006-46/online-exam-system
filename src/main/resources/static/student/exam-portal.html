@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Exam Portal | LMS</title>
+
+    <!-- Load order matters: theme -> sidebar -> page styles -->
+    <link rel="stylesheet" href="../css/student/student-theme.css">
+    <link rel="stylesheet" href="../css/student/student-sidebar.css">
+    <link rel="stylesheet" href="../css/student/exam-portal.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Shared Student Sidebar -->
+    <div id="studentSidebar"></div>
+
+    <!-- Main content -->
+    <main class="main-content">
+
+        <header class="page-header">
+            <div>
+                <p class="eyebrow">YOUR LEARNING JOURNEY</p>
+                <h1>Exam Portal</h1>
+
+                <p class="page-description">
+                    View your available examinations and test your knowledge.
+                </p>
+            </div>
+
+            <div class="header-badge">
+                <span class="status-dot"></span>
+                Student Workspace
+            </div>
+        </header>
+
+        <!-- Exam summary -->
+        <section class="summary-grid" aria-label="Exam statistics">
+
+            <article class="summary-card">
+                <div class="summary-icon blue-icon" aria-hidden="true">▣</div>
+
+                <div>
+                    <p>Total Published Exams</p>
+                    <h2 id="totalExams">0</h2>
+                </div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-icon green-icon" aria-hidden="true">✓</div>
+
+                <div>
+                    <p>Available Exams</p>
+                    <h2 id="availableExams">0</h2>
+                </div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-icon purple-icon" aria-hidden="true">◷</div>
+
+                <div>
+                    <p>Exam Duration</p>
+                    <h2>Timed</h2>
+                </div>
+            </article>
+
+        </section>
+
+        <!-- Exam listing -->
+        <section class="exam-section">
+
+            <div class="section-heading">
+                <div>
+                    <h2>Available Examinations</h2>
+
+                    <p>
+                        Select an examination to view its details and begin.
+                    </p>
+                </div>
+
+                <button type="button"
+                        id="refreshExamsBtn"
+                        class="refresh-btn">
+                    ↻ Refresh Exams
+                </button>
+            </div>
+
+            <div id="examMessage"
+                 class="message"
+                 role="status"
+                 aria-live="polite">
+                Loading available examinations...
+            </div>
+
+            <div id="examsContainer" class="exams-grid"></div>
+
+        </section>
+
+        <!-- Exam instructions -->
+        <section class="instructions-card">
+
+            <div class="instructions-icon" aria-hidden="true">ⓘ</div>
+
+            <div>
+                <h3>Before You Begin</h3>
+
+                <ul>
+                    <li>Check the examination title before starting.</li>
+                    <li>Make sure you have enough uninterrupted time.</li>
+                    <li>Submit your answers before the timer expires.</li>
+                    <li>Once started, your examination may be timed.</li>
+                </ul>
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+    const sidebarContainer = document.getElementById("studentSidebar");
+
+    if (!sidebarContainer) {
+        console.error("Sidebar container not found.");
+        return;
+    }
+
+    try {
+        const response = await fetch("student-sidebar.html");
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        sidebarContainer.innerHTML = await response.text();
+
+        const script = document.createElement("script");
+        script.src = "../js/student/student-sidebar.js";
+
+        script.onload = function () {
+            if (typeof window.initializeStudentSidebar === "function") {
+                window.initializeStudentSidebar();
+            }
+        };
+
+        script.onerror = function () {
+            console.error("Unable to load student-sidebar.js");
+        };
+
+        document.body.appendChild(script);
+
+    } catch (error) {
+        console.error("Sidebar loading failed:", error);
+        sidebarContainer.innerHTML =
+            "<p>Unable to load navigation. Please refresh the page.</p>";
+    }
+});
+</script>
+<script src="/js/api-config.js"></script>
+<script src="../js/student/exam-portal.js"></script>
+
+</body>
+</html>

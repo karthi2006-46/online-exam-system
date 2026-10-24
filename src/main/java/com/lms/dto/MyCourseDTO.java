@@ -1,12 +1,12 @@
 package com.lms.dto;
 
 import java.time.LocalDateTime;
-
 import lombok.Data;
 
 @Data
 public class MyCourseDTO {
 
+    private Long enrollmentId;
     private Long courseId;
     private String courseTitle;
     private Integer durationDays;

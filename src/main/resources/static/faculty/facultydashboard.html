@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard | LMS</title>
+
+    <link rel="stylesheet" href="/css/faculty/faculty.css">
+    
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">L</div>
+            <div>
+                <h2>LearnHub</h2>
+                <p>Faculty Portal</p>
+            </div>
+        </div>
+
+        <nav class="navigation">
+            <a href="/faculty/facultydashboard.html" class="nav-link active">
+                <span>▦</span> Dashboard
+            </a>
+
+            <a href="/faculty/extension-requests.html" class="nav-link">
+                <span>◷</span> Extension Requests
+                <span class="nav-badge" id="extensionBadge">0</span>
+            </a>
+
+            <a href="/faculty/manage-courses.html" class="nav-link">
+                <span>▤</span> Manage Courses
+            </a>
+
+            <a href="/faculty/manage-exams.html" class="nav-link">
+                <span>▣</span> Manage Exams
+            </a>
+
+            <a href="/faculty/manage-materials.html" class="nav-link">
+                <span>▧</span> Study Materials
+            </a>
+
+            <a href="/faculty/student-results.html" class="nav-link">
+                <span>▥</span> Student Results
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="profile-mini">
+                <div class="avatar" id="avatar">F</div>
+                <div>
+                    <strong id="facultyName">Faculty</strong>
+                    <small>Faculty Account</small>
+                </div>
+            </div>
+
+            <button class="logout-button" onclick="logout()">
+                ↪ Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <p class="breadcrumb">Workspace / Dashboard</p>
+                <h1>Faculty Dashboard</h1>
+                <p class="subtitle">
+                    Welcome back! Here's an overview of your teaching workspace.
+                </p>
+            </div>
+
+            <div class="topbar-right">
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">F</div>
+            </div>
+        </header>
+
+        <section class="welcome-banner">
+            <div>
+                <span class="eyebrow">FACULTY WORKSPACE</span>
+                <h2>Make learning more effective.</h2>
+                <p>
+                    Manage course activities, review student requests,
+                    and keep learning on track.
+                </p>
+
+                <a href="/faculty/extension-requests.html"
+                   class="button button-white">
+                    Review Extension Requests →
+                </a>
+            </div>
+
+            <div class="banner-illustration">✦</div>
+        </section>
+
+        <section class="stats-grid">
+
+            <article class="stat-card">
+                <div class="stat-icon icon-blue">▤</div>
+                <p>Total Courses</p>
+                <h2 id="courseCount">—</h2>
+                <span>Available in your LMS</span>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon icon-purple">◷</div>
+                <p>Pending Extensions</p>
+                <h2 id="pendingCount">—</h2>
+                <span>Awaiting faculty review</span>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon icon-green">✓</div>
+                <p>Approved Extensions</p>
+                <h2 id="approvedCount">—</h2>
+                <span>Approved in this session's data</span>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon icon-orange">!</div>
+                <p>Rejected Extensions</p>
+                <h2 id="rejectedCount">—</h2>
+                <span>Rejected in this session's data</span>
+            </article>
+
+        </section>
+
+        <section class="content-grid">
+
+            <article class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Quick Actions</h2>
+                        <p>Access your frequently used tools.</p>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+
+                    <a href="/faculty/extension-requests.html"
+                       class="action-card">
+                        <div class="action-icon icon-purple">◷</div>
+                        <div>
+                            <h3>Extension Requests</h3>
+                            <p>Approve or reject course extensions.</p>
+                        </div>
+                        <span>→</span>
+                    </a>
+
+                    <a href="/faculty/manage-courses.html"
+                       class="action-card">
+                        <div class="action-icon icon-blue">▤</div>
+                        <div>
+                            <h3>Manage Courses</h3>
+                            <p>Open the course management page.</p>
+                        </div>
+                        <span>→</span>
+                    </a>
+
+                    <a href="/faculty/manage-exams.html"
+                       class="action-card">
+                        <div class="action-icon icon-green">▣</div>
+                        <div>
+                            <h3>Manage Exams</h3>
+                            <p>Open exam management.</p>
+                        </div>
+                        <span>→</span>
+                    </a>
+
+                    <a href="/faculty/manage-materials.html"
+                       class="action-card">
+                        <div class="action-icon icon-orange">▧</div>
+                        <div>
+                            <h3>Study Materials</h3>
+                            <p>Open the learning materials page.</p>
+                        </div>
+                        <span>→</span>
+                    </a>
+
+                </div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Extension Overview</h2>
+                        <p>Summary of extension request statuses.</p>
+                    </div>
+                    <button class="text-button" onclick="loadDashboard()">
+                        Refresh
+                    </button>
+                </div>
+
+                <div class="overview-row">
+                    <span class="status-dot dot-yellow"></span>
+                    <span>Pending</span>
+                    <strong id="overviewPending">—</strong>
+                </div>
+
+                <div class="overview-row">
+                    <span class="status-dot dot-green"></span>
+                    <span>Approved</span>
+                    <strong id="overviewApproved">—</strong>
+                </div>
+
+                <div class="overview-row">
+                    <span class="status-dot dot-red"></span>
+                    <span>Rejected</span>
+                    <strong id="overviewRejected">—</strong>
+                </div>
+
+                <a href="/faculty/extension-requests.html"
+                   class="button button-primary full-button">
+                    Open Extension Requests
+                </a>
+
+                <p class="helper-text" id="dashboardMessage"></p>
+            </article>
+
+        </section>
+
+        <footer class="footer">
+            <span>© <span id="year"></span> LearnHub LMS</span>
+            <span>Faculty Workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/facuilty/faculty-dashboard.js"></script>
+
+</body>
+</html>

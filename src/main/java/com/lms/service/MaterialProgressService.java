@@ -1,93 +1,146 @@
 package com.lms.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import com.lms.entity.Enrollment;
 import com.lms.entity.MaterialProgress;
 import com.lms.entity.StudyMaterial;
+import com.lms.entity.User;
 import com.lms.repository.EnrollmentRepository;
 import com.lms.repository.MaterialProgressRepository;
 import com.lms.repository.StudyMaterialRepository;
 import com.lms.repository.UserRepository;
-import com.lms.entity.User;
-import com.lms.entity.Enrollment;
-import java.util.Optional;
-import java.util.*;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class MaterialProgressService {
 
-    @Autowired
-    private MaterialProgressRepository progressRepo;
+    private final MaterialProgressRepository progressRepo;
+    private final StudyMaterialRepository materialRepo;
+    private final EnrollmentRepository enrollmentRepo;
+    private final UserRepository userRepo;
 
-    @Autowired
-    private StudyMaterialRepository materialRepo;
+    // ======================================
+    // MARK MATERIAL AS COMPLETED
+    // ======================================
 
-    @Autowired
-    private EnrollmentRepository enrollmentRepo;
+    @Transactional
+    public MaterialProgress markCompleted(
+            Long studentId,
+            Long materialId) {
 
-    @Autowired
-    private UserRepository userRepo;
+        User student = userRepo.findById(studentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Student not found"
+                ));
 
-   public void markCompleted(
-        Long studentId,
-        Long materialId
-){
+        if (student.getRole() == null
+                || !"STUDENT".equalsIgnoreCase(
+                        student.getRole().getName())) {
 
-    Optional<MaterialProgress> existing =
-        progressRepo.findByStudent_IdAndMaterial_Id(
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only students can update progress"
+            );
+        }
+
+        if (Boolean.FALSE.equals(student.getActive())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Inactive students cannot update progress"
+            );
+        }
+
+        StudyMaterial material = materialRepo.findById(materialId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Study material not found"
+                ));
+
+        Long courseId = material.getCourse().getId();
+
+        // Confirm that the student is enrolled in this course.
+        Enrollment enrollment = enrollmentRepo
+                .findByStudent_IdAndCourse_Id(studentId, courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "You are not enrolled in this course"
+                ));
+
+        // Avoid duplicate progress records.
+        MaterialProgress progress = progressRepo
+                .findByStudent_IdAndMaterial_Id(
+                        studentId,
+                        materialId
+                )
+                .orElseGet(() -> {
+                    MaterialProgress newProgress =
+                            new MaterialProgress();
+
+                    newProgress.setStudent(student);
+                    newProgress.setMaterial(material);
+                    newProgress.setCompleted(false);
+
+                    return newProgress;
+                });
+
+        // Mark completed only once.
+        if (!Boolean.TRUE.equals(progress.getCompleted())) {
+            progress.setCompleted(true);
+            progressRepo.save(progress);
+        }
+
+        // Update enrollment percentage.
+        updateEnrollmentProgress(
                 studentId,
-                materialId
+                courseId,
+                enrollment
         );
 
-    if(existing.isPresent()){
-        return;
+        return progress;
     }
 
-    User student =
-            userRepo.findById(studentId)
-                    .orElseThrow();
+    // ======================================
+    // GET COMPLETED MATERIAL IDS
+    // ======================================
 
-    StudyMaterial material =
-            materialRepo.findById(materialId)
-                    .orElseThrow();
+    @Transactional(readOnly = true)
+    public List<Long> getCompletedMaterialIds(Long studentId) {
 
-    MaterialProgress progress =
-            new MaterialProgress();
+        return progressRepo
+                .findByStudent_Id(studentId)
+                .stream()
+                .filter(progress ->
+                        Boolean.TRUE.equals(progress.getCompleted()))
+                .map(progress -> progress.getMaterial().getId())
+                .toList();
+    }
 
-    progress.setStudent(student);
-    progress.setMaterial(material);
-    progress.setCompleted(true);
+    // ======================================
+    // UPDATE COURSE PROGRESS
+    // ======================================
 
-    progressRepo.save(progress);
-
-    updateEnrollmentProgress(
-            studentId,
-            material.getCourse().getId()
-    );
-}
-public List<Long> getCompletedMaterialIds(
-        Long studentId){
-
-    return progressRepo
-            .findByStudent_Id(studentId)
-            .stream()
-            .map(progress ->
-                    progress.getMaterial().getId())
-            .toList();
-}
-    
-
-    // 👇 Step 5 code paste here
     private void updateEnrollmentProgress(
             Long studentId,
-            Long courseId
-    ){
+            Long courseId,
+            Enrollment enrollment) {
 
         long totalMaterials =
-                materialRepo.countByCourse_Id(
-                        courseId
-                );
+                materialRepo.countByCourse_Id(courseId);
+
+        if (totalMaterials == 0) {
+            enrollment.setCompletionPercentage(0.0);
+            enrollmentRepo.save(enrollment);
+            return;
+        }
 
         long completedMaterials =
                 progressRepo
@@ -98,25 +151,10 @@ public List<Long> getCompletedMaterialIds(
                         );
 
         double percentage =
-                ((double) completedMaterials
-                        / totalMaterials) * 100;
+                (completedMaterials * 100.0) / totalMaterials;
 
-        Enrollment enrollment =
-                enrollmentRepo
-                        .findByStudent_IdAndCourse_Id(
-                                studentId,
-                                courseId
-                        )
-                        .orElseThrow();
+        enrollment.setCompletionPercentage(percentage);
 
-        enrollment.setCompletionPercentage(
-                percentage
-        );
-
-        enrollmentRepo.save(
-                enrollment
-        );
-        
+        enrollmentRepo.save(enrollment);
     }
-    
 }

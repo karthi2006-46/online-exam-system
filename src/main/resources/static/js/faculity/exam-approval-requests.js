@@ -1,6 +1,4 @@
-const API_BASE =
-    "http://localhost:8080/api/exam-approval";
-
+const API_BASE = `${window.API_BASE_URL}/api/exam-approval`;
 
 // ==========================================
 // LOAD PENDING REQUESTS

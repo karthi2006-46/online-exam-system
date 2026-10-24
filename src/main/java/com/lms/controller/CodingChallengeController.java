@@ -4,10 +4,12 @@ import com.lms.entity.CodingChallenge;
 import com.lms.repository.CodingChallengeRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/coding-challenges")
@@ -17,13 +19,12 @@ public class CodingChallengeController {
     @Autowired
     private CodingChallengeRepository codingChallengeRepository;
 
-
     // ==========================================
-    // GET ALL CHALLENGES FOR A COURSE
+    // GET ALL ACTIVE CHALLENGES FOR A COURSE
     // ==========================================
 
     @GetMapping("/course/{courseId}")
-    public ResponseEntity<?> getChallengesByCourse(
+    public ResponseEntity<List<CodingChallenge>> getChallengesByCourse(
             @PathVariable Long courseId) {
 
         List<CodingChallenge> challenges =
@@ -33,55 +34,97 @@ public class CodingChallengeController {
         return ResponseEntity.ok(challenges);
     }
 
-
     // ==========================================
-    // GET SINGLE CHALLENGE
+    // GET A SINGLE CHALLENGE
     // ==========================================
 
     @GetMapping("/{challengeId}")
     public ResponseEntity<?> getChallenge(
             @PathVariable Long challengeId) {
 
-        CodingChallenge challenge =
-                codingChallengeRepository
-                        .findById(challengeId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Coding Challenge not found"
-                                )
-                        );
-
-        return ResponseEntity.ok(challenge);
+        return codingChallengeRepository.findById(challengeId)
+                .filter(challenge ->
+                        Boolean.TRUE.equals(challenge.getActive()))
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(Map.of(
+                                "message",
+                                "Active coding challenge not found"
+                        )));
     }
 
-
     // ==========================================
-    // CREATE CODING CHALLENGE
+    // CREATE A CODING CHALLENGE
     // ==========================================
 
     @PostMapping
     public ResponseEntity<?> createChallenge(
             @RequestBody CodingChallenge challenge) {
 
+        if (challenge.getCourse() == null
+                || challenge.getCourse().getId() == null) {
+
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Course ID is required")
+            );
+        }
+
+        if (challenge.getTitle() == null
+                || challenge.getTitle().isBlank()) {
+
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Challenge title is required")
+            );
+        }
+
+        if (challenge.getDifficulty() != null
+                && !List.of("EASY", "MEDIUM", "HARD")
+                        .contains(challenge.getDifficulty().toUpperCase())) {
+
+            return ResponseEntity.badRequest().body(
+                    Map.of(
+                            "message",
+                            "Difficulty must be EASY, MEDIUM, or HARD"
+                    )
+            );
+        }
+
+        if (challenge.getDifficulty() != null) {
+            challenge.setDifficulty(
+                    challenge.getDifficulty().toUpperCase()
+            );
+        }
+
         CodingChallenge saved =
                 codingChallengeRepository.save(challenge);
 
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-
     // ==========================================
-    // DELETE CODING CHALLENGE
+    // DELETE A CODING CHALLENGE
     // ==========================================
 
     @DeleteMapping("/{challengeId}")
     public ResponseEntity<?> deleteChallenge(
             @PathVariable Long challengeId) {
 
+        if (!codingChallengeRepository.existsById(challengeId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "message",
+                            "Coding challenge not found"
+                    ));
+        }
+
         codingChallengeRepository.deleteById(challengeId);
 
         return ResponseEntity.ok(
-                "Coding challenge deleted successfully"
+                Map.of(
+                        "message",
+                        "Coding challenge deleted successfully"
+                )
         );
     }
 }

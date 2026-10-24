@@ -4,10 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResultDTO {
+
     private Long id;
     private Long examId;
     private String examTitle;
@@ -18,4 +21,6 @@ public class ResultDTO {
     private Integer correctAnswers;
     private Integer wrongAnswers;
     private Integer skippedQuestions;
+
+    private List<QuestionReviewDTO> questionReviews;
 }

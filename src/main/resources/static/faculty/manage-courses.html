@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Manage Courses | LearnHub LMS</title>
+
+    <link rel="stylesheet" href="/css/faculty/faculty.css">
+
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            margin-bottom: 6px;
+        }
+
+        .page-header p,
+        .muted {
+            color: #62708f;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 22px;
+        }
+
+        .course-card {
+            background: #fff;
+            border: 1px solid #e3e9f4;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 4px 14px rgba(15, 27, 61, .05);
+            transition: .25s ease;
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(15, 27, 61, .09);
+        }
+
+        .course-code {
+            display: inline-block;
+            padding: 5px 11px;
+            border-radius: 20px;
+            background: #edf3ff;
+            color: #2f62e6;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .course-card h2 {
+            font-size: 19px;
+            margin-bottom: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        .course-description {
+            color: #62708f;
+            font-size: 14px;
+            min-height: 48px;
+            margin-bottom: 20px;
+            overflow-wrap: anywhere;
+        }
+
+        .course-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 15px 0;
+            border-top: 1px solid #e3e9f4;
+            border-bottom: 1px solid #e3e9f4;
+        }
+
+        .course-details small {
+            display: block;
+            color: #62708f;
+            margin-bottom: 4px;
+        }
+
+        .course-details strong {
+            font-size: 15px;
+        }
+
+        .course-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .course-actions a {
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 650;
+            background: #edf3ff;
+            color: #2f62e6;
+        }
+
+        .course-actions a:hover {
+            background: #2f62e6;
+            color: white;
+        }
+
+        .state-message {
+            background: white;
+            border: 1px solid #e3e9f4;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            color: #62708f;
+        }
+
+        .search-input {
+            max-width: 350px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 600px) {
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">L</div>
+            <div>
+                <h2>LearnHub</h2>
+                <p>Faculty Portal</p>
+            </div>
+        </div>
+
+        <nav class="navigation">
+            <a href="/faculty/facultydashboard.html" class="nav-link">
+                <span>▦</span> Dashboard
+            </a>
+
+            <a href="/faculty/extension-requests.html" class="nav-link">
+                <span>◷</span> Extension Requests
+            </a>
+
+            <a href="/faculty/exam-approval-requests.html" class="nav-link">
+                <span>✓</span> Exam Approvals
+            </a>
+
+            <a href="/faculty/manage-courses.html" class="nav-link active">
+                <span>▤</span> Manage Courses
+            </a>
+
+            <a href="/faculty/manage-exams.html" class="nav-link">
+                <span>▣</span> Manage Exams
+            </a>
+
+            <a href="/faculty/manage-materials.html" class="nav-link">
+                <span>▧</span> Study Materials
+            </a>
+
+            <a href="/faculty/student-results.html" class="nav-link">
+                <span>▥</span> Student Results
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="profile-mini">
+                <div class="avatar" id="avatar">F</div>
+                <div>
+                    <strong id="facultyName">Faculty</strong>
+                    <small>Faculty Account</small>
+                </div>
+            </div>
+
+            <button class="logout-button" onclick="logout()">
+                ↪ Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="page-header">
+            <div>
+                <p class="muted">Workspace / Courses</p>
+                <h1>Manage Courses</h1>
+                <p class="muted">
+                    View and manage courses assigned to your account.
+                </p>
+            </div>
+
+            <div id="courseSummary" class="course-code">
+                Loading courses...
+            </div>
+        </header>
+
+        <input
+            type="search"
+            id="courseSearch"
+            class="search-input"
+            placeholder="Search by course name or code..."
+            aria-label="Search courses"
+        >
+
+        <div id="courseMessage" class="state-message" role="status">
+            Loading your assigned courses...
+        </div>
+
+        <section id="courseGrid" class="course-grid"></section>
+
+        <footer class="footer">
+            <span>© <span id="year"></span> LearnHub LMS</span>
+            <span>Faculty Workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/faculity/manage-courses.js"></script>
+</body>
+</html>
+

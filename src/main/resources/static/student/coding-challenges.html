@@ -3,272 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Practice programming and track your coding challenge progress.">
     <title>Coding Challenges | LMS</title>
 
-    <link rel="stylesheet" href="../css/style.css">
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f3f6fb;
-            color: #1e293b;
-        }
-
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 240px;
-            background: #1e293b;
-            color: white;
-            padding: 25px 20px;
-            flex-shrink: 0;
-        }
-
-        .sidebar h2 {
-            text-align: center;
-            margin-bottom: 35px;
-        }
-
-        .sidebar a {
-            display: block;
-            color: white;
-            text-decoration: none;
-            padding: 13px 10px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #334155;
-            color: #60a5fa;
-        }
-
-        .main {
-            flex: 1;
-            min-width: 0;
-            padding: 30px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .header h1 {
-            margin: 0;
-        }
-
-        .summary {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px #0000000d;
-            margin-bottom: 25px;
-        }
-
-        .progress-track {
-            width: 100%;
-            height: 15px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: #16a34a;
-            transition: width 0.3s;
-        }
-
-        .challenge-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 22px;
-            box-shadow: 0 3px 12px #0000000d;
-        }
-
-        .challenge-card h2 {
-            margin-top: 0;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge.completed {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .description {
-            white-space: pre-wrap;
-            line-height: 1.7;
-            margin: 18px 0;
-        }
-
-        .editor-label {
-            display: block;
-            margin: 15px 0 8px;
-            font-weight: bold;
-        }
-
-        .code-editor {
-            width: 100%;
-            min-height: 230px;
-            padding: 15px;
-            resize: vertical;
-            background: #0f172a;
-            color: #e2e8f0;
-            border: none;
-            border-radius: 8px;
-            font-family: Consolas, monospace;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        button {
-            border: none;
-            border-radius: 7px;
-            padding: 11px 18px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-            color: white;
-        }
-
-        .btn-success {
-            background: #16a34a;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #64748b;
-            color: white;
-        }
-
-        .message {
-            margin-top: 12px;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-        }
-
-        .empty {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-        }
-
-        @media (max-width: 700px) {
-            .layout {
-                display: block;
-            }
-
-            .sidebar {
-                width: 100%;
-            }
-
-            .main {
-                padding: 18px;
-            }
-        }
-    </style>
+    <!-- Load order matters: theme -> sidebar -> page styles -->
+    <link rel="stylesheet" href="../css/student/student-theme.css">
+    <link rel="stylesheet" href="../css/student/student-sidebar.css">
+    <link rel="stylesheet" href="../css/student/coding-challenges.css">
 </head>
-
 <body>
+<div class="container">
 
-<div class="layout">
+    <!-- Shared Student Sidebar -->
+    <div id="studentSidebar"></div>
 
-    <aside class="sidebar">
-        <h2>LMS</h2>
-
-        <a href="studentdashboard.html">Dashboard</a>
-        <a href="my-courses.html">My Courses</a>
-        <a href="study-material.html">Study Materials</a>
-
-        <a href="coding-challenges.html" class="active">
-            Coding Challenges
-        </a>
-
-        <a href="#" onclick="logout()">Logout</a>
-    </aside>
-
-    <main class="main">
-
-        <div class="header">
-            <h1>Coding Challenges</h1>
-
-            <button class="btn-secondary" onclick="loadChallenges()">
-                Refresh
+    <main class="main-content">
+        <header class="header">
+            <div class="page-heading">
+                <div class="eyebrow">STUDENT WORKSPACE</div>
+                <h1>Coding Challenges</h1>
+                <p>Build your skills one problem at a time.</p>
+            </div>
+            <button type="button" class="btn-secondary refresh-button" onclick="loadChallenges()">
+                <span aria-hidden="true">↻</span> Refresh challenges
             </button>
-        </div>
+        </header>
 
-        <div class="summary">
-
-            <h3 id="courseTitle">Loading course...</h3>
-
-            <p>
-                Completed Challenges:
-                <strong id="completedCount">0 / 0</strong>
-            </p>
-
-            <div class="progress-track">
+        <section class="summary" aria-labelledby="courseTitle">
+            <div class="summary-top">
+                <div class="course-icon" aria-hidden="true">&lt;/&gt;</div>
+                <div class="course-info">
+                    <span class="section-label">CURRENT COURSE</span>
+                    <h2 id="courseTitle">Loading course...</h2>
+                    <p>Complete the coding exercises to build your practical experience.</p>
+                </div>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="progress-heading">
+                <div>
+                    <span class="section-label">YOUR PROGRESS</span>
+                    <p class="progress-number"><strong id="completedCount">0 / 0</strong><span>challenges completed</span></p>
+                </div>
+                <span class="progress-percent" id="progressText">Progress: 0%</span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="Coding challenge completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
+            <div class="eligibility-panel">
+                <span class="eligibility-icon" aria-hidden="true">✓</span>
+                <p id="eligibilityText" aria-live="polite">Checking exam eligibility...</p>
+            </div>
+        </section>
 
-            <p id="progressText">Progress: 0%</p>
+        <section class="challenge-list-section" aria-labelledby="challengeListTitle">
+            <div class="section-heading">
+                <div>
+                    <span class="section-label">PRACTICE AREA</span>
+                    <h2 id="challengeListTitle">Available challenges</h2>
+                    <p>Review the requirements, write your solution, and track your progress.</p>
+                </div>
+            </div>
+            <div id="challengesContainer" aria-live="polite" aria-busy="false">
+                <div class="empty">
+                    <div class="empty-icon" aria-hidden="true">&lt;/&gt;</div>
+                    <h3>Loading coding challenges</h3>
+                    <p>Your practice problems will appear here shortly.</p>
+                </div>
+            </div>
+        </section>
 
-            <p id="eligibilityText">
-                Checking exam eligibility...
-            </p>
-
-        </div>
-
-        <div id="challengesContainer">
-            <div class="empty">Loading coding challenges...</div>
-        </div>
-
+        <footer class="page-footer">
+            <span>LMS Student Portal</span><span>Keep practising. Keep improving.</span>
+        </footer>
     </main>
-
 </div>
 
-<script src="../js/student/coding-challenges.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+    const sidebarContainer = document.getElementById("studentSidebar");
 
+    if (!sidebarContainer) {
+        console.error("Sidebar container not found.");
+        return;
+    }
+
+    try {
+        const response = await fetch("student-sidebar.html");
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        sidebarContainer.innerHTML = await response.text();
+
+        const script = document.createElement("script");
+        script.src = "../js/student/student-sidebar.js";
+
+        script.onload = function () {
+            if (typeof window.initializeStudentSidebar === "function") {
+                window.initializeStudentSidebar();
+            }
+        };
+
+        script.onerror = function () {
+            console.error("Unable to load student-sidebar.js");
+        };
+
+        document.body.appendChild(script);
+
+    } catch (error) {
+        console.error("Sidebar loading failed:", error);
+        sidebarContainer.innerHTML =
+            "<p>Unable to load navigation. Please refresh the page.</p>";
+    }
+});
+</script>
+<script src="/js/api-config.js"></script>
+<script src="../js/student/coding-challenges.js"></script>
 </body>
 </html>

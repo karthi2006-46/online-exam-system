@@ -2,58 +2,378 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Courses</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
+    <title>My Courses | LearnHub LMS</title>
+
+    <!-- Inter font (falls back to Segoe UI / system fonts if offline) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- 1. Shared theme  2. Sidebar  3. Page styles -->
+    <link rel="stylesheet" href="../css/student/student-theme.css">
+    <link rel="stylesheet" href="../css/student/student-sidebar.css">
     <link rel="stylesheet" href="../css/student/my-courses.css">
 </head>
+
 <body>
 
 <div class="container">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
+    <!-- Shared Student Sidebar -->
+    <div id="studentSidebar"></div>
 
-        <h2>LMS</h2>
-
-        <ul>
-            <li><a href="studentdashboard.html">Dashboard</a></li>
-            <li><a href="my-courses.html" class="active">My Courses</a></li>
-            <li><a href="study-material.html">Study Materials</a></li>
-            <li><a href="profile.html">Profile</a></li>
-            <li><a href="../login.html">Logout</a></li>
-        </ul>
-
-    </aside>
-
-    <!-- Main Content -->
-
+    <!-- =========================================
+         MAIN CONTENT
+    ========================================== -->
     <main class="main-content">
 
-        <h1>My Courses</h1>
+        <!-- Page Header -->
+        <header class="page-header">
 
-        <div id="coursesContainer" class="courses-grid">
+            <div class="page-header-content">
+                <span class="page-label">Learning center</span>
 
-        </div>
-        <div class="progress-section">
-    <div class="progress-bar">
-        <div id="progressFill"></div>
-    </div>
+                <h1>My Courses</h1>
 
-    <span id="progressText">0%</span>
-</div>
+                <p>
+                    Manage your enrolled courses, track your progress,
+                    and continue your learning journey.
+                </p>
+            </div>
 
-<button
-    id="examBtn"
-    disabled>
-    Take Exam
-</button>
+            <div class="page-header-badge">
+                <span class="header-badge-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg>
+                </span>
+                <div>
+                    <strong>My Learning</strong>
+                    <small>Course overview</small>
+                </div>
+            </div>
+
+        </header>
+
+        <!-- Page Status Message -->
+        <div id="pageMessage" role="status" aria-live="polite"></div>
+
+        <!-- =========================================
+             ENROLLED COURSE CARDS (rendered by my-courses.js)
+        ========================================== -->
+        <section class="courses-section" aria-label="My enrolled courses">
+
+            <div class="section-heading">
+                <div>
+                    <h2>Your Enrolled Courses</h2>
+                    <p>
+                        Access your learning materials, coding challenges,
+                        examinations, and course extensions.
+                    </p>
+                </div>
+            </div>
+
+            <div id="coursesContainer" class="courses-grid">
+
+                <!-- Loading state -->
+                <div class="courses-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading your courses...</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- =========================================
+             COURSE EXTENSION HISTORY
+        ========================================== -->
+        <section class="extension-history">
+
+            <div class="extension-history-header">
+
+                <div class="extension-history-title">
+                    <span class="section-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    </span>
+
+                    <div>
+                        <h2>Course Extension History</h2>
+                        <p>Track your extension requests and faculty decisions.</p>
+                    </div>
+                </div>
+
+                <span class="history-label">Request history</span>
+
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Course</th>
+                            <th scope="col">Days Requested</th>
+                            <th scope="col">Reason</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Rejection Reason</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="extensionHistoryBody">
+                        <tr>
+                            <td colspan="5" class="table-loading">
+                                Loading extension history...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p id="extensionHistoryMessage"
+               class="extension-message"
+               role="status"
+               aria-live="polite"></p>
+
+            <div class="extension-history-note">
+                <span class="note-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                </span>
+
+                <p>
+                    Extension requests are subject to faculty approval.
+                    Check the status column to view the latest decision.
+                </p>
+            </div>
+
+        </section>
+
+        <!-- Page Footer -->
+        <footer class="page-footer">
+            <p>Keep learning, keep growing.</p>
+            <span>LearnHub LMS</span>
+        </footer>
 
     </main>
 
 </div>
 
+
+<!-- =========================================
+     COURSE EXTENSION REQUEST MODAL
+========================================== -->
+<div id="extensionModal"
+     class="extension-modal"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="extensionModalTitle"
+     aria-hidden="true">
+
+    <div class="extension-modal-content">
+
+        <div class="extension-modal-header">
+
+            <div>
+                <span class="modal-label">Course management</span>
+
+                <h2 id="extensionModalTitle">Request Course Extension</h2>
+
+                <p>Submit a request for additional time to complete your course.</p>
+            </div>
+
+            <button type="button"
+                    id="closeExtensionModalBtn"
+                    class="modal-close-btn"
+                    aria-label="Close extension request dialog">
+                &times;
+            </button>
+
+        </div>
+
+        <!-- Selected Course Details -->
+        <div class="extension-course-summary">
+
+            <div class="extension-summary-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+
+            <div class="extension-summary-details">
+                <strong id="extensionCourseName">Selected Course</strong>
+                <p id="extensionDueDate">Current due date will appear here.</p>
+            </div>
+
+        </div>
+
+        <!-- Extension Request Form -->
+        <form id="extensionForm">
+
+            <input type="hidden" id="extensionEnrollmentId">
+
+            <div class="form-group">
+                <label for="daysRequested">
+                    Additional Days
+                    <span class="required-mark">*</span>
+                </label>
+
+                <input
+                    type="number"
+                    id="daysRequested"
+                    name="daysRequested"
+                    min="1"
+                    max="90"
+                    required
+                    placeholder="Enter additional days">
+
+                <small class="form-hint">
+                    Enter the number of additional days you need.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="extensionReason">
+                    Reason for Extension
+                    <span class="required-mark">*</span>
+                </label>
+
+                <textarea
+                    id="extensionReason"
+                    name="extensionReason"
+                    rows="4"
+                    maxlength="500"
+                    required
+                    placeholder="Explain why you need additional time..."></textarea>
+
+                <small class="form-hint">
+                    Provide a clear explanation to help faculty review your request.
+                </small>
+            </div>
+
+            <p id="extensionFormMessage"
+               class="extension-message"
+               role="status"
+               aria-live="polite"></p>
+
+            <div class="extension-modal-actions">
+
+                <button
+                    type="button"
+                    id="cancelExtensionBtn"
+                    class="modal-btn modal-btn-secondary">
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    id="submitExtensionBtn"
+                    class="modal-btn modal-btn-primary">
+
+                    <span>Submit Request</span>
+
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================
+     JAVASCRIPT
+========================================== -->
+<script src="/js/api-config.js"></script>
 <script src="../js/student/my-courses.js"></script>
+
+<script>
+    /*
+     * Modal close controls.
+     * Existing course request logic remains in my-courses.js.
+     */
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const modal = document.getElementById("extensionModal");
+        const cancelButton = document.getElementById("cancelExtensionBtn");
+        const closeButton = document.getElementById("closeExtensionModalBtn");
+
+        function closeExtensionModal() {
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.remove("show");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-open");
+        }
+
+        if (cancelButton) {
+            cancelButton.addEventListener("click", closeExtensionModal);
+        }
+
+        if (closeButton) {
+            closeButton.addEventListener("click", closeExtensionModal);
+        }
+
+        if (modal) {
+            modal.addEventListener("click", function (event) {
+                if (event.target === modal) {
+                    closeExtensionModal();
+                }
+            });
+        }
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && modal && modal.classList.contains("show")) {
+                closeExtensionModal();
+            }
+        });
+
+    });
+</script>
+
+<!-- Load shared sidebar -->
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+    const sidebarContainer = document.getElementById("studentSidebar");
+
+    if (!sidebarContainer) {
+        console.error("Sidebar container not found.");
+        return;
+    }
+
+    try {
+        const response = await fetch("student-sidebar.html");
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        sidebarContainer.innerHTML = await response.text();
+
+        const script = document.createElement("script");
+        script.src = "../js/student/student-sidebar.js";
+
+        script.onload = function () {
+            if (typeof window.initializeStudentSidebar === "function") {
+                window.initializeStudentSidebar();
+            }
+        };
+
+        script.onerror = function () {
+            console.error("Unable to load student-sidebar.js");
+        };
+
+        document.body.appendChild(script);
+
+    } catch (error) {
+        console.error("Sidebar loading failed:", error);
+        sidebarContainer.innerHTML =
+            "<p>Unable to load navigation. Please refresh the page.</p>";
+    }
+});
+</script>
 
 </body>
 </html>

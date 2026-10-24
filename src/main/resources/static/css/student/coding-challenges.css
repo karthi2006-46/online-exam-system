@@ -1,0 +1,962 @@
+/* =====================================================
+   CODING CHALLENGES - PAGE STYLES (PREMIUM)
+   Load order: student-theme.css -> student-sidebar.css -> coding-challenges.css
+   Uses design tokens from student-theme.css. Layout, reset, sidebar
+   and base typography are NOT redefined here.
+   ===================================================== */
+
+/* Page-only tokens (everything else comes from the theme) */
+:root {
+    --code-bg: #0b1220;
+    --code-border: #26344c;
+    --code-text: #e2e8f0;
+}
+
+
+/* =====================================================
+   1. PAGE HEADER
+   ===================================================== */
+
+.main-content .header {
+    position: relative;
+
+    margin-bottom: 26px;
+    padding: 30px 36px;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+    border-radius: 22px;
+
+    background:
+        radial-gradient(520px 220px at 100% 0%, rgba(61, 123, 255, 0.15), transparent 70%),
+        radial-gradient(340px 200px at 0% 130%, rgba(18, 161, 90, 0.07), transparent 70%),
+        var(--surface);
+    box-shadow: var(--shadow-sm);
+
+    animation: riseIn 0.6s var(--ease) both;
+}
+
+.main-content .header::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 4px;
+
+    background: linear-gradient(90deg, #2f62e6, #6ea2ff, #12a15a, #2f62e6);
+    background-size: 220% 100%;
+
+    animation: flowBar 7s linear infinite;
+    content: "";
+}
+
+.eyebrow {
+    display: inline-block;
+
+    margin-bottom: 10px;
+    padding: 5px 12px;
+
+    border-radius: 999px;
+
+    background: var(--primary-light);
+    color: var(--primary);
+
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.section-label {
+    display: block;
+
+    color: var(--text-muted);
+
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+.main-content .page-heading h1 {
+    margin-bottom: 8px;
+}
+
+.main-content .page-heading > p {
+    color: var(--text-secondary);
+    font-size: 15px;
+}
+
+
+/* =====================================================
+   2. BUTTONS (shared by static and JS-rendered buttons)
+   ===================================================== */
+
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.refresh-button {
+    position: relative;
+
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+
+    min-height: 44px;
+    padding: 10px 20px;
+
+    overflow: hidden;
+
+    border: 1px solid transparent;
+    border-radius: 11px;
+
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.4;
+    text-align: center;
+
+    transition: var(--transition);
+}
+
+/* Primary + success: theme blue gradient */
+.btn-primary,
+.btn-success {
+    background: linear-gradient(135deg, #3d7bff, #2f62e6);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(47, 98, 230, 0.28);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-success:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(47, 98, 230, 0.38);
+}
+
+/* Light sweep on hover */
+.btn-primary::after,
+.btn-success::after {
+    position: absolute;
+    top: 0;
+    left: -80%;
+
+    width: 50%;
+    height: 100%;
+
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+
+    transform: skewX(-20deg);
+    transition: left 0.7s var(--ease);
+    content: "";
+}
+
+.btn-primary:hover:not(:disabled)::after,
+.btn-success:hover:not(:disabled)::after {
+    left: 130%;
+}
+
+/* Secondary: outline */
+.btn-secondary,
+.refresh-button {
+    border-color: var(--border-strong);
+    background: var(--surface);
+    color: var(--primary-hover);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    transform: translateY(-2px);
+
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:active:not(:disabled),
+.btn-success:active:not(:disabled),
+.btn-secondary:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.btn-primary:disabled,
+.btn-success:disabled,
+.btn-secondary:disabled {
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-success:focus-visible {
+    outline: 3px solid rgba(47, 98, 230, 0.3);
+    outline-offset: 3px;
+}
+
+
+/* =====================================================
+   3. COURSE SUMMARY
+   ===================================================== */
+
+.summary {
+    position: relative;
+
+    margin-bottom: 38px;
+    padding: 28px 30px;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+
+    animation: riseIn 0.6s var(--ease) 0.08s both;
+    transition: var(--transition);
+}
+
+.summary::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 4px;
+    height: 100%;
+
+    background: linear-gradient(180deg, #2f62e6, #6ea2ff);
+    content: "";
+}
+
+.summary:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.summary-top {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.course-icon {
+    display: grid;
+    place-items: center;
+
+    width: 60px;
+    height: 60px;
+    flex: 0 0 60px;
+
+    border-radius: 17px;
+
+    background: linear-gradient(135deg, #3d7bff, #2f62e6);
+    color: #ffffff;
+
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 17px;
+    font-weight: 800;
+
+    box-shadow: 0 10px 22px rgba(47, 98, 230, 0.32);
+    transition: transform 0.45s var(--ease);
+}
+
+.summary:hover .course-icon {
+    transform: scale(1.06) rotate(-4deg);
+}
+
+/* Theme defines .course-info as a flex row; here it is a text block */
+.summary .course-info {
+    display: block;
+
+    min-width: 0;
+    margin: 0;
+}
+
+.main-content .summary .course-info h2 {
+    margin: 5px 0 4px;
+
+    font-size: 22px;
+    font-weight: 750;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.summary .course-info p {
+    color: var(--text-secondary);
+    font-size: 13.5px;
+}
+
+.summary-divider {
+    height: 1px;
+    margin: 24px 0;
+
+    background: linear-gradient(90deg, var(--border), transparent);
+}
+
+.progress-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.progress-number {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-top: 6px;
+}
+
+.progress-number strong {
+    color: var(--ink);
+
+    font-size: 26px;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+}
+
+.progress-number span {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.progress-percent {
+    padding: 6px 14px;
+
+    border-radius: 999px;
+
+    background: var(--primary-light);
+    color: var(--primary);
+
+    font-size: 13px;
+    font-weight: 750;
+}
+
+/* Progress bar with shimmer (base comes from theme) */
+.summary .progress-track {
+    height: 10px;
+    margin-top: 16px;
+}
+
+.summary .progress-fill {
+    position: relative;
+    overflow: hidden;
+
+    transition: width 0.9s var(--ease);
+}
+
+.summary .progress-fill::after {
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+
+    transform: translateX(-100%);
+    animation: shimmer 2.6s ease-in-out infinite;
+    content: "";
+}
+
+.eligibility-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    margin-top: 22px;
+    padding: 14px 16px;
+
+    border: 1px solid #d6e2ff;
+    border-radius: 12px;
+
+    background: linear-gradient(90deg, var(--primary-light), #f8faff);
+}
+
+.eligibility-icon {
+    display: grid;
+    place-items: center;
+
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+
+    border-radius: 50%;
+
+    background: var(--primary);
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
+#eligibilityText {
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+
+/* =====================================================
+   4. SECTION HEADING
+   ===================================================== */
+
+.challenge-list-section {
+    min-width: 0;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+
+    margin-bottom: 22px;
+}
+
+.main-content .section-heading h2 {
+    margin: 6px 0 4px;
+}
+
+.section-heading p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+
+/* =====================================================
+   5. CHALLENGE CARDS (rendered by JS)
+   ===================================================== */
+
+.challenge-card {
+    position: relative;
+
+    margin-bottom: 24px;
+    padding: 30px 30px 28px;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+
+    animation: riseIn 0.6s var(--ease) both;
+    transition: var(--transition);
+}
+
+#challengesContainer > .challenge-card:nth-child(1) { animation-delay: 0.05s; }
+#challengesContainer > .challenge-card:nth-child(2) { animation-delay: 0.12s; }
+#challengesContainer > .challenge-card:nth-child(3) { animation-delay: 0.19s; }
+#challengesContainer > .challenge-card:nth-child(4) { animation-delay: 0.26s; }
+#challengesContainer > .challenge-card:nth-child(5) { animation-delay: 0.33s; }
+
+/* Accent bar grows on hover */
+.challenge-card::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 4px;
+
+    background: linear-gradient(90deg, #2f62e6, #6ea2ff);
+
+    transform: scaleX(0.3);
+    transform-origin: left;
+    transition: transform 0.6s var(--ease);
+    content: "";
+}
+
+.challenge-card:hover {
+    transform: translateY(-3px);
+
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.challenge-card:hover::before,
+.challenge-card:focus-within::before {
+    transform: scaleX(1);
+}
+
+.challenge-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+
+    margin-bottom: 10px;
+}
+
+.challenge-kicker {
+    margin-bottom: 6px;
+
+    color: var(--text-muted);
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.main-content .challenge-card h2 {
+    font-size: 21px;
+    font-weight: 750;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.challenge-badges {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.difficulty-badge,
+.marks-badge {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+
+    min-height: 28px;
+    padding: 5px 12px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.difficulty-badge::before {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+    background: currentColor;
+
+    content: "";
+}
+
+.difficulty-easy   { background: var(--success-light); color: #0d7a43; }
+.difficulty-medium { background: var(--warning-light); color: #9a5b00; }
+.difficulty-hard   { background: var(--danger-light);  color: #b3202f; }
+
+.marks-badge {
+    background: var(--primary-light);
+    color: var(--primary-hover);
+}
+
+.challenge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    margin: 4px 0 14px;
+    padding: 6px 12px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.challenge-status::before {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+    background: currentColor;
+
+    content: "";
+}
+
+.status-completed { background: var(--success-light); color: #0d7a43; }
+.status-pending   { background: #eef2f9; color: var(--text-secondary); }
+
+.challenge-section {
+    margin: 20px 0;
+}
+
+.main-content .challenge-section h3 {
+    margin-bottom: 8px;
+
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 750;
+    letter-spacing: 0.2px;
+}
+
+.challenge-description {
+    color: var(--text-secondary);
+
+    font-size: 14px;
+    line-height: 1.85;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+
+/* =====================================================
+   6. CODE BLOCKS AND EDITOR
+   ===================================================== */
+
+.sample-code {
+    margin: 0;
+    padding: 16px 18px;
+
+    overflow-x: auto;
+
+    border: 1px solid var(--code-border);
+    border-radius: 12px;
+
+    background: var(--code-bg);
+    color: var(--code-text);
+
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.editor-label {
+    display: block;
+
+    margin: 24px 0 10px;
+
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.code-editor {
+    display: block;
+
+    width: 100%;
+    min-height: 270px;
+    padding: 18px 20px;
+
+    overflow: auto;
+    resize: vertical;
+
+    border: 1px solid var(--code-border);
+    border-radius: 13px;
+    outline: none;
+
+    background: var(--code-bg);
+    color: var(--code-text);
+
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13.5px;
+    line-height: 1.8;
+    tab-size: 4;
+    white-space: pre;
+
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.code-editor::placeholder {
+    color: #64748b;
+}
+
+.code-editor:focus {
+    border-color: #4f8bff;
+    box-shadow:
+        0 0 0 4px rgba(79, 139, 255, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.code-editor:disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    margin-top: 16px;
+}
+
+.actions button {
+    min-width: 150px;
+}
+
+.message {
+    margin: 12px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    animation: slideDown 0.4s var(--ease) both;
+}
+
+.message:empty {
+    display: none;
+}
+
+.message-error {
+    color: #b3202f;
+}
+
+.message-success {
+    color: #0d7a43;
+}
+
+.completion-note {
+    margin-top: 14px;
+
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    line-height: 1.65;
+}
+
+
+/* =====================================================
+   7. EMPTY / LOADING / ERROR STATE
+   ===================================================== */
+
+.empty {
+    padding: 52px 24px;
+
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--border-radius);
+
+    background: var(--surface);
+    color: var(--text-secondary);
+
+    text-align: center;
+
+    animation: riseIn 0.6s var(--ease) both;
+}
+
+.empty-icon {
+    display: grid;
+    place-items: center;
+
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 16px;
+
+    border: 1px solid #d6e2ff;
+    border-radius: 20px;
+
+    background: linear-gradient(135deg, #f3f7ff, var(--primary-light));
+    color: var(--primary);
+
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 17px;
+    font-weight: 800;
+
+    animation: floaty 4s ease-in-out infinite;
+}
+
+.main-content .empty h3 {
+    margin-bottom: 8px;
+    font-size: 19px;
+}
+
+.empty p {
+    max-width: 440px;
+    margin: 6px auto;
+
+    font-size: 14px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+}
+
+
+/* =====================================================
+   8. FOOTER
+   ===================================================== */
+
+.page-footer {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 15px;
+
+    margin-top: 36px;
+    padding: 20px 0 0;
+
+    border-top: 1px solid var(--border);
+
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.page-footer span:first-child {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   9. ANIMATIONS
+   ===================================================== */
+
+@keyframes riseIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes flowBar {
+    from { background-position: 0% 0; }
+    to   { background-position: 220% 0; }
+}
+
+@keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    60%, 100% { transform: translateX(100%); }
+}
+
+@keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-7px); }
+}
+
+
+/* =====================================================
+   10. RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 900px) {
+
+    .main-content .header {
+        padding: 26px 24px;
+    }
+
+    .challenge-card {
+        padding: 24px 22px;
+    }
+}
+
+@media (max-width: 760px) {
+
+    .main-content .header {
+        align-items: flex-start;
+
+        margin-bottom: 20px;
+        padding: 24px 20px;
+        border-radius: 18px;
+    }
+
+    .refresh-button {
+        width: 100%;
+    }
+
+    .summary {
+        margin-bottom: 28px;
+        padding: 24px 20px;
+    }
+
+    .challenge-card {
+        padding: 22px 18px;
+    }
+
+    .challenge-card-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .challenge-badges {
+        justify-content: flex-start;
+    }
+
+    .code-editor {
+        min-height: 230px;
+        padding: 15px;
+        font-size: 12.5px;
+    }
+
+    .actions {
+        align-items: stretch;
+    }
+
+    .actions button {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+
+    .summary {
+        padding: 20px 16px;
+    }
+
+    .summary-top {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .course-icon {
+        width: 48px;
+        height: 48px;
+        flex-basis: 48px;
+        border-radius: 13px;
+        font-size: 14px;
+    }
+
+    .main-content .summary .course-info h2 {
+        font-size: 19px;
+    }
+
+    .progress-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .challenge-card {
+        padding: 18px 14px;
+    }
+
+    .main-content .challenge-card h2 {
+        font-size: 18px;
+    }
+
+    .page-footer {
+        flex-direction: column;
+    }
+}
+
+
+/* =====================================================
+   11. REDUCED MOTION
+   ===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .main-content .header::before,
+    .summary .progress-fill::after,
+    .empty-icon {
+        animation: none;
+    }
+
+    .main-content .header,
+    .summary,
+    .challenge-card,
+    .empty,
+    .message {
+        animation: none;
+    }
+}

@@ -65,4 +65,21 @@ public class ExamAttemptController {
         ExamAttemptDTO attemptDTO = examAttemptService.autoSubmitExam(attemptId);
         return ApiResponseUtil.success("Exam auto-submitted successfully", attemptDTO);
     }
+@GetMapping("/student/{studentId}/exam/{examId}")
+@PreAuthorize("hasRole('STUDENT')")
+public ResponseEntity<?> getStudentExamAttempt(
+        @PathVariable Long studentId,
+        @PathVariable Long examId) {
+
+    var attempt = examAttemptService
+            .getStudentExamAttempt(examId, studentId);
+
+    java.util.Map<String, Object> response =
+            new java.util.HashMap<>();
+
+    response.put("success", true);
+    response.put("data", attempt.orElse(null));
+
+    return ResponseEntity.ok(response);
+}
 }

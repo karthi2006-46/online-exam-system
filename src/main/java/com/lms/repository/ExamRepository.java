@@ -7,8 +7,10 @@ import java.util.List;
 
 @Repository
 public interface ExamRepository extends JpaRepository<Exam, Long> {
+    long countByCourse_IdAndActiveTrueAndPublishedTrue(Long courseId);
     List<Exam> findByCourse_Id(Long courseId);
     List<Exam> findByActiveTrue();
     List<Exam> findByPublishedTrue();
     List<Exam> findByCourse_IdAndPublishedTrue(Long courseId);
+    long countByCourse_Faculty_IdAndActiveTrue(Long facultyId);
 }

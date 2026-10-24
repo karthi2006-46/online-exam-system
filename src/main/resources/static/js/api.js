@@ -1,109 +1,206 @@
-// API Configuration
-const API_BASE_URL = 'http://localhost:8080/api';
+// ==========================================
+// LMS API CONFIGURATION
+// Works on localhost and mobile devices
+// ==========================================
+
+const API_BASE_URL = "/api";
 
 class APIClient {
+
     constructor() {
-        this.token = localStorage.getItem('token');
+        this.refreshToken();
     }
 
-    async request(endpoint, method = 'GET', data = null) {
+    // Always read the latest token from localStorage
+    refreshToken() {
+        this.token = localStorage.getItem("token");
+    }
+
+    async request(endpoint, method = "GET", data = null) {
+
+        this.refreshToken();
+
         const url = `${API_BASE_URL}${endpoint}`;
+
         const headers = {
-            'Content-Type': 'application/json',
+            "Accept": "application/json"
         };
 
+        if (data !== null) {
+            headers["Content-Type"] = "application/json";
+        }
+
         if (this.token) {
-            headers['Authorization'] = `Bearer ${this.token}`;
+            headers["Authorization"] = `Bearer ${this.token}`;
         }
 
         const options = {
             method,
-            headers,
+            headers
         };
 
-        if (data) {
+        if (data !== null) {
             options.body = JSON.stringify(data);
         }
 
+        console.log("API Request:", method, url);
+        console.log("Token available:", Boolean(this.token));
+
         try {
+
             const response = await fetch(url, options);
-            const result = await response.json();
+
+            const contentType =
+                response.headers.get("content-type") || "";
+
+            let result;
+
+            if (contentType.includes("application/json")) {
+                result = await response.json();
+            } else {
+                result = await response.text();
+            }
+
+            console.log("API Response:", response.status, result);
+
+            if (!response.ok) {
+                throw new Error(
+                    `API request failed (${response.status}): ` +
+                    (typeof result === "string"
+                        ? result
+                        : JSON.stringify(result))
+                );
+            }
+
             return result;
+
         } catch (error) {
-            console.error('API Error:', error);
+
+            console.error("API Error:", url, error);
+
             throw error;
         }
     }
 
-    // Auth endpoints
+    // ==========================================
+    // AUTHENTICATION
+    // ==========================================
+
     async login(email, password) {
-        return this.request('/auth/login', 'POST', { email, password });
+
+        const result = await this.request(
+            "/auth/login",
+            "POST",
+            { email, password }
+        );
+
+        // Adapt these property names to your actual AuthResponse.
+        const token =
+            result?.token ??
+            result?.accessToken ??
+            result?.data?.token ??
+            result?.data?.accessToken;
+
+        if (token) {
+            localStorage.setItem("token", token);
+            this.refreshToken();
+        }
+
+        return result;
     }
 
     async signup(userData) {
-        return this.request('/auth/signup', 'POST', userData);
+        return this.request("/auth/signup", "POST", userData);
     }
 
     async getUserProfile(userId) {
-        return this.request(`/auth/profile/${userId}`, 'GET');
+        return this.request(`/auth/profile/${userId}`);
     }
 
-    // Courses endpoints
+    // ==========================================
+    // COURSES
+    // ==========================================
+
     async getCourses() {
-        return this.request('/courses/active', 'GET');
+        return this.request("/courses/active");
     }
 
     async getCourseById(courseId) {
-        return this.request(`/courses/${courseId}`, 'GET');
+        return this.request(`/courses/${courseId}`);
     }
 
     async createCourse(courseData) {
-        return this.request('/courses', 'POST', courseData);
+        return this.request("/courses", "POST", courseData);
     }
 
-    // Enrollments endpoints
+    // ==========================================
+    // ENROLLMENTS
+    // ==========================================
+
     async getStudentEnrollments(studentId) {
-        return this.request(`/enrollments/student/${studentId}`, 'GET');
+        return this.request(`/enrollments/student/${studentId}`);
     }
 
     async enrollStudent(enrollData) {
-        return this.request('/enrollments', 'POST', enrollData);
+        return this.request("/enrollments", "POST", enrollData);
     }
 
-    // Exams endpoints
+    // ==========================================
+    // EXAMS
+    // ==========================================
+
     async getPublishedExams(courseId) {
-        return this.request(`/exams/course/${courseId}/published`, 'GET');
+        return this.request(`/exams/course/${courseId}/published`);
     }
 
     async getExamById(examId) {
-        return this.request(`/exams/${examId}`, 'GET');
+        return this.request(`/exams/${examId}`);
     }
 
-    // Questions endpoints
+    // ==========================================
+    // QUESTIONS
+    // ==========================================
+
     async getExamQuestions(examId) {
-        return this.request(`/questions/exam/${examId}`, 'GET');
+        return this.request(`/questions/exam/${examId}`);
     }
 
-    // Exam Attempts endpoints
+    // ==========================================
+    // EXAM ATTEMPTS
+    // ==========================================
+
     async startExam(examId, studentId) {
-        return this.request(`/exam-attempts/start?examId=${examId}&studentId=${studentId}`, 'POST');
+        return this.request(
+            `/exam-attempts/start?examId=${examId}&studentId=${studentId}`,
+            "POST"
+        );
     }
 
     async saveAnswers(attemptId, answers) {
-        return this.request(`/exam-attempts/${attemptId}/save-answers`, 'PUT', answers);
+        return this.request(
+            `/exam-attempts/${attemptId}/save-answers`,
+            "PUT",
+            answers
+        );
     }
 
     async submitExam(attemptId) {
-        return this.request(`/exam-attempts/${attemptId}/submit`, 'PUT');
+        return this.request(
+            `/exam-attempts/${attemptId}/submit`,
+            "PUT"
+        );
     }
 
-    // Results endpoints
+    // ==========================================
+    // RESULTS
+    // ==========================================
+
     async getStudentResults(studentId) {
-        return this.request(`/results/student/${studentId}`, 'GET');
+        return this.request(`/results/student/${studentId}`);
     }
 
     async getResultByAttempt(attemptId) {
-        return this.request(`/results/attempt/${attemptId}`, 'GET');
+        return this.request(`/results/attempt/${attemptId}`);
     }
 }
 

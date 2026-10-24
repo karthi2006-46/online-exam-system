@@ -1,0 +1,408 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Manage Exams | LearnHub LMS</title>
+
+    <link rel="stylesheet" href="/css/faculty/faculty.css">
+
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 { margin-bottom: 6px; }
+
+        .muted { color: #62708f; }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .toolbar input,
+        .toolbar select {
+            max-width: 300px;
+        }
+
+        .primary-button,
+        .secondary-button,
+        .danger-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 10px;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        .primary-button {
+            background: #2f62e6;
+            color: white;
+        }
+
+        .secondary-button {
+            background: #edf3ff;
+            color: #2f62e6;
+        }
+
+        .danger-button {
+            background: #fdecee;
+            color: #b3202f;
+        }
+
+        .primary-button:hover { background: #2551c4; }
+
+        .exam-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .exam-card {
+            padding: 24px;
+            background: white;
+            border: 1px solid #e3e9f4;
+            border-radius: 18px;
+            box-shadow: 0 4px 14px rgba(15, 27, 61, .05);
+        }
+
+        .exam-card h2 {
+            margin: 14px 0 8px;
+            font-size: 19px;
+            overflow-wrap: anywhere;
+        }
+
+        .exam-description {
+            min-height: 44px;
+            color: #62708f;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            padding: 5px 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .published {
+            background: #e8f8ef;
+            color: #0d7a43;
+        }
+
+        .draft {
+            background: #fff5e0;
+            color: #9a5b00;
+        }
+
+        .exam-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 20px;
+            padding: 16px 0;
+            border-top: 1px solid #e3e9f4;
+            border-bottom: 1px solid #e3e9f4;
+        }
+
+        .exam-stats small {
+            display: block;
+            margin-bottom: 4px;
+            color: #62708f;
+        }
+
+        .exam-stats strong { font-size: 15px; }
+
+        .exam-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        .exam-actions button {
+            flex: 1 1 100px;
+            font-size: 12px;
+        }
+
+        .state-message {
+            margin-bottom: 20px;
+            padding: 24px;
+            border: 1px solid #e3e9f4;
+            border-radius: 14px;
+            background: white;
+            color: #62708f;
+            text-align: center;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 27, 61, .55);
+            overflow-y: auto;
+        }
+
+        .modal.open { display: flex; }
+
+        .modal-content {
+            width: 100%;
+            max-width: 650px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px;
+            border-radius: 20px;
+            background: white;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .close-button {
+            border: 0;
+            background: transparent;
+            color: #62708f;
+            font-size: 26px;
+            cursor: pointer;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .form-error {
+            color: #b3202f;
+            margin-bottom: 14px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: auto; }
+            .toolbar input, .toolbar select { max-width: none; }
+            .modal-content { padding: 20px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">L</div>
+            <div>
+                <h2>LearnHub</h2>
+                <p>Faculty Portal</p>
+            </div>
+        </div>
+
+        <nav class="navigation">
+            <a href="/faculty/facultydashboard.html" class="nav-link">
+                <span>▦</span> Dashboard
+            </a>
+
+            <a href="/faculty/extension-requests.html" class="nav-link">
+                <span>◷</span> Extension Requests
+            </a>
+
+            <a href="/faculty/exam-approval-requests.html" class="nav-link">
+                <span>✓</span> Exam Approvals
+            </a>
+
+            <a href="/faculty/manage-courses.html" class="nav-link">
+                <span>▤</span> Manage Courses
+            </a>
+
+            <a href="/faculty/manage-exams.html" class="nav-link active">
+                <span>▣</span> Manage Exams
+            </a>
+
+            <a href="/faculty/manage-materials.html" class="nav-link">
+                <span>▧</span> Study Materials
+            </a>
+
+            <a href="/faculty/student-results.html" class="nav-link">
+                <span>▥</span> Student Results
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="profile-mini">
+                <div class="avatar" id="avatar">F</div>
+                <div>
+                    <strong id="facultyName">Faculty</strong>
+                    <small>Faculty Account</small>
+                </div>
+            </div>
+
+            <button class="logout-button" onclick="logout()">
+                ↪ Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="page-header">
+            <div>
+                <p class="muted">Workspace / Exams</p>
+                <h1>Manage Exams</h1>
+                <p class="muted">Create, publish, and manage course examinations.</p>
+            </div>
+
+            <button class="primary-button" id="openCreateModal">
+                + Create Exam
+            </button>
+        </header>
+
+        <section class="toolbar">
+            <input
+                type="search"
+                id="examSearch"
+                placeholder="Search exams..."
+                aria-label="Search exams"
+            >
+
+            <select id="courseFilter" aria-label="Filter by course">
+                <option value="">All assigned courses</option>
+            </select>
+
+            <select id="statusFilter" aria-label="Filter by status">
+                <option value="">All statuses</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+            </select>
+        </section>
+
+        <div id="examMessage" class="state-message" role="status">
+            Loading exams...
+        </div>
+
+        <section id="examGrid" class="exam-grid"></section>
+
+        <footer class="footer">
+            <span>© <span id="year"></span> LearnHub LMS</span>
+            <span>Faculty Workspace</span>
+        </footer>
+    </main>
+</div>
+
+<div class="modal" id="examModal" role="dialog"
+     aria-modal="true" aria-labelledby="modalTitle">
+
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h2 id="modalTitle">Create Exam</h2>
+                <p class="muted">Enter the examination details.</p>
+            </div>
+
+            <button class="close-button" id="closeCreateModal"
+                    type="button" aria-label="Close">&times;</button>
+        </div>
+
+        <form id="examForm">
+            <div id="formError" class="form-error" role="alert"></div>
+
+            <div class="form-grid">
+
+                <div class="form-group full-width">
+                    <label for="courseId">Course *</label>
+                    <select id="courseId" required>
+                        <option value="">Select a course</option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="title">Exam Title *</label>
+                    <input id="title" maxlength="200"
+                           placeholder="e.g. Java Fundamentals Assessment"
+                           required>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="description">Description</label>
+                    <textarea id="description"
+                              placeholder="Enter exam instructions or description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="totalQuestions">Total Questions *</label>
+                    <input type="number" id="totalQuestions"
+                           min="1" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="durationMinutes">Duration (minutes) *</label>
+                    <input type="number" id="durationMinutes"
+                           min="1" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="totalMarks">Total Marks *</label>
+                    <input type="number" id="totalMarks"
+                           min="1" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="passingMarks">Passing Marks *</label>
+                    <input type="number" id="passingMarks"
+                           min="0" step="1" required>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="secondary-button"
+                        id="cancelCreate">Cancel</button>
+
+                <button type="submit" class="primary-button"
+                        id="saveExamButton">Create Exam</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/js/faculity/manage-exams.js"></script>
+</body>
+</html>
+

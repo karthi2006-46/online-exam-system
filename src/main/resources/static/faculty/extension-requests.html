@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Requests | Faculty Portal</title>
+    <link rel="stylesheet" href="/css/faculty/faculty.css">
+    <link rel="stylesheet" href="/css/faculty/extension-requests.css">
+    <link rel="stylesheet" href="../css/student/student-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">L</div>
+            <div>
+                <h2>LearnHub</h2>
+                <p>Faculty Portal</p>
+            </div>
+        </div>
+
+        <nav class="navigation">
+            <a href="/faculty/facultydashboard.html" class="nav-link">
+                <span>▦</span> Dashboard
+            </a>
+
+            <a href="/faculty/extension-requests.html"
+               class="nav-link active">
+                <span>◷</span> Extension Requests
+            </a>
+
+            <a href="/faculty/manage-courses.html" class="nav-link">
+                <span>▤</span> Manage Courses
+            </a>
+
+            <a href="/faculty/manage-exams.html" class="nav-link">
+                <span>▣</span> Manage Exams
+            </a>
+
+            <a href="/faculty/manage-materials.html" class="nav-link">
+                <span>▧</span> Study Materials
+            </a>
+
+            <a href="/faculty/student-results.html" class="nav-link">
+                <span>▥</span> Student Results
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="profile-mini">
+                <div class="avatar">F</div>
+                <div>
+                    <strong>Faculty</strong>
+                    <small>Faculty Account</small>
+                </div>
+            </div>
+
+            <button class="logout-button" onclick="logout()">
+                ↪ Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <p class="breadcrumb">Workspace / Extension Requests</p>
+                <h1>Course Extension Requests</h1>
+                <p class="subtitle">
+                    Review student requests and decide whether to extend course deadlines.
+                </p>
+            </div>
+
+            <button class="button button-primary" id="refreshButton">
+                ↻ Refresh
+            </button>
+        </header>
+
+        <section class="request-summary">
+            <article class="summary-card">
+                <span>Pending Requests</span>
+                <strong id="pendingTotal">0</strong>
+            </article>
+
+            <article class="summary-card">
+                <span>Approved Requests</span>
+                <strong id="approvedTotal">—</strong>
+            </article>
+
+            <article class="summary-card">
+                <span>Rejected Requests</span>
+                <strong id="rejectedTotal">—</strong>
+            </article>
+        </section>
+
+        <section class="panel requests-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Pending Requests</h2>
+                    <p>Requests awaiting faculty action.</p>
+                </div>
+
+                <span class="live-indicator">
+                    <span></span> Live API
+                </span>
+            </div>
+
+            <div id="message" class="message" hidden></div>
+
+            <div id="loading" class="loading">
+                Loading extension requests...
+            </div>
+
+            <div id="emptyState" class="empty-state" hidden>
+                <div class="empty-icon">✓</div>
+                <h3>No pending requests</h3>
+                <p>New student extension requests will appear here.</p>
+            </div>
+
+            <div class="table-wrapper" id="tableWrapper" hidden>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Enrollment</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="requestTableBody"></tbody>
+                </table>
+            </div>
+
+        </section>
+
+        <footer class="footer">
+            <span>© <span id="year"></span> LearnHub LMS</span>
+            <span>Extension Management</span>
+        </footer>
+
+    </main>
+</div>
+
+<div id="rejectModal" class="modal" hidden>
+    <div class="modal-card">
+        <button class="modal-close" id="closeModal" aria-label="Close">
+            ×
+        </button>
+
+        <h2>Reject Extension Request</h2>
+        <p>Provide a reason for rejecting this request.</p>
+
+        <label for="rejectionReason">Rejection reason</label>
+        <textarea id="rejectionReason"
+                  rows="4"
+                  maxlength="500"
+                  placeholder="Explain why the request is being rejected..."></textarea>
+
+        <div class="modal-actions">
+            <button class="button button-secondary" id="cancelReject">
+                Cancel
+            </button>
+
+            <button class="button button-danger" id="confirmReject">
+                Confirm Rejection
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/faculity/faculty-common.js"></script>
+<script src="/js/faculity/extension-requests.js"></script>
+
+</body>
+</html>

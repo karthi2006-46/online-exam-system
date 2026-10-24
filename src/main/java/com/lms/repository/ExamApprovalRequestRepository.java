@@ -9,19 +9,29 @@ import java.util.Optional;
 public interface ExamApprovalRequestRepository
         extends JpaRepository<ExamApprovalRequest, Long> {
 
-    List<ExamApprovalRequest>
-    findByStatus(ExamApprovalRequest.Status status);
+    // Existing methods
+    List<ExamApprovalRequest> findByStatus(
+            ExamApprovalRequest.Status status
+    );
 
-    Optional<ExamApprovalRequest>
-    findByStudent_IdAndCourse_IdAndStatus(
+    Optional<ExamApprovalRequest> findByStudent_IdAndCourse_IdAndStatus(
             Long studentId,
             Long courseId,
             ExamApprovalRequest.Status status
     );
 
-    Optional<ExamApprovalRequest>
-    findByStudent_IdAndCourse_Id(
+    Optional<ExamApprovalRequest> findByStudent_IdAndCourse_Id(
             Long studentId,
             Long courseId
     );
+
+    // New: pending requests for courses assigned to a faculty member
+    List<ExamApprovalRequest>
+    findByCourse_Faculty_IdAndStatus(
+            Long facultyId,
+            ExamApprovalRequest.Status status
+    );
+
+    // New: retrieve requests belonging to a particular student
+    List<ExamApprovalRequest> findByStudent_Id(Long studentId);
 }

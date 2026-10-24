@@ -2,35 +2,106 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Online Exam System - Login</title>
-    <link rel="stylesheet" href="/css/style.css">
+
+    <!-- Inter font (falls back to Segoe UI / system fonts if offline) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="/css/auth.css">
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h1>Online Exam System</h1>
-                <p>Login to your account</p>
-            </div>
-            <form id="loginForm" class="auth-form">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required>
+<main class="auth-page">
+
+    <!-- Brand panel -->
+    <aside class="auth-brand">
+        <div class="brand-logo">
+            <span class="brand-mark">L</span>
+            <span class="brand-name">
+                <strong>LMS</strong>
+                <small>Online Exam System</small>
+            </span>
+        </div>
+
+        <div class="brand-hero">
+            <h2>Learn. Practice. <span>Succeed.</span></h2>
+            <p>Everything you need for your courses, exams and coding practice, in one place.</p>
+
+            <ul class="brand-features">
+                <li>
+                    <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span>
+                    Courses and study materials
+                </li>
+                <li>
+                    <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="m9 14 2 2 4-4"/></svg></span>
+                    Online exams with a live timer
+                </li>
+                <li>
+                    <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4"/><path d="m16 8 4 4-4 4"/><path d="m13.5 6-3 12"/></svg></span>
+                    Coding challenges to practise
+                </li>
+            </ul>
+        </div>
+
+        <p class="brand-foot">Keep learning, keep growing.</p>
+    </aside>
+
+    <!-- Form panel -->
+    <section class="auth-panel">
+        <div class="auth-container">
+            <div class="auth-card">
+
+                <div class="auth-header">
+                    <span class="auth-chip">Welcome back</span>
+                    <h1>Login to your account</h1>
+                    <p>Enter your details to continue to your dashboard.</p>
                 </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+
+                <div id="authMessage" class="auth-alert" role="alert" aria-live="assertive" hidden></div>
+
+                <form id="loginForm" class="auth-form">
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <div class="field">
+                            <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>
+                            <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="field password-field">
+                            <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                            <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                            <button type="button" class="toggle-visibility" data-target="password" aria-pressed="false" aria-label="Show password">
+                                <svg class="icon-show" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg class="icon-hide" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.9 17.9A10.9 10.9 0 0 1 12 19c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.1-5.9M9.9 5.2A10 10 0 0 1 12 5c6.5 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="m2 2 20 20"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span class="btn-label">Login</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+
+                </form>
+
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="/signup.html">Sign up here</a></p>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Login</button>
-            </form>
-            <div class="auth-footer">
-                <p>Don't have an account? <a href="/signup.html">Sign up here</a></p>
+
             </div>
         </div>
-    </div>
-    <script src="/js/api.js"></script>
-    <script src="/js/auth.js"></script>
+    </section>
+
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth-ui.js"></script>
+<script src="/js/auth.js"></script>
 </body>
 </html>

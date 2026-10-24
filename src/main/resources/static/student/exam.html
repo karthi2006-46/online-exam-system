@@ -2,36 +2,237 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Exam</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Online Exam | LMS</title>
+
+    <!-- Inter font (falls back to Segoe UI / system fonts if offline) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Shared theme (tokens, font, reset) + exam styles -->
+    <link rel="stylesheet" href="../css/student/student-theme.css">
     <link rel="stylesheet" href="../css/student/exam.css">
 </head>
 <body>
 
-<div class="exam-container">
+<!-- Sticky top bar: brand, answered progress, timer -->
+<header class="exam-topbar">
 
-    <div class="exam-header">
-        <h1 id="examTitle">Loading Exam...</h1>
+    <div class="exam-brand">
+        <span class="exam-brand-mark">L</span>
+        <span class="exam-brand-text">
+            <strong>LMS</strong>
+            <small>Online examination</small>
+        </span>
+    </div>
 
-        <div class="timer-box">
-            Time Left:
-            <span id="timer">00:00</span>
+    <div class="exam-progress" id="examProgress" hidden>
+        <div class="exam-progress-row">
+            <span>Progress</span>
+            <strong id="answeredText">0 of 0 answered</strong>
+        </div>
+        <div class="exam-progress-track">
+            <div class="exam-progress-fill" id="progressFill"></div>
         </div>
     </div>
 
-    <div id="questionsContainer">
+    <div class="timer-box" role="timer" aria-label="Time remaining">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+        <span class="timer-label">Time left</span>
+        <span id="timer">00:00</span>
+    </div>
 
+</header>
+
+<main class="exam-container">
+
+    <section class="exam-header">
+        <div>
+            <span class="exam-header-chip">Exam in progress</span>
+            <h1 id="examTitle">Loading Exam...</h1>
+            <p>Read each question carefully and choose your answers before the timer runs out.</p>
+        </div>
+    </section>
+
+    <div id="questionsContainer">
+        <!-- Questions are rendered by exam.js -->
     </div>
 
     <div class="submit-section">
-        <button id="submitBtn">
-            Submit Exam
+        <div class="submit-summary">
+            <strong id="answeredSummary">Ready to submit?</strong>
+            <small>Review your answers before you submit.</small>
+        </div>
+
+        <button id="submitBtn" type="button">
+            <span>Submit Exam</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
     </div>
 
+</main>
+
+<!-- Submit confirmation dialog -->
+<div class="submit-overlay" id="submitOverlay">
+    <div class="submit-dialog" id="submitDialog" role="alertdialog" aria-modal="true"
+         aria-labelledby="submitTitle" aria-describedby="submitDesc">
+        <div class="submit-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>
+        </div>
+        <h2 id="submitTitle">Submit your exam?</h2>
+        <p id="submitDesc">Once submitted, you cannot change your answers.</p>
+        <div class="submit-actions">
+            <button type="button" class="dialog-btn secondary" id="submitCancel">Review answers</button>
+            <button type="button" class="dialog-btn primary" id="submitConfirm">Yes, submit</button>
+        </div>
+    </div>
 </div>
 
+<script src="/js/api-config.js"></script>
 <script src="../js/student/exam.js"></script>
+
+<!-- UI enhancements: progress, timer colours, submit confirmation.
+     These only read the page; exam.js logic is not modified. -->
+<script>
+(function () {
+    "use strict";
+
+    var container = document.getElementById("questionsContainer");
+    var timerEl = document.getElementById("timer");
+    var timerBox = document.querySelector(".timer-box");
+    var submitBtn = document.getElementById("submitBtn");
+    var progressWrap = document.getElementById("examProgress");
+    var answeredText = document.getElementById("answeredText");
+    var progressFill = document.getElementById("progressFill");
+    var summary = document.getElementById("answeredSummary");
+
+    /* ---------- Answered progress ---------- */
+    function counts() {
+        var items = container.querySelectorAll(".question-item");
+        var answered = 0;
+
+        items.forEach(function (item) {
+            var done = false;
+            item.querySelectorAll("input, textarea, select").forEach(function (f) {
+                if (f.type === "radio" || f.type === "checkbox") {
+                    if (f.checked) done = true;
+                } else if (f.value && f.value.trim()) {
+                    done = true;
+                }
+            });
+            if (done) answered++;
+        });
+
+        return { total: items.length, answered: answered };
+    }
+
+    function updateProgress() {
+        var c = counts();
+        if (!c.total) { progressWrap.hidden = true; return; }
+
+        progressWrap.hidden = false;
+        answeredText.textContent = c.answered + " of " + c.total + " answered";
+        progressFill.style.width = Math.round((c.answered / c.total) * 100) + "%";
+        summary.textContent = c.answered === c.total
+            ? "All questions answered"
+            : c.answered + " of " + c.total + " questions answered";
+    }
+
+    container.addEventListener("change", updateProgress);
+    container.addEventListener("input", updateProgress);
+    new MutationObserver(updateProgress).observe(container, { childList: true, subtree: true });
+    updateProgress();
+
+    /* ---------- Timer colours ---------- */
+    var timerStarted = false;
+
+    function toSeconds(text) {
+        var parts = text.trim().split(":").map(Number);
+        if (!parts.length || parts.some(isNaN)) return null;
+        return parts.reduce(function (total, v) { return total * 60 + v; }, 0);
+    }
+
+    function updateTimer() {
+        var secs = toSeconds(timerEl.textContent);
+        if (secs === null) return;
+        if (secs > 0) timerStarted = true;
+        if (!timerStarted) return;
+
+        timerBox.classList.toggle("is-danger", secs <= 60);
+        timerBox.classList.toggle("is-warning", secs > 60 && secs <= 300);
+    }
+
+    new MutationObserver(updateTimer).observe(timerEl, { childList: true, characterData: true, subtree: true });
+
+    /* ---------- Submit confirmation ---------- */
+    var overlay = document.getElementById("submitOverlay");
+    var dialog = document.getElementById("submitDialog");
+    var desc = document.getElementById("submitDesc");
+    var cancelBtn = document.getElementById("submitCancel");
+    var confirmBtn = document.getElementById("submitConfirm");
+    var confirmed = false;
+    var lastFocus = null;
+
+    function openDialog() {
+        var c = counts();
+        var left = c.total - c.answered;
+
+        dialog.classList.toggle("has-unanswered", left > 0);
+        desc.textContent = "";
+
+        if (c.total && left > 0) {
+            var strong = document.createElement("strong");
+            strong.textContent = left + (left === 1 ? " unanswered question" : " unanswered questions");
+            desc.appendChild(document.createTextNode("You still have "));
+            desc.appendChild(strong);
+            desc.appendChild(document.createTextNode(". Once submitted, you cannot change your answers."));
+        } else {
+            desc.textContent = "Once submitted, you cannot change your answers.";
+        }
+
+        lastFocus = document.activeElement;
+        overlay.classList.add("is-open");
+        document.body.classList.add("dialog-open");
+        setTimeout(function () { cancelBtn.focus(); }, 60);
+    }
+
+    function closeDialog() {
+        overlay.classList.remove("is-open");
+        document.body.classList.remove("dialog-open");
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+
+    // Capture phase: intercept the first click, ask, then re-send it once confirmed.
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest && e.target.closest("#submitBtn");
+        if (!btn || confirmed || btn.disabled) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        openDialog();
+    }, true);
+
+    cancelBtn.addEventListener("click", closeDialog);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeDialog(); });
+
+    confirmBtn.addEventListener("click", function () {
+        closeDialog();
+        confirmed = true;
+        submitBtn.click();
+        confirmed = false;
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (!overlay.classList.contains("is-open")) return;
+        if (e.key === "Escape") { closeDialog(); return; }
+        if (e.key === "Tab") {
+            if (e.shiftKey && document.activeElement === cancelBtn) { e.preventDefault(); confirmBtn.focus(); }
+            else if (!e.shiftKey && document.activeElement === confirmBtn) { e.preventDefault(); cancelBtn.focus(); }
+        }
+    });
+})();
+</script>
 
 </body>
 </html>

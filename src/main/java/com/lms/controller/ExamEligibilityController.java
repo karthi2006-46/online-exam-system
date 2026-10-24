@@ -38,4 +38,4 @@ public class ExamEligibilityController {
 
         return ResponseEntity.ok(result);
     }
-}
+} 

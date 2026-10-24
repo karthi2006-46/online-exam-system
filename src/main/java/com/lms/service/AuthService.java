@@ -22,11 +22,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import com.lms.dto.StudentProfileDTO;
+import com.lms.service.EmailService;
 
 @Service
 @Transactional
@@ -52,6 +53,9 @@ private CourseRepository courseRepository;
 @Autowired
 private EnrollmentRepository enrollmentRepository;
 
+@Autowired
+private EmailService emailService;
+
 
     public UserDTO signup(SignupRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -73,40 +77,39 @@ Role role = roleRepository.findById(request.getRoleId())
         user.setActive(true);
 User savedUser = userRepository.save(user);
 
-if(role.getName().equals("STUDENT")) {
+if (role.getName().equals("STUDENT")) {
 
-    Course course =
-        courseRepository.findById(
+    Course course = courseRepository.findById(
             request.getCourseId()
         ).orElseThrow(
             () -> new ResourceNotFoundException("Course not found")
         );
 
-    Enrollment enrollment =
-        new Enrollment();
+    Enrollment enrollment = new Enrollment();
 
     enrollment.setStudent(savedUser);
     enrollment.setCourse(course);
     enrollment.setStatus("ACTIVE");
     enrollment.setCompletionPercentage(0.0);
 
-    enrollment.setEnrollmentDate(
-        LocalDateTime.now()
-    );
+    enrollment.setEnrollmentDate(LocalDateTime.now());
 
     enrollment.setDueDate(
-        LocalDateTime.now()
-            .plusDays(course.getDurationDays())
+        LocalDateTime.now().plusDays(course.getDurationDays())
     );
 
-    enrollmentRepository.save(
-        enrollment
+    enrollmentRepository.save(enrollment);
+
+    // Send welcome email only to students
+    emailService.sendWelcomeEmail(
+        savedUser.getEmail(),
+        savedUser.getFirstName()
     );
 }
 
 return convertToDTO(savedUser);
-    }
 
+    }
     public AuthResponse login(AuthRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -204,4 +207,111 @@ response.setRole(user.getRole().getName());
         );
         
     }
+    // ==========================================
+// CHANGE PASSWORD
+// ==========================================
+public void changePassword(
+        String userId,
+        String currentPassword,
+        String newPassword,
+        String confirmPassword) {
+
+    if (!StringUtils.hasText(userId)) {
+        throw new BadRequestException("User ID is required");
+    }
+
+    if (!StringUtils.hasText(currentPassword)
+            || !StringUtils.hasText(newPassword)
+            || !StringUtils.hasText(confirmPassword)) {
+
+        throw new BadRequestException(
+                "All password fields are required"
+        );
+    }
+
+    if (newPassword.length() < 8) {
+        throw new BadRequestException(
+                "New password must contain at least 8 characters"
+        );
+    }
+
+    if (!newPassword.equals(confirmPassword)) {
+        throw new BadRequestException(
+                "New password and confirmation do not match"
+        );
+    }
+
+    Long id;
+
+    try {
+        id = Long.valueOf(userId);
+    } catch (NumberFormatException exception) {
+        throw new BadRequestException("Invalid user ID");
+    }
+
+    User user = userRepository.findById(id)
+            .orElseThrow(
+                    () -> new ResourceNotFoundException("User not found")
+            );
+
+    if (!passwordEncoder.matches(
+            currentPassword,
+            user.getPassword())) {
+
+        throw new BadRequestException(
+                "Current password is incorrect"
+        );
+    }
+
+    if (passwordEncoder.matches(
+            newPassword,
+            user.getPassword())) {
+
+        throw new BadRequestException(
+                "New password must be different from current password"
+        );
+    }
+
+    user.setPassword(passwordEncoder.encode(newPassword));
+
+    userRepository.save(user);
+}
+// ==========================================
+// GET COMPLETE STUDENT PROFILE
+// ==========================================
+
+public StudentProfileDTO getCompleteStudentProfile(Long userId) {
+
+    User user = userRepository.findById(userId)
+            .orElseThrow(
+                    () -> new ResourceNotFoundException("User not found")
+            );
+
+    UserDTO userDTO = convertToDTO(user);
+
+    List<StudentProfileDTO.CourseInfo> courses =
+            enrollmentRepository.findByStudent_Id(userId)
+                    .stream()
+                    .map(enrollment -> {
+
+                        Course course = enrollment.getCourse();
+
+                        return new StudentProfileDTO.CourseInfo(
+                                enrollment.getId(),
+                                course.getId(),
+                                course.getTitle(),
+                                course.getCourseCode(),
+                                course.getDescription(),
+                                course.getDurationDays(),
+                                course.getTotalFees(),
+                                enrollment.getEnrollmentDate(),
+                                enrollment.getDueDate(),
+                                enrollment.getStatus(),
+                                enrollment.getCompletionPercentage()
+                        );
+                    })
+                    .collect(Collectors.toList());
+
+    return new StudentProfileDTO(userDTO, courses);
+}
 }

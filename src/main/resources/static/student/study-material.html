@@ -1,40 +1,152 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Study Materials</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Study Materials | LearnHub LMS</title>
+
+    <!-- Load order matters: theme -> sidebar -> page styles -->
+    <link rel="stylesheet" href="../css/student/student-theme.css">
+    <link rel="stylesheet" href="../css/student/student-sidebar.css">
     <link rel="stylesheet" href="../css/student/study-material.css">
 </head>
+
 <body>
 
 <div class="container">
 
-    <aside class="sidebar">
+    <!-- Shared Student Sidebar -->
+    <div id="studentSidebar"></div>
 
-        <h2>LMS</h2>
+    <!-- ======================================
+         MAIN CONTENT
+    ======================================= -->
+    <main class="main-content">
 
-        <ul>
-            <li><a href="studentdashboard.html">Dashboard</a></li>
-            <li><a href="my-courses.html">My Courses</a></li>
-            <li><a href="study-material.html" class="active">Study Materials</a></li>
-            <li><a href="profile.html">Profile</a></li>
-            <li><a href="../login.html">Logout</a></li>
-        </ul>
+        <!-- Page Header -->
+        <header class="study-page-header">
 
-    </aside>
+            <div>
+                <span class="page-label">LEARNING CENTER</span>
 
-    <main class="content">
+                <h1>Study Materials</h1>
 
-        <h1>Study Materials</h1>
+                <p>
+                    Explore your course resources, access learning
+                    materials, and continue developing your skills.
+                </p>
+            </div>
 
-        <div id="materialsContainer">
+            <div class="study-header-icon" aria-hidden="true">
+                <span>▤</span>
+            </div>
 
-        </div>
+        </header>
+
+
+        <!-- Information Banner -->
+        <section class="study-info-banner">
+
+            <div class="study-info-icon" aria-hidden="true">i</div>
+
+            <div>
+                <h3>Your Learning Resources</h3>
+
+                <p>
+                    Access the study materials provided for your enrolled
+                    courses. Review each resource and complete the
+                    required learning activities.
+                </p>
+            </div>
+
+        </section>
+
+
+        <!-- Materials Section -->
+        <section class="materials-section">
+
+            <div class="materials-section-header">
+                <div>
+                    <h2>Available Materials</h2>
+                    <p>Your course learning resources are listed below.</p>
+                </div>
+            </div>
+
+            <!--
+                IMPORTANT:
+                Keep this ID because study-material.js
+                uses it to render materials.
+            -->
+            <div id="materialsContainer"
+                 class="materials-grid"
+                 aria-live="polite">
+
+                <div class="materials-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading study materials...</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Footer -->
+        <footer class="study-page-footer">
+            <p>Keep learning, keep growing.</p>
+            <span>LearnHub LMS</span>
+        </footer>
 
     </main>
 
 </div>
 
+
+<!-- Existing JavaScript: keep unchanged -->
+<script src="/js/api-config.js"></script>
 <script src="../js/student/study-material.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+    const sidebarContainer = document.getElementById("studentSidebar");
+
+    if (!sidebarContainer) {
+        console.error("Sidebar container not found.");
+        return;
+    }
+
+    try {
+        const response = await fetch("student-sidebar.html");
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        sidebarContainer.innerHTML = await response.text();
+
+        const script = document.createElement("script");
+        script.src = "../js/student/student-sidebar.js";
+
+        script.onload = function () {
+            if (typeof window.initializeStudentSidebar === "function") {
+                window.initializeStudentSidebar();
+            }
+        };
+
+        script.onerror = function () {
+            console.error("Unable to load student-sidebar.js");
+        };
+
+        document.body.appendChild(script);
+
+    } catch (error) {
+        console.error("Sidebar loading failed:", error);
+        sidebarContainer.innerHTML =
+            "<p>Unable to load navigation. Please refresh the page.</p>";
+    }
+});
+</script>
 
 </body>
 </html>

@@ -8,6 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import com.lms.entity.User;
+import com.lms.repository.UserRepository;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -19,6 +23,8 @@ public class CourseController {
 
     @Autowired
     private CourseService courseService;
+    @Autowired
+private UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
@@ -45,12 +51,25 @@ public class CourseController {
         CourseDTO courseDTO = courseService.getCourseById(courseId);
         return ApiResponseUtil.success("Course retrieved successfully", courseDTO);
     }
+@GetMapping("/my-courses")
+@PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
+public ResponseEntity<?> getMyCourses(Authentication authentication) {
 
-    @GetMapping("/faculty/{facultyId}")
-    public ResponseEntity<?> getCoursesByFaculty(@PathVariable Long facultyId) {
-        List<CourseDTO> courses = courseService.getCoursesByFaculty(facultyId);
-        return ApiResponseUtil.success("Faculty courses retrieved", courses);
-    }
+    UserDetails userDetails =
+            (UserDetails) authentication.getPrincipal();
+
+    User user = userRepository.findByEmail(userDetails.getUsername())
+            .orElseThrow(() ->
+                    new RuntimeException("Authenticated user not found"));
+
+    List<CourseDTO> courses =
+            courseService.getCoursesByFaculty(user.getId());
+
+    return ApiResponseUtil.success(
+            "Assigned courses retrieved successfully",
+            courses
+    );
+}
 
     @PutMapping("/{courseId}")
     @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
