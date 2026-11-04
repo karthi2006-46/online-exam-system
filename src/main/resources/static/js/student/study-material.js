@@ -1,15 +1,70 @@
-// ======================================
+// =====================================================
 // STUDY MATERIALS - STUDENT MODULE
-// ======================================
+// =====================================================
 
 const MATERIALS_API = `${window.API_BASE_URL}/api/materials`;
-const MATERIAL_PROGRESS_API = `${window.API_BASE_URL}/api/material-progress`;
+const MATERIAL_PROGRESS_API =
+    `${window.API_BASE_URL}/api/material-progress`;
+
+
+// =====================================================
+// API RESPONSE HELPER
+// =====================================================
+
+async function readApiResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+        return await response.json();
+    }
+
+    return await response.text();
+}
+
+
+// =====================================================
+// NORMALIZE MATERIAL URL
+// =====================================================
+
+function getMaterialUrl(fileUrl) {
+    if (!fileUrl || typeof fileUrl !== "string") {
+        throw new Error("Material file URL is missing.");
+    }
+
+    const url = fileUrl.trim();
+
+    if (!url) {
+        throw new Error("Material file URL is empty.");
+    }
+
+    // External URL: return it without adding localhost.
+    if (/^https?:\/\//i.test(url)) {
+        return url;
+    }
+
+    // Backend URL from api-config.js
+    const baseUrl = String(window.API_BASE_URL || "")
+        .replace(/\/+$/, "");
+
+    if (!baseUrl) {
+        throw new Error("Backend API URL is not configured.");
+    }
+
+    // If the URL starts with "/", append it to the backend URL.
+    if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+    }
+
+    // Otherwise, append the relative path.
+    return `${baseUrl}/${url}`;
+}
 
 
 
-// ======================================
+
+// =====================================================
 // LOAD STUDY MATERIALS
-// ======================================
+// =====================================================
 
 async function loadMaterials() {
     const studentId = localStorage.getItem("userId");
@@ -19,7 +74,7 @@ async function loadMaterials() {
     const container = document.getElementById("materialsContainer");
 
     if (!container) {
-        console.error("materialsContainer not found");
+        console.error("materialsContainer not found.");
         return;
     }
 
@@ -37,7 +92,9 @@ async function loadMaterials() {
         container.innerHTML = `
             <div class="empty-state">
                 <h3>No course selected</h3>
-                <p>Please select an enrolled course before viewing materials.</p>
+                <p>
+                    Please select an enrolled course before viewing materials.
+                </p>
             </div>
         `;
         return;
@@ -51,10 +108,14 @@ async function loadMaterials() {
     `;
 
     try {
+        // ---------------------------------------------
         // 1. Fetch course materials
+        // ---------------------------------------------
+
         const materialsResponse = await fetch(
             `${MATERIALS_API}/course/${encodeURIComponent(courseId)}`,
             {
+                method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     Accept: "application/json"
@@ -64,7 +125,7 @@ async function loadMaterials() {
 
         if (!materialsResponse.ok) {
             throw new Error(
-                `Failed to load materials (${materialsResponse.status})`
+                `Failed to load materials: HTTP ${materialsResponse.status}`
             );
         }
 
@@ -76,10 +137,14 @@ async function loadMaterials() {
                 ? materialsResult.data
                 : [];
 
+        // ---------------------------------------------
         // 2. Fetch completed material IDs
+        // ---------------------------------------------
+
         const completedResponse = await fetch(
             `${MATERIAL_PROGRESS_API}/student/${encodeURIComponent(studentId)}`,
             {
+                method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     Accept: "application/json"
@@ -89,7 +154,7 @@ async function loadMaterials() {
 
         if (!completedResponse.ok) {
             throw new Error(
-                `Failed to load completion status (${completedResponse.status})`
+                `Failed to load completion status: HTTP ${completedResponse.status}`
             );
         }
 
@@ -102,17 +167,21 @@ async function loadMaterials() {
                 : [];
 
         const completedSet = new Set(
-            completedIds.map(item => {
-                // Support either a numeric ID or an object containing an ID.
-                if (typeof item === "object" && item !== null) {
-                    return Number(item.materialId ?? item.id);
-                }
+            completedIds
+                .map(item => {
+                    if (typeof item === "object" && item !== null) {
+                        return Number(item.materialId ?? item.id);
+                    }
 
-                return Number(item);
-            }).filter(Number.isFinite)
+                    return Number(item);
+                })
+                .filter(Number.isFinite)
         );
 
+        // ---------------------------------------------
         // 3. Render materials
+        // ---------------------------------------------
+
         container.replaceChildren();
 
         if (materials.length === 0) {
@@ -157,42 +226,61 @@ async function loadMaterials() {
             description.textContent =
                 material.description || "No description provided.";
 
-            // Status
+            // Completion status
             const status = document.createElement("div");
+
             status.className = `material-status ${
                 isCompleted ? "is-completed" : "is-pending"
             }`;
 
-            status.innerHTML = `
-                <span class="status-dot"></span>
-                <span>${isCompleted ? "Completed" : "Not completed"}</span>
-            `;
+            const statusDot = document.createElement("span");
+            statusDot.className = "status-dot";
+
+            const statusText = document.createElement("span");
+            statusText.textContent = isCompleted
+                ? "Completed"
+                : "Not completed";
+
+            status.append(statusDot, statusText);
 
             // Actions
             const actions = document.createElement("div");
             actions.className = "material-actions";
 
+            // -----------------------------------------
             // Open material button
+            // -----------------------------------------
+
             const openButton = document.createElement("button");
+
             openButton.type = "button";
             openButton.className = "download-btn";
             openButton.textContent = "Open Material";
+
+            // IMPORTANT:
+            // Pass the complete material object.
             openButton.addEventListener("click", () => {
-                openMaterial(material.fileUrl);
+                openStudyMaterial(material);
             });
 
             actions.appendChild(openButton);
 
+            // -----------------------------------------
             // Completion button
+            // -----------------------------------------
+
             if (isCompleted) {
                 const completedButton = document.createElement("button");
 
                 completedButton.type = "button";
-                completedButton.className = "complete-btn completed-btn";
+                completedButton.className =
+                    "complete-btn completed-btn";
+
                 completedButton.disabled = true;
                 completedButton.textContent = "✓ Completed";
 
                 actions.appendChild(completedButton);
+
             } else {
                 const completeButton = document.createElement("button");
 
@@ -230,32 +318,50 @@ async function loadMaterials() {
                     Please check your connection and try again.
                     If the problem continues, contact your administrator.
                 </p>
-                <button type="button"
-                        class="download-btn retry-btn"
-                        id="retryMaterialsBtn">
+                <button
+                    type="button"
+                    class="download-btn retry-btn"
+                    id="retryMaterialsBtn">
                     Try Again
                 </button>
             </div>
         `;
 
-        document.getElementById("retryMaterialsBtn")
+        document
+            .getElementById("retryMaterialsBtn")
             ?.addEventListener("click", loadMaterials);
     }
 }
 
 
-// ======================================
+// =====================================================
 // MATERIAL ICON
-// ======================================
+// =====================================================
 
 function getMaterialIcon(fileType) {
     const type = String(fileType || "").toLowerCase();
 
-    if (type.includes("pdf")) return "PDF";
-    if (type.includes("video") || type.includes("mp4")) return "▶";
-    if (type.includes("ppt") || type.includes("presentation")) return "PPT";
-    if (type.includes("doc") || type.includes("word")) return "DOC";
-    if (type.includes("image") || type.includes("jpg") || type.includes("png")) {
+    if (type.includes("pdf")) {
+        return "PDF";
+    }
+
+    if (type.includes("video") || type.includes("mp4")) {
+        return "▶";
+    }
+
+    if (type.includes("ppt") || type.includes("presentation")) {
+        return "PPT";
+    }
+
+    if (type.includes("doc") || type.includes("word")) {
+        return "DOC";
+    }
+
+    if (
+        type.includes("image") ||
+        type.includes("jpg") ||
+        type.includes("png")
+    ) {
         return "IMG";
     }
 
@@ -263,37 +369,53 @@ function getMaterialIcon(fileType) {
 }
 
 
-// ======================================
-// OPEN MATERIAL
-// ======================================
+// =====================================================
+// OPEN STUDY MATERIAL
+// =====================================================
 
-function openMaterial(fileUrl) {
-    if (!fileUrl) {
-        alert("The material file URL is unavailable.");
-        return;
-    }
-
+async function openStudyMaterial(material) {
     try {
-        const parsedUrl = new URL(fileUrl, window.location.href);
+        const fileUrl = getMaterialUrl(material.fileUrl);
 
-        // Permit HTTP/HTTPS links only.
-        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-            alert("This material URL is not supported.");
+        // Open external resources directly.
+        if (/^https?:\/\//i.test(fileUrl) &&
+            !fileUrl.startsWith(window.API_BASE_URL)) {
+            window.open(fileUrl, "_blank", "noopener,noreferrer");
             return;
         }
 
-        window.open(parsedUrl.href, "_blank", "noopener,noreferrer");
+        // Open files hosted by your Spring Boot backend.
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(fileUrl, {
+            method: "GET",
+            headers: token
+                ? { Authorization: `Bearer ${token}` }
+                : {}
+        });
+
+        if (!response.ok) {
+            throw new Error(`Unable to open material. HTTP ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        window.open(blobUrl, "_blank", "noopener,noreferrer");
+
+        // Keep the object URL available while the browser opens the file.
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 
     } catch (error) {
-        console.error("Invalid material URL:", error);
-        alert("Unable to open this material. Please contact your administrator.");
+        console.error("Error opening material:", error);
+        alert(error.message || "Unable to open the study material.");
     }
 }
 
 
-// ======================================
+// =====================================================
 // MARK MATERIAL AS COMPLETED
-// ======================================
+// =====================================================
 
 async function completeMaterial(materialId, button) {
     const token = localStorage.getItem("token");
@@ -328,7 +450,7 @@ async function completeMaterial(materialId, button) {
             );
         }
 
-        // Reload from the backend to confirm the saved status.
+        // Reload from the backend to confirm saved status.
         await loadMaterials();
 
     } catch (error) {
@@ -346,8 +468,10 @@ async function completeMaterial(materialId, button) {
 }
 
 
-// ======================================
+// =====================================================
 // PAGE LOAD
-// ======================================
+// =====================================================
 
-document.addEventListener("DOMContentLoaded", loadMaterials);
+document.addEventListener("DOMContentLoaded", () => {
+    loadMaterials();
+});

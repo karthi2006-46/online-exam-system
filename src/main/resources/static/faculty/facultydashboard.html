@@ -2,237 +2,228 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faculty Dashboard | LMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Faculty Dashboard | LearnHub LMS</title>
 
     <link rel="stylesheet" href="/css/faculty/faculty.css">
-    
+    <link rel="stylesheet" href="/css/faculty/faculty-sidebar.css">
 </head>
+
 <body>
 
 <div class="app-layout">
 
-    <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-icon">L</div>
-            <div>
-                <h2>LearnHub</h2>
-                <p>Faculty Portal</p>
-            </div>
-        </div>
-
-        <nav class="navigation">
-            <a href="/faculty/facultydashboard.html" class="nav-link active">
-                <span>▦</span> Dashboard
-            </a>
-
-            <a href="/faculty/extension-requests.html" class="nav-link">
-                <span>◷</span> Extension Requests
-                <span class="nav-badge" id="extensionBadge">0</span>
-            </a>
-
-            <a href="/faculty/manage-courses.html" class="nav-link">
-                <span>▤</span> Manage Courses
-            </a>
-
-            <a href="/faculty/manage-exams.html" class="nav-link">
-                <span>▣</span> Manage Exams
-            </a>
-
-            <a href="/faculty/manage-materials.html" class="nav-link">
-                <span>▧</span> Study Materials
-            </a>
-
-            <a href="/faculty/student-results.html" class="nav-link">
-                <span>▥</span> Student Results
-            </a>
-        </nav>
-
-        <div class="sidebar-bottom">
-            <div class="profile-mini">
-                <div class="avatar" id="avatar">F</div>
-                <div>
-                    <strong id="facultyName">Faculty</strong>
-                    <small>Faculty Account</small>
-                </div>
-            </div>
-
-            <button class="logout-button" onclick="logout()">
-                ↪ Sign Out
-            </button>
-        </div>
-    </aside>
+    <!-- SIDEBAR (injected by faculty-sidebar.js) -->
+    <div id="facultySidebar"></div>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <main class="main-content">
 
+        <!-- TOPBAR -->
         <header class="topbar">
-            <div>
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="facultySidebar" aria-expanded="false">☰</button>
+
+            <div class="topbar-title">
                 <p class="breadcrumb">Workspace / Dashboard</p>
                 <h1>Faculty Dashboard</h1>
-                <p class="subtitle">
-                    Welcome back! Here's an overview of your teaching workspace.
-                </p>
+                <p class="subtitle">Your courses, students and pending reviews at a glance.</p>
             </div>
 
             <div class="topbar-right">
+                <a href="/faculty/extension-requests.html" class="button button-primary button-sm hide-mobile">Extension requests</a>
+                <a href="/faculty/exam-approval-requests.html" class="button button-light button-sm hide-mobile">Exam approvals</a>
                 <div class="date-display" id="currentDate"></div>
                 <div class="avatar avatar-large" id="topAvatar">F</div>
             </div>
         </header>
 
-        <section class="welcome-banner">
-            <div>
-                <span class="eyebrow">FACULTY WORKSPACE</span>
-                <h2>Make learning more effective.</h2>
-                <p>
-                    Manage course activities, review student requests,
-                    and keep learning on track.
-                </p>
+        <div id="dashboardMessage" class="dashboard-message" role="status" aria-live="polite">
+            Loading dashboard statistics...
+        </div>
 
-                <a href="/faculty/extension-requests.html"
-                   class="button button-white">
-                    Review Extension Requests →
-                </a>
-            </div>
-
-            <div class="banner-illustration">✦</div>
-        </section>
-
-        <section class="stats-grid">
-
+        <!-- KPI STRIP -->
+        <section class="kpi-grid" aria-label="Key numbers">
             <article class="stat-card">
                 <div class="stat-icon icon-blue">▤</div>
-                <p>Total Courses</p>
-                <h2 id="courseCount">—</h2>
-                <span>Available in your LMS</span>
+                <div class="stat-body"><p>Courses</p><h2 id="courseCount">—</h2></div>
             </article>
-
             <article class="stat-card">
-                <div class="stat-icon icon-purple">◷</div>
-                <p>Pending Extensions</p>
-                <h2 id="pendingCount">—</h2>
-                <span>Awaiting faculty review</span>
+                <div class="stat-icon icon-purple">♙</div>
+                <div class="stat-body"><p>Students</p><h2 id="studentCount">—</h2></div>
             </article>
-
             <article class="stat-card">
                 <div class="stat-icon icon-green">✓</div>
-                <p>Approved Extensions</p>
-                <h2 id="approvedCount">—</h2>
-                <span>Approved in this session's data</span>
+                <div class="stat-body"><p>Active</p><h2 id="activeStudentCount">—</h2></div>
             </article>
-
             <article class="stat-card">
                 <div class="stat-icon icon-orange">!</div>
-                <p>Rejected Extensions</p>
-                <h2 id="rejectedCount">—</h2>
-                <span>Rejected in this session's data</span>
+                <div class="stat-body"><p>Inactive</p><h2 id="inactiveStudentCount">—</h2></div>
             </article>
-
+            <article class="stat-card">
+                <div class="stat-icon icon-blue">▧</div>
+                <div class="stat-body"><p>Materials</p><h2 id="materialCount">—</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-purple">▣</div>
+                <div class="stat-body"><p>Exams</p><h2 id="examCount">—</h2></div>
+            </article>
+            <a class="stat-card stat-link" href="/faculty/exam-approval-requests.html">
+                <div class="stat-icon icon-orange">◷</div>
+                <div class="stat-body"><p>Exam approvals</p><h2 id="pendingApprovalCount">—</h2></div>
+            </a>
+            <a class="stat-card stat-link" href="/faculty/extension-requests.html">
+                <div class="stat-icon icon-green">◷</div>
+                <div class="stat-body"><p>Extensions</p><h2 id="pendingCount">—</h2></div>
+            </a>
         </section>
 
+        <!-- ENROLLED STUDENTS -->
+        <section class="panel students-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Enrolled students</h2>
+                    <p>Students registered in your assigned courses.</p>
+                </div>
+                <button class="text-button" type="button" id="refreshStudents">Refresh ↻</button>
+            </div>
+
+            <div class="student-table-toolbar">
+                <input type="search" id="studentSearch"
+                       placeholder="Search student, email or course"
+                       aria-label="Search students">
+                <span id="studentTableCount">Loading students...</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="student-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Email</th>
+                            <th>Course</th>
+                            <th>Progress</th>
+                            <th>Status</th>
+                            <th>Enrolled</th>
+                            <th>Due</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <tr><td colspan="8">Loading student details...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p id="studentTableMessage" class="helper-text" role="status" aria-live="polite"></p>
+        </section>
+
+        <!-- PERFORMANCE + REQUESTS -->
         <section class="content-grid">
 
-            <article class="panel">
+            <article class="panel performance-panel">
                 <div class="panel-header">
                     <div>
-                        <h2>Quick Actions</h2>
-                        <p>Access your frequently used tools.</p>
+                        <h2>Student performance</h2>
+                        <p>Exam results across your courses.</p>
                     </div>
+                    <a href="/faculty/faculty-results.html" class="text-button">View results →</a>
                 </div>
 
-                <div class="quick-actions">
+                <div class="mini-stats">
+                    <div class="mini-stat"><span>Total</span><strong id="totalResults">—</strong></div>
+                    <div class="mini-stat"><span>Passed</span><strong id="passedResults" class="text-green">—</strong></div>
+                    <div class="mini-stat"><span>Failed</span><strong id="failedResults" class="text-orange">—</strong></div>
+                    <div class="mini-stat"><span>Avg score</span><strong id="averageScore">—</strong></div>
+                </div>
 
-                    <a href="/faculty/extension-requests.html"
-                       class="action-card">
-                        <div class="action-icon icon-purple">◷</div>
-                        <div>
-                            <h3>Extension Requests</h3>
-                            <p>Approve or reject course extensions.</p>
-                        </div>
-                        <span>→</span>
-                    </a>
-
-                    <a href="/faculty/manage-courses.html"
-                       class="action-card">
-                        <div class="action-icon icon-blue">▤</div>
-                        <div>
-                            <h3>Manage Courses</h3>
-                            <p>Open the course management page.</p>
-                        </div>
-                        <span>→</span>
-                    </a>
-
-                    <a href="/faculty/manage-exams.html"
-                       class="action-card">
-                        <div class="action-icon icon-green">▣</div>
-                        <div>
-                            <h3>Manage Exams</h3>
-                            <p>Open exam management.</p>
-                        </div>
-                        <span>→</span>
-                    </a>
-
-                    <a href="/faculty/manage-materials.html"
-                       class="action-card">
-                        <div class="action-icon icon-orange">▧</div>
-                        <div>
-                            <h3>Study Materials</h3>
-                            <p>Open the learning materials page.</p>
-                        </div>
-                        <span>→</span>
-                    </a>
-
+                <div class="pass-row">
+                    <span>Pass rate</span>
+                    <strong id="passPercentage">—</strong>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="passProgress"></div>
                 </div>
             </article>
 
             <article class="panel">
                 <div class="panel-header">
                     <div>
-                        <h2>Extension Overview</h2>
-                        <p>Summary of extension request statuses.</p>
+                        <h2>Extension requests</h2>
+                        <p>Current status.</p>
                     </div>
-                    <button class="text-button" onclick="loadDashboard()">
-                        Refresh
-                    </button>
+                    <button class="text-button" type="button" id="refreshDashboard">Refresh ↻</button>
                 </div>
 
-                <div class="overview-row">
-                    <span class="status-dot dot-yellow"></span>
-                    <span>Pending</span>
-                    <strong id="overviewPending">—</strong>
-                </div>
+                <div class="overview-row"><span class="status-dot dot-yellow"></span><span>Pending</span><strong id="overviewPending">—</strong></div>
+                <div class="overview-row"><span class="status-dot dot-green"></span><span>Approved</span><strong id="overviewApproved">Not available</strong></div>
+                <div class="overview-row"><span class="status-dot dot-red"></span><span>Rejected</span><strong id="overviewRejected">Not available</strong></div>
 
-                <div class="overview-row">
-                    <span class="status-dot dot-green"></span>
-                    <span>Approved</span>
-                    <strong id="overviewApproved">—</strong>
-                </div>
+                <a href="/faculty/extension-requests.html" class="button button-primary full-button">Open extension requests</a>
+            </article>
+        </section>
 
-                <div class="overview-row">
-                    <span class="status-dot dot-red"></span>
-                    <span>Rejected</span>
-                    <strong id="overviewRejected">—</strong>
-                </div>
-
-                <a href="/faculty/extension-requests.html"
-                   class="button button-primary full-button">
-                    Open Extension Requests
+        <!-- QUICK ACTIONS -->
+        <section class="panel">
+            <div class="panel-header">
+                <div><h2>Quick actions</h2></div>
+            </div>
+            <div class="quick-actions">
+                <a href="/faculty/extension-requests.html" class="action-card">
+                    <div class="action-icon icon-purple">◷</div>
+                    <div><h3>Extension requests</h3><p>Review course extensions</p></div>
                 </a>
-
-                <p class="helper-text" id="dashboardMessage"></p>
-            </article>
-
+                <a href="/faculty/exam-approval-requests.html" class="action-card">
+                    <div class="action-icon icon-orange">✓</div>
+                    <div><h3>Exam approvals</h3><p>Pending approval requests</p></div>
+                </a>
+                <a href="/faculty/manage-courses.html" class="action-card">
+                    <div class="action-icon icon-blue">▤</div>
+                    <div><h3>Manage courses</h3><p>Your assigned courses</p></div>
+                </a>
+                <a href="/faculty/manage-exams.html" class="action-card">
+                    <div class="action-icon icon-green">▣</div>
+                    <div><h3>Manage exams</h3><p>Create and edit exams</p></div>
+                </a>
+                <a href="/faculty/manage-materials.html" class="action-card">
+                    <div class="action-icon icon-blue">▧</div>
+                    <div><h3>Study materials</h3><p>Course learning content</p></div>
+                </a>
+                <a href="/faculty/faculty-results.html" class="action-card">
+                    <div class="action-icon icon-purple">▥</div>
+                    <div><h3>Student results</h3><p>Exam results by course</p></div>
+                </a>
+            </div>
         </section>
 
         <footer class="footer">
             <span>© <span id="year"></span> LearnHub LMS</span>
-            <span>Faculty Workspace</span>
+            <span>Faculty workspace</span>
         </footer>
 
     </main>
 </div>
 
-<script src="/js/facuilty/faculty-dashboard.js"></script>
+<script src="/js/api-config.js"></script>
+<script src="/js/faculity/faculty-sidebar.js"></script>
+<script src="/js/faculity/faculty-dashboard.js"></script>
 
+<!-- Mobile menu toggle -->
+<script>
+(function () {
+    var body = document.body;
+    var toggle = document.getElementById('menuToggle');
+    function setOpen(open) {
+        body.classList.toggle('nav-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    toggle.addEventListener('click', function () { setOpen(!body.classList.contains('nav-open')); });
+    document.getElementById('sidebarBackdrop').addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    document.getElementById('facultySidebar').addEventListener('click', function (e) {
+        if (e.target.closest('a')) setOpen(false);
+    });
+})();
+</script>
 </body>
 </html>

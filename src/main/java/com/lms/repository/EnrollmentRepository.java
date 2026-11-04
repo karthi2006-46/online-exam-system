@@ -24,5 +24,9 @@ long countByCourse_Faculty_IdAndStatusIgnoreCase(
         Long facultyId,
         String status
 );
-    
+    List<Enrollment> findByCourse_Faculty_Id(Long facultyId);
+
+List<Enrollment> findByCourse_Faculty_IdOrderByEnrollmentDateDesc(
+        Long facultyId
+);
 }

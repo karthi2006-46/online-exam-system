@@ -1,0 +1,477 @@
+/* =========================================
+   FACULTY SIDEBAR - shared on every faculty page
+   Save as: /css/faculty/faculty-sidebar.css
+========================================= */
+
+:root {
+    --fs-width: 260px;
+    --fs-bg-top: #12204a;
+    --fs-bg-bottom: #0a1226;
+    --fs-text: #aebad3;
+    --fs-muted: #707fa0;
+    --fs-accent: #3978f6;
+    --fs-accent-soft: #7aa5ff;
+    --fs-danger: #ef4d5e;
+    --fs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------- Page layout ---------- */
+.fs-layout {
+    display: flex;
+    min-height: 100vh;
+    align-items: stretch;
+}
+#facultySidebar {
+    flex: 0 0 var(--fs-width);
+    width: var(--fs-width);
+    min-width: 0;
+}
+.fs-layout .main-content {
+    flex: 1;
+    min-width: 0;
+    margin-left: 0;
+    box-sizing: border-box;
+}
+
+/* ---------- Sidebar shell ---------- */
+.fs-sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    width: var(--fs-width);
+    height: 100vh;
+    min-height: 600px;
+    box-sizing: border-box;
+    padding: 26px 16px 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    color: #fff;
+    font-family: Inter, "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    background:
+        radial-gradient(420px 260px at 0% 0%, rgba(57, 120, 246, 0.22), transparent 70%),
+        linear-gradient(180deg, var(--fs-bg-top) 0%, var(--fs-bg-bottom) 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 8px 0 32px rgba(6, 12, 30, 0.18);
+    scrollbar-width: none;
+}
+.fs-sidebar::-webkit-scrollbar { display: none; }
+
+/* ---------- Brand ---------- */
+.fs-brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 4px 8px 26px;
+    margin-bottom: 6px;
+    color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.fs-brand-mark {
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(140deg, #5b97ff 0%, #2b5be0 100%);
+    box-shadow: 0 8px 20px rgba(43, 91, 224, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    font-size: 23px;
+    font-weight: 800;
+    transition: transform 0.45s var(--fs-ease), box-shadow 0.45s var(--fs-ease);
+}
+.fs-brand:hover .fs-brand-mark {
+    transform: rotate(-6deg) scale(1.06);
+    box-shadow: 0 12px 26px rgba(43, 91, 224, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.fs-brand-text { display: grid; gap: 3px; }
+.fs-brand-text strong { font-size: 20px; font-weight: 700; letter-spacing: 0.4px; }
+.fs-brand-text small { color: var(--fs-muted); font-size: 12.5px; font-weight: 500; }
+
+.fs-section-label {
+    margin: 22px 10px 12px;
+    color: var(--fs-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+}
+
+/* ---------- Navigation ---------- */
+.fs-nav { display: flex; flex-direction: column; gap: 6px; }
+
+.fs-nav a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 48px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border-radius: 12px;
+    color: var(--fs-text);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 550;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.3s var(--fs-ease), color 0.3s var(--fs-ease), transform 0.3s var(--fs-ease);
+}
+.fs-nav a::before {
+    content: "";
+    position: absolute;
+    left: -16px;
+    top: 50%;
+    width: 4px;
+    height: 24px;
+    border-radius: 0 4px 4px 0;
+    background: var(--fs-accent-soft);
+    box-shadow: 0 0 14px rgba(122, 165, 255, 0.7);
+    transform: translateY(-50%) scaleY(0);
+    transition: transform 0.4s var(--fs-ease);
+}
+
+.fs-icon {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.3s var(--fs-ease), transform 0.4s var(--fs-ease), box-shadow 0.3s var(--fs-ease);
+}
+.fs-icon svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.fs-label { flex: 1; white-space: nowrap; }
+.fs-label .short { display: none; }
+
+/* Notification badge */
+.fs-badge {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background: var(--fs-danger);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(239, 77, 94, 0.4);
+}
+.fs-badge.is-empty { display: none; }
+
+/* Hover */
+.fs-nav a:hover { background: rgba(255, 255, 255, 0.06); color: #fff; transform: translateX(3px); }
+.fs-nav a:hover .fs-icon { background: rgba(255, 255, 255, 0.09); transform: scale(1.06); }
+
+/* Active */
+.fs-nav a.active {
+    color: #fff;
+    background: linear-gradient(90deg, rgba(57, 120, 246, 0.3), rgba(57, 120, 246, 0.06));
+    box-shadow: inset 0 0 0 1px rgba(122, 165, 255, 0.16);
+    transform: none;
+}
+.fs-nav a.active::before { transform: translateY(-50%) scaleY(1); }
+.fs-nav a.active .fs-icon {
+    background: linear-gradient(140deg, #4f8dff, #2f62e6);
+    box-shadow: 0 6px 16px rgba(47, 98, 230, 0.45);
+    transform: none;
+}
+.fs-nav a:focus-visible { outline: 2px solid var(--fs-accent-soft); outline-offset: 2px; }
+
+/* Logout */
+.fs-nav .fs-logout { margin-top: 10px; }
+.fs-nav .fs-logout::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: -6px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+.fs-nav .fs-logout:hover { background: rgba(239, 77, 94, 0.12); color: #ff8b97; }
+.fs-nav .fs-logout:hover .fs-icon { background: rgba(239, 77, 94, 0.18); }
+
+/* ---------- Bottom profile ---------- */
+.fs-bottom { margin-top: auto; padding-top: 24px; }
+.fs-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+}
+.fs-avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(140deg, #4f8dff, #2f62e6);
+    font-size: 15px;
+    font-weight: 700;
+}
+.fs-profile-info { display: grid; gap: 3px; min-width: 0; }
+.fs-profile-info strong {
+    font-size: 13px;
+    font-weight: 650;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.fs-profile-info small { color: var(--fs-muted); font-size: 11.5px; }
+
+@keyframes fsIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: none; }
+}
+.fs-nav a[data-page] { animation: fsIn 0.55s var(--fs-ease) both; }
+.fs-nav a:nth-child(2) { animation-delay: 0.04s; }
+.fs-nav a:nth-child(3) { animation-delay: 0.08s; }
+.fs-nav a:nth-child(4) { animation-delay: 0.12s; }
+.fs-nav a:nth-child(5) { animation-delay: 0.16s; }
+.fs-nav a:nth-child(6) { animation-delay: 0.20s; }
+.fs-nav a:nth-child(7) { animation-delay: 0.24s; }
+.fs-nav a:nth-child(8) { animation-delay: 0.28s; }
+
+/* =========================================
+   LOGOUT DIALOG
+========================================= */
+.fs-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(7, 12, 28, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease, visibility 0s linear 0.3s;
+    font-family: Inter, "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+.fs-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition-delay: 0s;
+}
+.fs-dialog {
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    padding: 32px 28px 24px;
+    text-align: center;
+    background: #fff;
+    color: #121c36;
+    border-radius: 22px;
+    box-shadow: 0 30px 70px rgba(6, 12, 30, 0.45);
+    transform: translateY(18px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.45s var(--fs-ease), opacity 0.3s ease;
+}
+.fs-overlay.is-open .fs-dialog { transform: none; opacity: 1; }
+
+.fs-dialog-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    color: var(--fs-danger);
+    background: #fdecee;
+    box-shadow: 0 0 0 8px #fef5f6;
+}
+.fs-dialog-icon svg {
+    width: 28px;
+    height: 28px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.fs-dialog h2 { margin: 0 0 8px; font-size: 20px; font-weight: 700; }
+.fs-dialog p {
+    margin: 0 auto 26px;
+    max-width: 300px;
+    color: #5d6985;
+    font-size: 14px;
+    line-height: 1.6;
+}
+.fs-actions { display: flex; gap: 12px; }
+.fs-btn {
+    flex: 1;
+    min-height: 48px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 13px;
+    font: inherit;
+    font-size: 14.5px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: transform 0.25s var(--fs-ease), background 0.25s ease, box-shadow 0.25s ease;
+}
+.fs-btn:active { transform: scale(0.96); }
+.fs-btn:focus-visible { outline: 2px solid var(--fs-accent); outline-offset: 2px; }
+.fs-btn.no { background: #eef1f7; color: #26324f; }
+.fs-btn.no:hover { background: #e3e8f2; }
+.fs-btn.yes {
+    background: linear-gradient(135deg, #f0586a, #dc3347);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(220, 51, 71, 0.32);
+}
+.fs-btn.yes:hover { box-shadow: 0 12px 26px rgba(220, 51, 71, 0.42); transform: translateY(-1px); }
+
+.fs-dialog.is-loading .fs-btn { pointer-events: none; opacity: 0.6; }
+.fs-dialog.is-loading .fs-btn.yes::after {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-left: 10px;
+    vertical-align: -2px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: fsSpin 0.7s linear infinite;
+}
+@keyframes fsSpin { to { transform: rotate(360deg); } }
+body.fs-lock { overflow: hidden; }
+
+/* =========================================
+   MOBILE - floating, horizontally scrollable tab bar
+   (faculty has 8 pages, so the bar scrolls)
+========================================= */
+@media (max-width: 760px) {
+
+    .fs-layout { display: block; padding-bottom: 96px; }
+
+    #facultySidebar {
+        position: fixed;
+        z-index: 1000;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 0 10px calc(10px + env(safe-area-inset-bottom));
+        box-sizing: border-box;
+        pointer-events: none;
+    }
+
+    .fs-sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        padding: 6px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        background: rgba(14, 24, 52, 0.88);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        backdrop-filter: blur(20px) saturate(160%);
+        box-shadow: 0 14px 40px rgba(5, 10, 25, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        pointer-events: auto;
+    }
+
+    .fs-brand, .fs-section-label, .fs-bottom { display: none; }
+
+    .fs-nav {
+        flex-direction: row;
+        gap: 2px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .fs-nav::-webkit-scrollbar { display: none; }
+
+    .fs-nav a {
+        flex: 0 0 68px;
+        flex-direction: column;
+        justify-content: center;
+        gap: 3px;
+        min-height: 56px;
+        padding: 6px 1px;
+        border-radius: 18px;
+        font-size: 10px;
+        animation: none;
+    }
+    .fs-nav a::before, .fs-nav .fs-logout::after { display: none; }
+    .fs-nav a:hover { transform: none; background: transparent; }
+    .fs-nav a:active { transform: scale(0.92); }
+
+    .fs-icon { flex: none; width: 36px; height: 28px; border-radius: 14px; background: transparent; }
+    .fs-icon svg { width: 21px; height: 21px; }
+    .fs-nav a:hover .fs-icon { background: transparent; transform: none; }
+
+    .fs-label { flex: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 9.5px; }
+    .fs-label .full { display: none; }
+    .fs-label .short { display: inline; }
+
+    /* badge sits on the icon corner */
+    .fs-badge {
+        position: absolute;
+        top: 3px;
+        left: calc(50% + 6px);
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        line-height: 16px;
+        font-size: 9.5px;
+    }
+
+    .fs-nav a.active { background: transparent; box-shadow: none; }
+    .fs-nav a.active .fs-icon {
+        background: linear-gradient(140deg, #4f8dff, #2f62e6);
+        box-shadow: 0 6px 16px rgba(47, 98, 230, 0.5);
+        transform: translateY(-2px);
+    }
+    .fs-nav .fs-logout { margin-top: 0; }
+    .fs-nav .fs-logout:hover { background: transparent; color: var(--fs-text); }
+
+    .fs-layout .main-content { width: 100%; padding: 20px 14px 30px; }
+
+    /* Dialog becomes a bottom sheet */
+    .fs-overlay { align-items: flex-end; padding: 0; }
+    .fs-dialog {
+        max-width: none;
+        border-radius: 26px 26px 0 0;
+        padding: 14px 22px calc(24px + env(safe-area-inset-bottom));
+        transform: translateY(100%);
+    }
+    .fs-dialog::before {
+        content: "";
+        display: block;
+        width: 40px;
+        height: 4px;
+        margin: 0 auto 22px;
+        border-radius: 4px;
+        background: #d7dce8;
+    }
+    .fs-overlay.is-open .fs-dialog { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fs-sidebar *, .fs-overlay, .fs-dialog, .fs-btn {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+}

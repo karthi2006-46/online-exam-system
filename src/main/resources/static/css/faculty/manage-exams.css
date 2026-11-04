@@ -1,0 +1,260 @@
+/* =====================================================
+   MANAGE EXAMS – page styles
+   Needs faculty.css (shared) loaded first.
+===================================================== */
+
+.muted { color: var(--muted); font-size: 13px; }
+
+/* ---------- Buttons ---------- */
+.primary-button,
+.secondary-button,
+.danger-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background .15s, color .15s;
+}
+.primary-button   { background: var(--primary); color: #fff; }
+.primary-button:hover:not(:disabled) { background: var(--primary-dark); }
+.secondary-button { background: var(--primary-soft); color: #2456b8; }
+.secondary-button:hover { background: #d8e4ff; }
+.danger-button    { background: #fdecee; color: #b3202f; }
+.danger-button:hover { background: #fad7dc; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ---------- Toolbar ---------- */
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.search-box { position: relative; flex: 1 1 240px; max-width: 360px; }
+.search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--faint);
+    font-size: 17px;
+    pointer-events: none;
+}
+.toolbar input,
+.toolbar select {
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+}
+.toolbar input { padding: 8px 12px 8px 36px; }
+.toolbar select { width: auto; min-width: 170px; padding: 8px 12px; }
+.toolbar input::placeholder { color: var(--faint); }
+
+/* ---------- Shared field styles ---------- */
+.form-group { margin-bottom: 14px; min-width: 0; }
+.form-group label { display: block; margin-bottom: 5px; font-size: 12px; font-weight: 600; color: #334155; }
+.form-group label b { color: #dc2626; }
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #d3dae6;
+    border-radius: 9px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+}
+.form-group textarea { min-height: 84px; resize: vertical; line-height: 1.5; }
+
+.toolbar input:focus,
+.toolbar select:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .14);
+}
+
+/* ---------- Messages ---------- */
+.state-message {
+    margin-bottom: 14px;
+    padding: 28px 20px;
+    background: #fff;
+    border: 1px dashed #cdd6e6;
+    border-radius: var(--radius);
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+}
+.state-message:empty { display: none; }
+
+.form-error { color: #b3202f; font-size: 13px; }
+.form-error:not(:empty) { margin-bottom: 12px; padding: 9px 12px; background: #fef2f2; border-radius: 8px; }
+
+/* ---------- Exam grid ---------- */
+.exam-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--gap);
+}
+
+.exam-card {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: border-color .15s, box-shadow .15s;
+}
+.exam-card:hover { border-color: #a9c0f2; box-shadow: 0 6px 20px rgba(17, 29, 58, .08); }
+
+.status-badge {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.status-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.published { background: #e8f8ef; color: #0d7a43; }
+.draft     { background: #fff5e0; color: #9a5b00; }
+
+.exam-card h2 { margin: 10px 0 6px; font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
+
+.exam-description {
+    margin-bottom: 14px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.exam-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: auto;
+    padding: 10px 12px;
+    background: #f7f9fc;
+    border-radius: 9px;
+}
+.exam-stats small { display: block; margin-bottom: 2px; color: var(--muted); font-size: 11px; }
+.exam-stats strong { font-size: 14px; }
+
+.exam-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.exam-actions button { flex: 1 1 80px; min-height: 34px; padding: 6px 10px; font-size: 12px; }
+
+/* ---------- Modals ---------- */
+.modal {
+    position: fixed; inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(15, 27, 61, .55);
+    overflow-y: auto;
+}
+.modal.open { display: flex; }
+
+.modal-content {
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 22px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, .25);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+.modal-header h2 { font-size: 18px; margin-bottom: 2px; }
+.close-button {
+    width: 32px; height: 32px;
+    flex-shrink: 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 24px;
+    line-height: 1;
+    border-radius: 8px;
+}
+.close-button:hover { background: #f1f4f9; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.form-group.full-width { grid-column: 1 / -1; }
+.form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+
+/* ---------- Questions ---------- */
+.form-title { font-size: 15px; margin-bottom: 12px; }
+.modal-divider { height: 1px; margin: 18px 0; background: var(--border); }
+.question-summary { margin-bottom: 12px; color: var(--muted); font-size: 13px; }
+.question-list { display: grid; gap: 10px; margin: 12px 0; }
+.question-item { padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: #fcfdff; }
+.question-item h3 { margin: 0 0 8px; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.question-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; color: var(--muted); font-size: 13px; }
+.question-item-actions { display: flex; gap: 8px; margin-top: 10px; }
+.question-item-actions button { min-height: 32px; padding: 5px 12px; font-size: 12px; }
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+@media (max-width: 760px) {
+    .search-box { max-width: none; flex-basis: 100%; }
+    .toolbar select { flex: 1 1 140px; min-width: 0; }
+
+    .primary-button#openCreateModal { padding: 8px 12px; }
+
+    .exam-grid { grid-template-columns: 1fr; gap: 10px; }
+    .exam-card { padding: 14px; }
+
+    /* modals slide up as bottom sheets, like the sidebar dialogs */
+    .modal { align-items: flex-end; padding: 0; }
+    .modal-content {
+        max-width: none;
+        max-height: 92vh;
+        padding: 18px 16px calc(16px + env(safe-area-inset-bottom));
+        border-radius: 20px 20px 0 0;
+    }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full-width { grid-column: auto; }
+    .form-actions .primary-button,
+    .form-actions .secondary-button { flex: 1; }
+    .question-options { grid-template-columns: 1fr; }
+    .question-item-actions button { flex: 1; }
+}

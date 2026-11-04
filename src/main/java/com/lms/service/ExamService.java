@@ -10,7 +10,8 @@ import com.lms.repository.ExamRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.lms.repository.QuestionRepository;
+import com.lms.entity.Question;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,8 @@ public class ExamService {
 
     @Autowired
     private CourseRepository courseRepository;
-
+@Autowired
+private QuestionRepository questionRepository;
     public ExamDTO createExam(ExamDTO request) {
         Course course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -65,18 +67,48 @@ public class ExamService {
                 .collect(Collectors.toList());
     }
 
-    public ExamDTO publishExam(Long examId) {
-        Exam exam = examRepository.findById(examId)
-                .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
+public ExamDTO publishExam(Long examId) {
 
-        if (exam.getQuestions().isEmpty()) {
-            throw new BadRequestException("Cannot publish exam without questions");
-        }
+    Exam exam = examRepository.findById(examId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Exam not found"));
 
-        exam.setPublished(true);
-        Exam updatedExam = examRepository.save(exam);
-        return convertToDTO(updatedExam);
+    // Count questions directly from the database
+    long questionCount = questionRepository.countByExam_Id(examId);
+
+    if (questionCount == 0) {
+        throw new BadRequestException(
+                "Cannot publish exam without questions");
     }
+
+    // Validate question count
+    if (questionCount != exam.getTotalQuestions()) {
+        throw new BadRequestException(
+                "Exam requires " + exam.getTotalQuestions()
+                + " questions, but only " + questionCount
+                + " questions are available");
+    }
+
+    // Validate total marks
+    int actualTotalMarks = questionRepository
+            .findByExam_Id(examId)
+            .stream()
+            .mapToInt(Question::getMarks)
+            .sum();
+
+    if (actualTotalMarks != exam.getTotalMarks()) {
+        throw new BadRequestException(
+                "Exam total marks are " + exam.getTotalMarks()
+                + ", but the questions add up to "
+                + actualTotalMarks);
+    }
+
+    exam.setPublished(true);
+
+    Exam updatedExam = examRepository.save(exam);
+
+    return convertToDTO(updatedExam);
+}
 
     public ExamDTO unpublishExam(Long examId) {
         Exam exam = examRepository.findById(examId)

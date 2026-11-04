@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Student Results | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/faculty/faculty.css">
+    <link rel="stylesheet" href="/css/faculty/faculty-results.css">
+    <link rel="stylesheet" href="/css/faculty/faculty-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout fs-layout">
+
+    <!-- SIDEBAR (injected by faculty-sidebar.js) -->
+    <div id="facultySidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-title">
+                <p class="breadcrumb">Workspace / Student Results</p>
+                <h1>Results management</h1>
+                <p class="subtitle">Review exam performance and export results for your assigned courses.</p>
+            </div>
+            <div class="topbar-right">
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">F</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">Checking your session…</div>
+
+        <!-- CURRENT SELECTION -->
+        <section class="selection-grid" aria-label="Current selection">
+            <article class="stat-card">
+                <div class="stat-icon icon-blue">▤</div>
+                <div class="stat-body"><p>Course ID</p><h2 id="selectedCourseLabel">—</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-green">✓</div>
+                <div class="stat-body"><p>Result status</p><h2 id="selectedStatusLabel">All</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-purple">▣</div>
+                <div class="stat-body"><p>Exam ID</p><h2 id="selectedExamLabel">All</h2></div>
+            </article>
+        </section>
+
+        <div class="results-layout">
+
+            <!-- LEFT: FIND + EXPORT -->
+            <section class="panel tool-panel">
+                <div class="tool-head">
+                    <div class="tool-icon icon-blue">▥</div>
+                    <div>
+                        <h2>Find and export results</h2>
+                        <p>Choose a course, narrow it down with filters, then export.</p>
+                    </div>
+                </div>
+
+                <form id="filterForm">
+
+                    <div class="field-group">
+                        <h3 class="group-title">Course</h3>
+                        <div class="form-group">
+                            <label for="courseId">Course ID <b>*</b></label>
+                            <input id="courseId" type="number" min="1" required placeholder="Enter assigned course ID">
+                            <small class="field-hint">Required for every export on this page.</small>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <h3 class="group-title">Optional filters</h3>
+                        <div class="filter-grid">
+                            <div class="form-group">
+                                <label for="examId">Exam ID</label>
+                                <input id="examId" type="number" min="1" placeholder="All exams">
+                            </div>
+                            <div class="form-group">
+                                <label for="status">Result status</label>
+                                <select id="status">
+                                    <option value="">All results</option>
+                                    <option value="PASS">PASS</option>
+                                    <option value="FAIL">FAIL</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="fromDate">From date</label>
+                                <input id="fromDate" type="date">
+                            </div>
+                            <div class="form-group">
+                                <label for="toDate">To date</label>
+                                <input id="toDate" type="date">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="export-row">
+                        <button class="button button-primary" type="submit">↓ Export filtered results</button>
+                        <button class="button button-success" id="exportCourseBtn" type="button">↓ All course results</button>
+                        <button class="button button-secondary" id="exportExamBtn" type="button">↓ Exam results</button>
+                        <button class="button button-ghost" id="clearFilters" type="button">Clear filters</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- RIGHT COLUMN -->
+            <div class="side-column">
+
+                <section class="panel tool-panel accent-green">
+                    <div class="tool-head">
+                        <div class="tool-icon icon-green">♙</div>
+                        <div>
+                            <h2>Individual student export</h2>
+                            <p>One student's results for the course selected on the left.</p>
+                        </div>
+                    </div>
+
+                    <form id="studentForm" class="student-form">
+                        <div class="form-group">
+                            <label for="studentId">Student ID <b>*</b></label>
+                            <input id="studentId" type="number" min="1" required placeholder="Enter student ID">
+                        </div>
+                        <button class="button button-primary" type="submit">↓ Export student results</button>
+                    </form>
+                </section>
+
+                <section class="panel tool-panel accent-purple">
+                    <div class="tool-head">
+                        <div class="tool-icon icon-purple">▧</div>
+                        <div>
+                            <h2>Academic progress reports</h2>
+                            <p>PDF reports with the student profile, enrollment, exam results and progress.</p>
+                        </div>
+                    </div>
+
+                    <div class="filter-grid two-col">
+                        <div class="form-group">
+                            <label for="progressCourseId">Course ID <b>*</b></label>
+                            <input type="number" id="progressCourseId" min="1" placeholder="Course ID" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="progressStudentId">Student ID</label>
+                            <input type="number" id="progressStudentId" min="1" placeholder="Student ID">
+                        </div>
+                    </div>
+                    <small class="field-hint">Leave Student ID empty to download every report in the course as one ZIP.</small>
+
+                    <div class="export-row stack">
+                        <button class="button button-primary" type="button" id="downloadStudentProgressBtn">↓ Student PDF</button>
+                        <button class="button button-success" type="button" id="downloadCourseProgressZipBtn">↓ All reports (ZIP)</button>
+                    </div>
+
+                    <p id="progressReportMessage" class="page-message" role="status" aria-live="polite"></p>
+                </section>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <span>© <span id="year"></span> LearnHub LMS</span>
+            <span>Faculty workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/faculity/faculty-sidebar.js"></script>
+<script src="/js/faculity/faculty-results.js"></script>
+
+<!-- Clear filters: resets the form and tells the page script the values changed -->
+<script>
+(function () {
+    var btn = document.getElementById('clearFilters');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+        ['courseId', 'examId', 'fromDate', 'toDate', 'status'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.value = '';
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+})();
+</script>
+</body>
+</html>

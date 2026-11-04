@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.lms.entity.ExamApprovalRequest;
+import com.lms.repository.ExamApprovalRequestRepository;
 
 @Service
 @Transactional
@@ -38,77 +40,125 @@ public class ExamAttemptService {
 
     @Autowired
     private ResultService resultService;
+    @Autowired
+private ExamApprovalRequestRepository examApprovalRequestRepository;
+// =====================================================
+// START EXAM - FACULTY APPROVAL REQUIRED
+// =====================================================
 
-    // =====================================================
-    // START EXAM
-    // =====================================================
+public ExamAttemptDTO startExam(Long examId, Long studentId) {
 
-    public ExamAttemptDTO startExam(Long examId, Long studentId) {
+    // 1. Find exam
+    Exam exam = examRepository.findById(examId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Exam not found"));
 
-        // Find exam
-        Exam exam = examRepository.findById(examId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Exam not found"));
+    // 2. Find student
+    User student = userRepository.findById(studentId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Student not found"));
 
-        // Find student
-        User student = userRepository.findById(studentId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Student not found"));
+    // 3. Check student role
+    if (student.getRole() == null ||
+            student.getRole().getName() == null ||
+            !student.getRole().getName().equalsIgnoreCase("STUDENT")) {
 
-        // Check exam publication
-        if (!Boolean.TRUE.equals(exam.getPublished())) {
-            throw new BadRequestException("Exam is not published yet");
-        }
+        throw new BadRequestException(
+                "Only students can start examinations"
+        );
+    }
 
-        // Check completed attempts
-        List<ExamAttempt> completedAttempts =
-                examAttemptRepository
-                        .findByExam_IdAndStudent_IdAndStatusIn(
-                                examId,
-                                studentId,
-                                List.of("SUBMITTED", "AUTO_SUBMITTED")
-                        );
+    // 4. Check exam publication
+    if (!Boolean.TRUE.equals(exam.getPublished())) {
+        throw new BadRequestException(
+                "Exam is not published yet"
+        );
+    }
 
-        if (!completedAttempts.isEmpty()) {
+    // 5. Check faculty approval
+    Long courseId = exam.getCourse().getId();
+
+    ExamApprovalRequest approvalRequest =
+            examApprovalRequestRepository
+                    .findByStudent_IdAndCourse_Id(studentId, courseId)
+                    .orElseThrow(() ->
+                            new BadRequestException(
+                                    "Please request faculty approval before starting the exam."
+                            )
+                    );
+
+    if (approvalRequest.getStatus() !=
+            ExamApprovalRequest.Status.APPROVED) {
+
+        if (approvalRequest.getStatus() ==
+                ExamApprovalRequest.Status.PENDING) {
+
             throw new BadRequestException(
-                    "You have already completed this exam. Please view your result."
+                    "Your exam approval request is pending. Please wait for faculty approval."
+            );
+
+        } else if (approvalRequest.getStatus() ==
+                ExamApprovalRequest.Status.REJECTED) {
+
+            throw new BadRequestException(
+                    "Your exam approval request was rejected. Please contact your faculty."
             );
         }
 
-        // Resume an existing attempt
-        List<ExamAttempt> inProgressAttempts =
-                examAttemptRepository
-                        .findByExam_IdAndStudent_IdAndStatus(
-                                examId,
-                                studentId,
-                                "IN_PROGRESS"
-                        );
-
-        if (!inProgressAttempts.isEmpty()) {
-            return convertToDTO(inProgressAttempts.get(0));
-        }
-
-        // Create a new attempt
-        ExamAttempt attempt = new ExamAttempt();
-
-        attempt.setExam(exam);
-        attempt.setStudent(student);
-
-        LocalDateTime now = LocalDateTime.now();
-
-        attempt.setStartTime(now);
-        attempt.setEndTime(
-                now.plusMinutes(exam.getDurationMinutes())
+        throw new BadRequestException(
+                "Faculty approval is required before starting the exam."
         );
-
-        attempt.setStatus("IN_PROGRESS");
-        attempt.setAnswers("{}");
-
-        ExamAttempt savedAttempt =
-                examAttemptRepository.save(attempt);
-
-        return convertToDTO(savedAttempt);
     }
+
+    // 6. Check completed attempts
+    List<ExamAttempt> completedAttempts =
+            examAttemptRepository
+                    .findByExam_IdAndStudent_IdAndStatusIn(
+                            examId,
+                            studentId,
+                            List.of("SUBMITTED", "AUTO_SUBMITTED")
+                    );
+
+    if (!completedAttempts.isEmpty()) {
+        throw new BadRequestException(
+                "You have already completed this exam. Please view your result."
+        );
+    }
+
+    // 7. Resume existing attempt
+    List<ExamAttempt> inProgressAttempts =
+            examAttemptRepository
+                    .findByExam_IdAndStudent_IdAndStatus(
+                            examId,
+                            studentId,
+                            "IN_PROGRESS"
+                    );
+
+    if (!inProgressAttempts.isEmpty()) {
+        return convertToDTO(inProgressAttempts.get(0));
+    }
+
+    // 8. Create new attempt
+    ExamAttempt attempt = new ExamAttempt();
+
+    attempt.setExam(exam);
+    attempt.setStudent(student);
+
+    LocalDateTime now = LocalDateTime.now();
+
+    attempt.setStartTime(now);
+    attempt.setEndTime(
+            now.plusMinutes(exam.getDurationMinutes())
+    );
+
+    attempt.setStatus("IN_PROGRESS");
+    attempt.setAnswers("{}");
+
+    ExamAttempt savedAttempt =
+            examAttemptRepository.save(attempt);
+
+    return convertToDTO(savedAttempt);
+}
 
     // =====================================================
     // GET STUDENT ATTEMPT FOR A PARTICULAR EXAM

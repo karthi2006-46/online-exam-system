@@ -251,4 +251,16 @@ public class StudentDashboardService {
     private double round(double value) {
         return Math.round(value * 10.0) / 10.0;
     }
+    public double getCourseOverallProgress(Long studentId, Long courseId) {
+
+    Enrollment enrollment = enrollmentRepository
+            .findByStudent_IdAndCourse_Id(studentId, courseId)
+            .orElse(null);
+
+    if (enrollment == null) {
+        return 0.0;
+    }
+
+    return calculateCourseProgress(enrollment).getOverallProgress();
+}
 }

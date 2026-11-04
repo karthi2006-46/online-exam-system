@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Manage Materials | LearnHub LMS</title>
+
+    <link rel="stylesheet" href="/css/faculty/faculty.css">
+    <link rel="stylesheet" href="/css/faculty/manage-materials.css">
+    <link rel="stylesheet" href="/css/faculty/faculty-sidebar.css">
+</head>
+
+<body>
+
+<div class="app-layout fs-layout">
+
+    <!-- SIDEBAR (injected by faculty-sidebar.js) -->
+    <div id="facultySidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-title">
+                <p class="breadcrumb">Faculty portal / Materials</p>
+                <h1>Manage materials</h1>
+                <p class="subtitle">Upload, organise and manage your course resources.</p>
+            </div>
+
+            <div class="topbar-right">
+                <div class="date-card">
+                    <small>Today</small>
+                    <strong id="currentDate">—</strong>
+                </div>
+                <div class="avatar avatar-large" id="topAvatar">F</div>
+            </div>
+        </header>
+
+        <div id="notification" class="notification" role="status" aria-live="polite" hidden></div>
+
+        <!-- STATS -->
+        <section class="kpi-grid" aria-label="Material totals">
+            <article class="stat-card">
+                <div class="stat-icon icon-purple">▤</div>
+                <div class="stat-body"><p>Total materials</p><h2 id="totalMaterials">0</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-red">PDF</div>
+                <div class="stat-body"><p>PDF documents</p><h2 id="pdfMaterials">0</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-blue">▶</div>
+                <div class="stat-body"><p>Videos</p><h2 id="videoMaterials">0</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-green">✓</div>
+                <div class="stat-body"><p>Assignments</p><h2 id="assignmentMaterials">0</h2></div>
+            </article>
+        </section>
+
+        <div class="materials-layout">
+
+            <!-- LEFT: COURSE + UPLOAD -->
+            <div class="side-column">
+
+                <section class="panel course-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Select course</h2>
+                            <p>Enter the ID of a course assigned to you.</p>
+                        </div>
+                    </div>
+
+                    <form id="courseForm" class="course-form">
+                        <div class="form-group">
+                            <label for="courseId">Course ID</label>
+                            <input type="number" id="courseId" name="courseId" min="1" step="1"
+                                   placeholder="Enter course ID" required>
+                        </div>
+
+                        <div class="button-pair">
+                            <button type="submit" class="btn btn-primary" id="loadCourseButton">Load materials</button>
+                            <button type="button" class="btn btn-outline" id="refreshButton">↻ Refresh</button>
+                        </div>
+                    </form>
+
+                    <p class="helper-text">Access is checked by the server. You can manage materials only for courses assigned to your account.</p>
+                </section>
+
+                <section class="panel upload-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2 id="formHeading">Upload new material</h2>
+                            <p>Add learning resources to the selected course.</p>
+                        </div>
+                    </div>
+
+                    <form id="materialForm" enctype="multipart/form-data">
+
+                        <div class="form-group">
+                            <label for="materialTitle">Material title <span class="required">*</span></label>
+                            <input type="text" id="materialTitle" name="title" maxlength="200"
+                                   placeholder="e.g. Introduction to Java" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fileType">Material type <span class="required">*</span></label>
+                            <select id="fileType" name="fileType" required>
+                                <option value="PDF">PDF document</option>
+                                <option value="VIDEO">Video</option>
+                                <option value="ASSIGNMENT">Assignment</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="materialDescription">Description</label>
+                            <textarea id="materialDescription" name="description" rows="3" maxlength="1000"
+                                      placeholder="Describe this learning material..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="materialFile">Select file <span class="required">*</span></label>
+
+                            <label for="materialFile" class="file-drop-area">
+                                <span class="upload-icon">↑</span>
+                                <strong id="fileLabel">Click to select a file</strong>
+                                <span id="fileHelp">PDF: .pdf | Video: .mp4, .webm, .mov, .m4v</span>
+                                <span class="file-size-note">Maximum size: 50 MB</span>
+                            </label>
+
+                            <input type="file" id="materialFile" name="file" class="visually-hidden" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="saveMaterialButton">
+                                <span id="saveButtonText">↑ Upload material</span>
+                            </button>
+                            <button type="button" class="btn btn-outline" id="cancelEditButton" hidden>Cancel edit</button>
+                        </div>
+                        <p class="form-note" id="formNote">Select a course before uploading.</p>
+                    </form>
+                </section>
+            </div>
+
+            <!-- RIGHT: MATERIALS LIST -->
+            <section class="panel materials-panel">
+
+                <div class="panel-header materials-heading">
+                    <div>
+                        <h2>Course materials</h2>
+                        <p>View and manage uploaded learning resources.</p>
+                    </div>
+                    <span class="result-count" id="resultCount">0 materials</span>
+                </div>
+
+                <div class="table-toolbar">
+                    <div class="search-box">
+                        <span aria-hidden="true">⌕</span>
+                        <input type="search" id="materialSearch" placeholder="Search by title or filename"
+                               aria-label="Search materials">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="typeFilter">Type</label>
+                        <select id="typeFilter">
+                            <option value="ALL">All types</option>
+                            <option value="PDF">PDF</option>
+                            <option value="VIDEO">Video</option>
+                            <option value="ASSIGNMENT">Assignment</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="materials-table">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Type</th>
+                                <th>File size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="materialsTableBody">
+                            <tr>
+                                <td colspan="4" class="empty-cell">Select a course to view materials.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <span id="tableMessage">No course selected.</span>
+                    <button type="button" class="btn btn-small btn-outline" id="tableRefreshButton">Refresh list</button>
+                </div>
+            </section>
+
+        </div>
+
+        <footer class="footer">
+            <span>© <span id="currentYear"></span> LearnHub LMS</span>
+            <span>Faculty resource management</span>
+        </footer>
+
+    </main>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-backdrop" id="deleteModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+        <div class="modal-icon">!</div>
+        <h2 id="deleteTitle">Delete material?</h2>
+        <p id="deleteMessage">This material will be removed from the active materials list.</p>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline" id="cancelDeleteButton">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteButton">Delete material</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/faculity/faculty-sidebar.js"></script>
+<script src="/js/faculity/manage-materials.js"></script>
+</body>
+</html>

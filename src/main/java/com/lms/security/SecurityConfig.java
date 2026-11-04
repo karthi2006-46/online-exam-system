@@ -114,6 +114,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/coding-challenges/**").permitAll()
                 .requestMatchers("/api/coding-challenge-progress/**").permitAll()
                 .requestMatchers("/api/exam-eligibility/**").permitAll()
+                .requestMatchers("/api/reports/**").authenticated()
               .requestMatchers(
         org.springframework.http.HttpMethod.POST,
         "/api/exam-approval/request"

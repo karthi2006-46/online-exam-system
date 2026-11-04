@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Backup Management | Faculty Portal</title>
+
+    <link rel="stylesheet" href="/css/faculty/faculty.css">
+    <link rel="stylesheet" href="/css/faculty/backup.css">
+    <link rel="stylesheet" href="/css/faculty/faculty-sidebar.css">
+</head>
+
+<body>
+
+<div class="app-layout fs-layout">
+
+    <!-- SIDEBAR (injected by faculty-sidebar.js) -->
+    <div id="facultySidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-title">
+                <p class="breadcrumb">Faculty portal / Backup management</p>
+                <h1>Backup management</h1>
+                <p class="subtitle">Protect your course and student data.</p>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section class="backup-hero">
+
+            <div class="hero-copy">
+                <span class="status-chip"><i class="pulse-dot"></i> In development</span>
+
+                <h2>Backups you never have to think about</h2>
+                <p>
+                    We are building a secure backup system so you can protect course
+                    content, student records, academic progress and exam data, and
+                    restore it quickly if something goes wrong.
+                </p>
+
+                <ul class="hero-points">
+                    <li>Automatic scheduled backups</li>
+                    <li>One-step restore for any course</li>
+                    <li>Encrypted, access-controlled storage</li>
+                </ul>
+            </div>
+
+            <div class="hero-visual" aria-hidden="true">
+                <span class="ring ring-1"></span>
+                <span class="ring ring-2"></span>
+                <span class="ring ring-3"></span>
+
+                <span class="orbit orbit-a"><i></i></span>
+                <span class="orbit orbit-b"><i></i></span>
+
+                <div class="vault">
+                    <svg viewBox="0 0 24 24">
+                        <ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"></ellipse>
+                        <path d="M4.5 5.5v6c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-6"></path>
+                        <path d="M4.5 11.5v6c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-6"></path>
+                    </svg>
+                    <span class="vault-check">✓</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- FEATURES -->
+        <section class="feature-grid" aria-label="Planned features">
+
+            <article class="feature-card">
+                <div class="feature-icon icon-blue">▤</div>
+                <h3>Course backup</h3>
+                <p>Save course details, materials and exams so nothing is lost.</p>
+            </article>
+
+            <article class="feature-card">
+                <div class="feature-icon icon-purple">♙</div>
+                <h3>Student records</h3>
+                <p>Keep enrollments, results and academic progress safe.</p>
+            </article>
+
+            <article class="feature-card">
+                <div class="feature-icon icon-green">↻</div>
+                <h3>Data recovery</h3>
+                <p>Restore a course or student record from any saved backup.</p>
+            </article>
+
+        </section>
+
+        <!-- ROADMAP -->
+        <section class="panel roadmap">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Release roadmap</h2>
+                    <p>Where this feature is in its journey.</p>
+                </div>
+            </div>
+
+            <ol class="steps">
+                <li class="step done">
+                    <span class="step-dot">✓</span>
+                    <strong>Planning</strong>
+                    <small>Requirements agreed</small>
+                </li>
+                <li class="step current">
+                    <span class="step-dot"></span>
+                    <strong>Development</strong>
+                    <small>Building now</small>
+                </li>
+                <li class="step">
+                    <span class="step-dot"></span>
+                    <strong>Testing</strong>
+                    <small>Up next</small>
+                </li>
+                <li class="step">
+                    <span class="step-dot"></span>
+                    <strong>Release</strong>
+                    <small>Coming soon</small>
+                </li>
+            </ol>
+
+        </section>
+
+        <footer class="footer">
+            <span>© <span id="year"></span> LearnHub LMS</span>
+            <span>Faculty workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/faculity/faculty-sidebar.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -10,7 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
-
+import com.lms.entity.User;
+import com.lms.repository.UserRepository;
+import com.lms.service.ExamApprovalRequestService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 @RestController
 @RequestMapping("/api/exams")
 @CrossOrigin(origins = "*")
@@ -18,6 +22,11 @@ public class ExamController {
 
     @Autowired
     private ExamService examService;
+    @Autowired
+private ExamApprovalRequestService examApprovalRequestService;
+
+@Autowired
+private UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
@@ -65,4 +74,36 @@ public class ExamController {
         examService.deleteExam(examId);
         return ApiResponseUtil.success("Exam deleted successfully");
     }
+    // =====================================================
+// STUDENT - CHECK FACULTY APPROVAL STATUS
+// =====================================================
+
+@GetMapping("/approval-status")
+@PreAuthorize("hasRole('STUDENT')")
+public ResponseEntity<?> getApprovalStatus(
+        @RequestParam Long courseId,
+        Authentication authentication
+) {
+
+    UserDetails userDetails =
+            (UserDetails) authentication.getPrincipal();
+
+    User student = userRepository
+            .findByEmail(userDetails.getUsername())
+            .orElseThrow(() ->
+                    new RuntimeException("Student not found")
+            );
+
+    String status =
+            examApprovalRequestService.getApprovalStatus(
+                    student.getId(),
+                    courseId
+            );
+
+    return ApiResponseUtil.success(
+            "Exam approval status retrieved successfully",
+            status
+    );
+}
+    
 }

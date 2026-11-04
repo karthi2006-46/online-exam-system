@@ -1,4 +1,5 @@
-const API_BASE_URL = "/api/extensions";
+const API_BASE_URL = `${window.API_BASE_URL}/api/extensions`;
+
 
 let requestToReject = null;
 
