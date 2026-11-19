@@ -169,16 +169,16 @@ public class StudentProgressPdfGenerator {
                 report.getEnrollmentStatus()
         );
 
-        addRow(
-                table,
-                "Course Completion",
-                report.getCompletionPercentage() == null
-                        ? "Not available"
-                        : String.format(
-                                "%.2f%%",
-                                report.getCompletionPercentage()
-                        )
-        );
+addRow(
+        table,
+        "Overall Progress",
+        report.getOverallProgress() == null
+                ? "Not available"
+                : String.format(
+                        "%.2f%%",
+                        report.getOverallProgress()
+                )
+);
 
         document.add(table);
         document.add(Chunk.NEWLINE);

@@ -1,197 +1,76 @@
 "use strict";
 
-const API_BASE = `${window.API_BASE_URL}/api/exam-approval`;
+const API_BASE = `${window.API_BASE_URL}/api`;
+
+const EXAM_API = `${API_BASE}/exam-approval`;
+const CODING_API = `${API_BASE}/coding-submissions`;
 
 let allRequests = [];
-let selectedRequest = null;
-let toastTimer = null;
+let codingSubmissions = [];
+let selectedCodingSubmission = null;
 
-
-// ==========================================
+// ========================================
 // INITIALIZATION
-// ==========================================
+// ========================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    initializePage();
     bindEvents();
+
     loadApprovalRequests();
+    loadCodingSubmissions();
 
 });
 
-
-function initializePage() {
-
-    const dateElement = document.getElementById("currentDate");
-
-    if (dateElement) {
-
-        dateElement.textContent =
-            new Date().toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            });
-
-    }
-
-    const yearElement = document.getElementById("currentYear");
-
-    if (yearElement) {
-        yearElement.textContent = new Date().getFullYear();
-    }
-
-    const user = JSON.parse(
-        localStorage.getItem("user") || "null"
-    );
-
-    const email = localStorage.getItem("email") || "";
-
-    const name =
-        user?.name ||
-        user?.fullName ||
-        user?.username ||
-        email ||
-        "Faculty";
-
-    const avatar = document.getElementById("topAvatar");
-
-    if (avatar) {
-        avatar.textContent = name.charAt(0).toUpperCase();
-    }
-
-}
-
-
-// ==========================================
-// EVENT LISTENERS
-// ==========================================
-
-function bindEvents() {
-
-    document.getElementById("refreshButton")
-        .addEventListener("click", loadApprovalRequests);
-
-    document.getElementById("searchInput")
-        .addEventListener("input", renderRequests);
-
-    document.getElementById("statusFilter")
-        .addEventListener("change", renderRequests);
-
-    document.getElementById("sortFilter")
-        .addEventListener("change", renderRequests);
-
-    document.getElementById("clearFilters")
-        .addEventListener("click", clearFilters);
-
-    document.getElementById("closeDetails")
-        .addEventListener("click", closeDetailsModal);
-
-    document.getElementById("closeDetailsFooter")
-        .addEventListener("click", closeDetailsModal);
-
-    document.getElementById("modalApprove")
-        .addEventListener("click", () => {
-
-            if (selectedRequest) {
-                approveRequest(selectedRequest.id);
-            }
-
-        });
-
-    document.getElementById("modalReject")
-        .addEventListener("click", () => {
-
-            if (selectedRequest) {
-                rejectRequest(selectedRequest.id);
-            }
-
-        });
-
-    document.getElementById("detailsModal")
-        .addEventListener("click", event => {
-
-            if (event.target.id === "detailsModal") {
-                closeDetailsModal();
-            }
-
-        });
-
-    document.addEventListener("keydown", event => {
-
-        if (event.key === "Escape") {
-            closeDetailsModal();
-        }
-
-    });
-
-}
-
-
-// ==========================================
-// AUTHENTICATION
-// ==========================================
+// ========================================
+// AUTHENTICATION AND API
+// ========================================
 
 function getToken() {
-
     return localStorage.getItem("token");
-
 }
 
-
-// ==========================================
-// API REQUEST
-// ==========================================
-
-async function apiRequest(endpoint, options = {}) {
+async function apiRequest(url, options = {}) {
 
     const token = getToken();
 
     if (!token) {
-
         window.location.href = "/login.html";
-
         throw new Error("Authentication required.");
-
     }
 
-    const response = await fetch(
-        `${API_BASE}${endpoint}`,
-        {
-            ...options,
+    const headers = {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        ...(options.body ? {
+            "Content-Type": "application/json"
+        } : {}),
+        ...options.headers
+    };
 
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/json",
-                ...options.headers
-            }
-        }
-    );
-
-    if (response.status === 401) {
-
-        throw new Error("Session expired. Please log in again.");
-
-    }
-
-    if (response.status === 403) {
-
-        throw new Error("You are not authorized to perform this action.");
-
-    }
+    const response = await fetch(url, {
+        ...options,
+        headers
+    });
 
     const text = await response.text();
 
     let data = null;
 
     if (text) {
-
         try {
             data = JSON.parse(text);
         } catch {
             data = text;
         }
+    }
 
+    if (response.status === 401) {
+        throw new Error("Session expired. Please log in again.");
+    }
+
+    if (response.status === 403) {
+        throw new Error("You are not authorized to perform this action.");
     }
 
     if (!response.ok) {
@@ -204,23 +83,14 @@ async function apiRequest(endpoint, options = {}) {
         throw new Error(
             message || `Request failed: ${response.status}`
         );
-
     }
 
     return data;
-
 }
-
-
-// ==========================================
-// RESPONSE HANDLING
-// ==========================================
 
 function unwrapResponse(data) {
 
-    if (Array.isArray(data)) {
-        return data;
-    }
+    if (Array.isArray(data)) return data;
 
     if (data?.data !== undefined) {
         return unwrapResponse(data.data);
@@ -231,548 +101,318 @@ function unwrapResponse(data) {
     }
 
     return data;
+}
+
+// ========================================
+// EVENT LISTENERS
+// ========================================
+
+function bindEvents() {
+
+    document.getElementById("refreshButton")
+        .addEventListener("click", refreshAll);
+
+    document.querySelectorAll(".review-tab")
+        .forEach(tab => {
+
+            tab.addEventListener("click", () => {
+
+                const target = tab.dataset.tab;
+
+                document.querySelectorAll(".review-tab")
+                    .forEach(item => item.classList.remove("active"));
+
+                document.querySelectorAll(".review-panel")
+                    .forEach(panel => panel.classList.remove("active"));
+
+                tab.classList.add("active");
+
+                document.getElementById(target)
+                    .classList.add("active");
+
+            });
+
+        });
+
+    document.getElementById("closeCodingModal")
+        .addEventListener("click", closeCodingModal);
+
+    document.getElementById("codingModal")
+        .addEventListener("click", event => {
+
+            if (event.target.id === "codingModal") {
+                closeCodingModal();
+            }
+
+        });
+
+    document.getElementById("approveCoding")
+        .addEventListener("click", () => {
+
+            if (selectedCodingSubmission) {
+                reviewCodingSubmission("approve");
+            }
+
+        });
+
+    document.getElementById("rejectCoding")
+        .addEventListener("click", () => {
+
+            if (selectedCodingSubmission) {
+                reviewCodingSubmission("reject");
+            }
+
+        });
+
+    document.addEventListener("keydown", event => {
+
+        if (event.key === "Escape") {
+            closeCodingModal();
+        }
+
+    });
 
 }
 
+async function refreshAll() {
 
-// ==========================================
-// LOAD PENDING REQUESTS
-// ==========================================
+    const button = document.getElementById("refreshButton");
+
+    button.disabled = true;
+    button.textContent = "Loading...";
+
+    try {
+        await Promise.all([
+            loadApprovalRequests(),
+            loadCodingSubmissions()
+        ]);
+    } finally {
+        button.disabled = false;
+        button.textContent = "↻ Refresh";
+    }
+
+}
+
+// ========================================
+// EXAM APPROVAL REQUESTS
+// ========================================
 
 async function loadApprovalRequests() {
 
     const container =
         document.getElementById("requestsContainer");
 
-    const refreshButton =
-        document.getElementById("refreshButton");
-
-    container.innerHTML = `
-        <tr>
-            <td colspan="5" class="loading-cell">
-                Loading approval requests...
-            </td>
-        </tr>
-    `;
-
-    refreshButton.disabled = true;
-    refreshButton.textContent = "Loading...";
+    container.innerHTML =
+        `<p class="loading">Loading exam requests...</p>`;
 
     try {
 
-        const response = await apiRequest("/pending");
+        const response = await apiRequest(
+            `${EXAM_API}/pending`
+        );
 
         const requests = unwrapResponse(response);
-        document.getElementById("totalRequests").textContent =
-    requests.length;
-
-document.getElementById("pendingRequests").textContent =
-    requests.filter(r => r.status === "PENDING").length;
-
-document.getElementById("approvedRequests").textContent =
-    requests.filter(r => r.status === "APPROVED").length;
-
-document.getElementById("rejectedRequests").textContent =
-    requests.filter(r => r.status === "REJECTED").length;
 
         if (!Array.isArray(requests)) {
-
-            throw new Error(
-                "Invalid approval requests response from server."
-            );
-
+            throw new Error("Invalid exam request response.");
         }
 
         allRequests = requests;
 
-        updateStatistics();
+        updateExamStatistics();
 
-        renderRequests();
+        renderExamRequests();
 
     } catch (error) {
 
-        console.error("Approval requests error:", error);
+        console.error("Exam requests error:", error);
 
         container.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-cell">
-                    Unable to load approval requests.
-                    ${escapeHtml(error.message)}
-                </td>
-            </tr>
+            <div class="empty-state">
+                Unable to load exam requests.
+                <br>
+                ${escapeHtml(error.message)}
+            </div>
         `;
 
         showToast(error.message, "error");
-
-    } finally {
-
-        refreshButton.disabled = false;
-        refreshButton.textContent = "↻ Refresh";
 
     }
 
 }
 
+// ========================================
+// EXAM STATISTICS
+// ========================================
 
-// ==========================================
-// UPDATE STATISTICS
-// ==========================================
+function updateExamStatistics() {
 
-function updateStatistics() {
-
-    const pending = allRequests.filter(request =>
-        String(request.status || "").toUpperCase() === "PENDING"
+    const pending = allRequests.filter(
+        item => String(item.status).toUpperCase() === "PENDING"
     ).length;
 
-    document.getElementById("pendingCount").textContent =
-        pending;
-
-    document.getElementById("totalCount").textContent =
+    document.getElementById("totalRequests").textContent =
         allRequests.length;
 
-    document.getElementById("pendingBadge").textContent =
-        `${pending} Pending`;
+    document.getElementById("pendingRequests").textContent =
+        pending;
 
 }
 
+// ========================================
+// RENDER EXAM REQUESTS
+// ========================================
 
-// ==========================================
-// GET REQUEST INFORMATION
-// ==========================================
-
-function getRequestInfo(request) {
-
-    const student = request.student || {};
-    const course = request.course || {};
-
-    const studentName =
-        `${student.firstName || ""} ${student.lastName || ""}`.trim() ||
-        student.name ||
-        request.studentName ||
-        `Student #${request.studentId || student.id || "-"}`;
-
-    const studentId =
-        student.id ??
-        request.studentId ??
-        "-";
-
-    const email =
-        student.email ||
-        request.studentEmail ||
-        "Not available";
-
-    const courseName =
-        course.title ||
-        course.name ||
-        request.courseName ||
-        `Course #${request.courseId || course.id || "-"}`;
-
-    const courseId =
-        course.id ??
-        request.courseId ??
-        "-";
-
-    const requestedAt =
-        request.requestedAt
-            ? new Date(request.requestedAt)
-            : null;
-
-    return {
-        id: request.id,
-        studentName,
-        studentId,
-        email,
-        courseName,
-        courseId,
-        requestedAt,
-        status: String(request.status || "PENDING").toUpperCase()
-    };
-
-}
-
-
-// ==========================================
-// RENDER REQUEST TABLE
-// ==========================================
-
-function renderRequests() {
+function renderExamRequests() {
 
     const container =
         document.getElementById("requestsContainer");
 
-    const search =
-        document.getElementById("searchInput")
-            .value.trim().toLowerCase();
-
-    const status =
-        document.getElementById("statusFilter").value;
-
-    const sort =
-        document.getElementById("sortFilter").value;
-
-    let filtered = allRequests.filter(request => {
-
-        const info = getRequestInfo(request);
-
-        const searchableText = [
-            info.studentName,
-            info.studentId,
-            info.email,
-            info.courseName,
-            info.courseId
-        ].join(" ").toLowerCase();
-
-        const matchesSearch =
-            searchableText.includes(search);
-
-        const matchesStatus =
-            status === "ALL" ||
-            info.status === status;
-
-        return matchesSearch && matchesStatus;
-
-    });
-
-
-    filtered.sort((a, b) => {
-
-        const dateA =
-            getRequestInfo(a).requestedAt?.getTime() || 0;
-
-        const dateB =
-            getRequestInfo(b).requestedAt?.getTime() || 0;
-
-        return sort === "NEWEST"
-            ? dateB - dateA
-            : dateA - dateB;
-
-    });
-
-
-    if (filtered.length === 0) {
+    if (!allRequests.length) {
 
         container.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-cell">
-                    <strong>No requests found</strong>
-                    <br><br>
-                    No approval requests match your current search or filter.
-                </td>
-            </tr>
+            <div class="empty-state">
+                <h3>No Exam Requests</h3>
+                <p>There are currently no exam approval requests.</p>
+            </div>
         `;
 
-        document.getElementById("resultInfo").textContent =
-            "No matching requests.";
-
         return;
-
     }
 
+    container.innerHTML = allRequests.map(request => {
 
-    container.innerHTML = filtered.map(request => {
+        const student = request.student || {};
+        const course = request.course || {};
 
-        const info = getRequestInfo(request);
+        const studentName =
+            `${student.firstName || ""} ${student.lastName || ""}`.trim()
+            || student.name
+            || request.studentName
+            || `Student #${student.id || request.studentId || "-"}`;
 
-        const initial =
-            info.studentName.charAt(0).toUpperCase();
+        const courseName =
+            course.title
+            || course.name
+            || request.courseName
+            || `Course #${course.id || request.courseId || "-"}`;
 
-        const date =
-            info.requestedAt &&
-            !isNaN(info.requestedAt.getTime())
-                ? info.requestedAt.toLocaleString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
-                })
-                : "Not available";
+        const status =
+            String(request.status || "PENDING").toUpperCase();
 
-        const statusClass =
-            info.status.toLowerCase();
+        const date = request.requestedAt
+            ? new Date(request.requestedAt).toLocaleString("en-IN")
+            : "Not available";
 
         return `
+            <article class="review-card">
 
-            <tr>
+                <h3>${escapeHtml(studentName)}</h3>
 
-                <td>
+                <div class="review-meta">
 
-                    <div class="student-cell">
-
-                        <div class="student-small-avatar">
-                            ${escapeHtml(initial)}
-                        </div>
-
-                        <div class="student-details">
-
-                            <strong>
-                                ${escapeHtml(info.studentName)}
-                            </strong>
-
-                            <small>
-                                ID: ${escapeHtml(info.studentId)}
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                </td>
-
-
-                <td>
-
-                    <span class="course-name">
-                        ${escapeHtml(info.courseName)}
+                    <span>
+                        <strong>Student ID:</strong>
+                        ${escapeHtml(student.id || request.studentId || "-")}
                     </span>
 
-                    <span class="course-id">
-                        Course ID: ${escapeHtml(info.courseId)}
+                    <span>
+                        <strong>Email:</strong>
+                        ${escapeHtml(student.email || request.studentEmail || "-")}
                     </span>
 
-                </td>
-
-
-                <td>
-                    ${escapeHtml(date)}
-                </td>
-
-
-                <td>
-
-                    <span class="status-pill ${escapeHtml(statusClass)}">
-                        ${escapeHtml(info.status)}
+                    <span>
+                        <strong>Course:</strong>
+                        ${escapeHtml(courseName)}
                     </span>
 
-                </td>
+                    <span>
+                        <strong>Requested:</strong>
+                        ${escapeHtml(date)}
+                    </span>
 
+                </div>
 
-                <td>
+                <span class="review-status ${status.toLowerCase()}">
+                    ${escapeHtml(status)}
+                </span>
 
-                    <button
-                        class="view-btn"
-                        data-request-id="${escapeHtml(info.id)}"
-                    >
-                        Review →
-                    </button>
+                ${
+                    status === "PENDING"
+                        ? `
+                            <div class="review-actions">
 
-                </td>
+                                <button
+                                    class="btn-approve"
+                                    data-exam-approve="${escapeHtml(request.id)}">
+                                    Approve
+                                </button>
 
-            </tr>
+                                <button
+                                    class="btn-reject"
+                                    data-exam-reject="${escapeHtml(request.id)}">
+                                    Reject
+                                </button>
 
+                            </div>
+                        `
+                        : ""
+                }
+
+            </article>
         `;
 
     }).join("");
 
-
-    // Bind review buttons without inline JavaScript.
-    container.querySelectorAll("[data-request-id]")
+    container.querySelectorAll("[data-exam-approve]")
         .forEach(button => {
 
             button.addEventListener("click", () => {
-
-                const requestId = button.dataset.requestId;
-
-                openDetailsModal(requestId);
-
+                approveExamRequest(button.dataset.examApprove);
             });
 
         });
 
+    container.querySelectorAll("[data-exam-reject]")
+        .forEach(button => {
 
-    document.getElementById("resultInfo").textContent =
-        `Showing ${filtered.length} of ${allRequests.length} requests`;
+            button.addEventListener("click", () => {
+                rejectExamRequest(button.dataset.examReject);
+            });
 
-}
-
-
-// ==========================================
-// REQUEST DETAILS MODAL
-// ==========================================
-
-function openDetailsModal(requestId) {
-
-    const request = allRequests.find(item =>
-        String(item.id) === String(requestId)
-    );
-
-    if (!request) {
-
-        showToast("Request not found.", "error");
-        return;
-
-    }
-
-    selectedRequest = request;
-
-    const info = getRequestInfo(request);
-
-    document.getElementById("modalStudentName").textContent =
-        info.studentName;
-
-    document.getElementById("modalStudentId").textContent =
-        `Student ID: ${info.studentId}`;
-
-    document.getElementById("modalAvatar").textContent =
-        info.studentName.charAt(0).toUpperCase();
-
-    document.getElementById("modalEmail").textContent =
-        info.email;
-
-    document.getElementById("modalCourse").textContent =
-        info.courseName;
-
-    document.getElementById("modalCourseId").textContent =
-        info.courseId;
-
-    document.getElementById("modalRequestedAt").textContent =
-        info.requestedAt &&
-        !isNaN(info.requestedAt.getTime())
-            ? info.requestedAt.toLocaleString("en-IN")
-            : "Not available";
-
-    document.getElementById("modalStatus").textContent =
-        info.status;
-
-    document.getElementById("modalRequestId").textContent =
-        info.id;
-
-    const pending =
-        info.status === "PENDING";
-
-    document.getElementById("modalApprove").hidden =
-        !pending;
-
-    document.getElementById("modalReject").hidden =
-        !pending;
-
-    document.getElementById("detailsModal")
-        .classList.add("show");
-
-}
-
-
-function closeDetailsModal() {
-
-    document.getElementById("detailsModal")
-        .classList.remove("show");
-
-    selectedRequest = null;
-
-}
-
-
-// ==========================================
-// APPROVE REQUEST
-// ==========================================
-
-async function approveRequest(requestId) {
-
-    const confirmed = confirm(
-        "Are you sure you want to approve this student's exam access request?"
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
-    const comment = prompt(
-        "Enter approval comment (optional):"
-    );
-
-    if (comment === null) {
-        return;
-    }
-
-    try {
-
-        let url = `/${encodeURIComponent(requestId)}/approve`;
-
-        if (comment.trim()) {
-
-            url += `?comment=${encodeURIComponent(comment.trim())}`;
-
-        }
-
-        await apiRequest(url, {
-            method: "PUT"
         });
 
-        closeDetailsModal();
-
-        showToast(
-            "Exam approval request approved successfully.",
-            "success"
-        );
-
-        await loadApprovalRequests();
-
-    } catch (error) {
-
-        console.error("Approval error:", error);
-
-        showToast(error.message, "error");
-
-    }
-
 }
 
+// ========================================
+// APPROVE EXAM REQUEST
+// ========================================
 
-// ==========================================
-// REJECT REQUEST
-// ==========================================
+async function approveExamRequest(requestId) {
 
-async function rejectRequest(requestId) {
+    if (!confirm("Approve this student's exam request?")) return;
 
-    const comment = prompt(
-        "Please enter the reason for rejecting this request:"
-    );
+    const comment = prompt("Enter approval comment (optional):");
 
-    if (comment === null) {
-        return;
-    }
-
-    if (!comment.trim()) {
-
-        showToast(
-            "Please provide a rejection reason.",
-            "error"
-        );
-
-        return;
-
-    }
-
-    const confirmed = confirm(
-        "Are you sure you want to reject this exam approval request?"
-    );
-
-    if (!confirmed) {
-        return;
-    }
+    if (comment === null) return;
 
     try {
 
         const url =
-            `/${encodeURIComponent(requestId)}/reject` +
+            `${EXAM_API}/${encodeURIComponent(requestId)}/approve` +
             `?comment=${encodeURIComponent(comment.trim())}`;
 
         await apiRequest(url, {
             method: "PUT"
         });
 
-        closeDetailsModal();
-
-        showToast(
-            "Exam approval request rejected successfully.",
-            "success"
-        );
+        showToast("Exam request approved successfully.", "success");
 
         await loadApprovalRequests();
 
     } catch (error) {
 
-        console.error("Rejection error:", error);
+        console.error(error);
 
         showToast(error.message, "error");
 
@@ -780,65 +420,437 @@ async function rejectRequest(requestId) {
 
 }
 
+// ========================================
+// REJECT EXAM REQUEST
+// ========================================
 
-// ==========================================
-// CLEAR FILTERS
-// ==========================================
+async function rejectExamRequest(requestId) {
 
-function clearFilters() {
+    const comment = prompt(
+        "Enter the reason for rejecting this exam request:"
+    );
 
-    document.getElementById("searchInput").value = "";
+    if (comment === null) return;
 
-    document.getElementById("statusFilter").value = "ALL";
+    if (!comment.trim()) {
 
-    document.getElementById("sortFilter").value = "NEWEST";
+        showToast("Rejection reason is required.", "error");
 
-    renderRequests();
+        return;
+    }
+
+    if (!confirm("Reject this student's exam request?")) return;
+
+    try {
+
+        const url =
+            `${EXAM_API}/${encodeURIComponent(requestId)}/reject` +
+            `?comment=${encodeURIComponent(comment.trim())}`;
+
+        await apiRequest(url, {
+            method: "PUT"
+        });
+
+        showToast("Exam request rejected.", "success");
+
+        await loadApprovalRequests();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(error.message, "error");
+
+    }
 
 }
 
+// ========================================
+// CODING SUBMISSION REVIEWS
+// ========================================
 
-// ==========================================
-// TOAST NOTIFICATIONS
-// ==========================================
+async function loadCodingSubmissions() {
+
+    const container =
+        document.getElementById("codingContainer");
+
+    container.innerHTML =
+        `<p class="loading">Loading coding submissions...</p>`;
+
+    try {
+
+        const response = await apiRequest(
+            `${CODING_API}/faculty/pending`
+        );
+
+        const submissions = unwrapResponse(response);
+
+        if (!Array.isArray(submissions)) {
+            throw new Error("Invalid coding submissions response.");
+        }
+
+        codingSubmissions = submissions;
+
+        updateCodingStatistics();
+
+        renderCodingSubmissions();
+
+    } catch (error) {
+
+        console.error("Coding submissions error:", error);
+
+        container.innerHTML = `
+            <div class="empty-state">
+                Unable to load coding submissions.
+                <br>
+                ${escapeHtml(error.message)}
+            </div>
+        `;
+
+        showToast(error.message, "error");
+
+    }
+
+}
+
+// ========================================
+// CODING STATISTICS
+// ========================================
+
+function updateCodingStatistics() {
+
+    document.getElementById("pendingCoding").textContent =
+        codingSubmissions.filter(
+            item => item.status === "PENDING_REVIEW"
+        ).length;
+
+    // This endpoint returns pending submissions only.
+    // Approved totals need a separate faculty history endpoint.
+    document.getElementById("approvedCoding").textContent =
+        "—";
+
+}
+
+// ========================================
+// RENDER CODING SUBMISSIONS
+// ========================================
+
+function renderCodingSubmissions() {
+
+    const container =
+        document.getElementById("codingContainer");
+
+    if (!codingSubmissions.length) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                <h3>No Pending Coding Submissions</h3>
+                <p>All available coding submissions have been reviewed.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = codingSubmissions.map(submission => {
+
+        const student = submission.student || {};
+        const challenge = submission.challenge || {};
+        const course = challenge.course || {};
+
+        const studentName =
+            `${student.firstName || ""} ${student.lastName || ""}`.trim()
+            || student.name
+            || `Student #${student.id || "-"}`;
+
+        const challengeName =
+            challenge.title
+            || challenge.name
+            || `Challenge #${challenge.id || "-"}`;
+
+        const courseName =
+            course.title
+            || course.name
+            || "Course";
+
+        const date = submission.submittedAt
+            ? new Date(submission.submittedAt).toLocaleString("en-IN")
+            : "Not available";
+
+        return `
+            <article class="review-card">
+
+                <h3>${escapeHtml(studentName)}</h3>
+
+                <div class="review-meta">
+
+                    <span>
+                        <strong>Student ID:</strong>
+                        ${escapeHtml(student.id || "-")}
+                    </span>
+
+                    <span>
+                        <strong>Challenge:</strong>
+                        ${escapeHtml(challengeName)}
+                    </span>
+
+                    <span>
+                        <strong>Course:</strong>
+                        ${escapeHtml(courseName)}
+                    </span>
+
+                    <span>
+                        <strong>Language:</strong>
+                        ${escapeHtml(submission.language || "-")}
+                    </span>
+
+                    <span>
+                        <strong>Submitted:</strong>
+                        ${escapeHtml(date)}
+                    </span>
+
+                </div>
+
+                <span class="review-status">
+                    PENDING REVIEW
+                </span>
+
+                <div class="review-actions">
+
+                    <button
+                        class="btn-review"
+                        data-review-submission="${escapeHtml(submission.id)}">
+                        Review Code →
+                    </button>
+
+                </div>
+
+            </article>
+        `;
+
+    }).join("");
+
+    container.querySelectorAll("[data-review-submission]")
+        .forEach(button => {
+
+            button.addEventListener("click", () => {
+
+                openCodingReview(
+                    button.dataset.reviewSubmission
+                );
+
+            });
+
+        });
+
+}
+
+// ========================================
+// OPEN CODING REVIEW
+// ========================================
+
+async function openCodingReview(submissionId) {
+
+    try {
+
+        const response = await apiRequest(
+            `${CODING_API}/faculty/${encodeURIComponent(submissionId)}`
+        );
+
+        const submission = unwrapResponse(response);
+
+        if (!submission || typeof submission !== "object") {
+            throw new Error("Invalid submission details.");
+        }
+
+        selectedCodingSubmission = submission;
+
+        const student = submission.student || {};
+        const challenge = submission.challenge || {};
+        const course = challenge.course || {};
+
+        const studentName =
+            `${student.firstName || ""} ${student.lastName || ""}`.trim()
+            || student.name
+            || `Student #${student.id || "-"}`;
+
+        const details = document.getElementById("codingDetails");
+
+        details.innerHTML = `
+
+            <div class="review-meta">
+
+                <span>
+                    <strong>Student:</strong>
+                    ${escapeHtml(studentName)}
+                </span>
+
+                <span>
+                    <strong>Student ID:</strong>
+                    ${escapeHtml(student.id || "-")}
+                </span>
+
+                <span>
+                    <strong>Course:</strong>
+                    ${escapeHtml(course.title || course.name || "-")}
+                </span>
+
+                <span>
+                    <strong>Challenge:</strong>
+                    ${escapeHtml(challenge.title || challenge.name || "-")}
+                </span>
+
+                <span>
+                    <strong>Language:</strong>
+                    ${escapeHtml(submission.language || "-")}
+                </span>
+
+                <span>
+                    <strong>Submitted:</strong>
+                    ${escapeHtml(
+                        submission.submittedAt
+                            ? new Date(submission.submittedAt).toLocaleString("en-IN")
+                            : "-"
+                    )}
+                </span>
+
+            </div>
+
+            <h3>Student Source Code</h3>
+
+            <pre class="code-preview">${escapeHtml(
+                submission.sourceCode || "No source code available."
+            )}</pre>
+
+        `;
+
+        document.getElementById("codingFeedback").value = "";
+
+        const isPending =
+            submission.status === "PENDING_REVIEW";
+
+        document.getElementById("approveCoding").hidden =
+            !isPending;
+
+        document.getElementById("rejectCoding").hidden =
+            !isPending;
+
+        document.getElementById("codingFeedback").disabled =
+            !isPending;
+
+        document.getElementById("codingModal")
+            .classList.add("show");
+
+    } catch (error) {
+
+        console.error("Coding review error:", error);
+
+        showToast(error.message, "error");
+
+    }
+
+}
+
+// ========================================
+// APPROVE / REJECT CODING SUBMISSION
+// ========================================
+
+async function reviewCodingSubmission(action) {
+
+    if (!selectedCodingSubmission) return;
+
+    const feedback =
+        document.getElementById("codingFeedback").value.trim();
+
+    if (action === "reject" && !feedback) {
+        showToast("Please provide a rejection reason.", "error");
+        return;
+    }
+
+    const message = action === "approve"
+        ? "Approve this coding submission?"
+        : "Reject this coding submission?";
+
+    if (!confirm(message)) return;
+
+    const submissionId = selectedCodingSubmission.id;
+
+    try {
+
+        const url =
+            `${CODING_API}/faculty/${encodeURIComponent(submissionId)}/${action}` +
+            `?feedback=${encodeURIComponent(feedback)}`;
+
+        await apiRequest(url, {
+            method: "PUT"
+        });
+
+        closeCodingModal();
+
+        showToast(
+            action === "approve"
+                ? "Coding submission approved successfully."
+                : "Coding submission rejected. Student can submit again.",
+            "success"
+        );
+
+        await loadCodingSubmissions();
+        await loadApprovalRequests();
+
+    } catch (error) {
+
+        console.error("Coding review action error:", error);
+
+        showToast(error.message, "error");
+    }
+}
+
+// ========================================
+// CLOSE CODING MODAL
+// ========================================
+
+function closeCodingModal() {
+
+    document.getElementById("codingModal")
+        .classList.remove("show");
+
+    selectedCodingSubmission = null;
+
+}
+
+// ========================================
+// TOAST
+// ========================================
 
 function showToast(message, type = "success") {
 
     const toast = document.getElementById("toast");
 
-    clearTimeout(toastTimer);
-
     toast.textContent = message;
 
     toast.className = `toast show ${type}`;
 
-    toastTimer = setTimeout(() => {
-
+    setTimeout(() => {
         toast.classList.remove("show");
-
     }, 3500);
 
 }
 
-
-// ==========================================
+// ========================================
 // HTML ESCAPE
-// ==========================================
+// ========================================
 
 function escapeHtml(value) {
 
-    return String(value ?? "").replace(/[&<>"']/g, character => {
-
-        const entities = {
+    return String(value ?? "").replace(
+        /[&<>"']/g,
+        character => ({
             "&": "&amp;",
             "<": "&lt;",
             ">": "&gt;",
             '"': "&quot;",
             "'": "&#39;"
-        };
-
-        return entities[character];
-
-    });
+        })[character]
+    );
 
 }

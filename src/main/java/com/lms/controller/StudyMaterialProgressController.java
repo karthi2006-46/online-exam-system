@@ -20,7 +20,7 @@ public class StudyMaterialProgressController {
 
     private final StudyMaterialProgressService progressService;
 
-    @PostMapping("/complete/{materialId}")
+//     @PostMapping("/complete/{materialId}")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<?> markCompleted(
             @PathVariable Long materialId,

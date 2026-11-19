@@ -31,7 +31,7 @@ public class Enrollment {
     private LocalDateTime dueDate;
 
     @Column(nullable = false)
-    private String status = "ACTIVE"; // ACTIVE, COMPLETED, DROPPED
+    private String status = "ACTIVE"; // ACTIVE,  INACTIVE,COMPLETED, DROPPED
 
     @Column(nullable = false)
     private Double completionPercentage = 0.0;

@@ -122,4 +122,47 @@ public ResponseEntity<?> getCompleteStudentProfile(
             profile
     );
 }
+// ==========================================
+// FORGOT PASSWORD - SEND OTP
+// ==========================================
+
+@PostMapping("/forgot-password")
+public ResponseEntity<?> forgotPassword(
+        @RequestBody Map<String, String> request) {
+
+    authService.sendPasswordResetOtp(request.get("email"));
+
+    return ResponseEntity.ok(
+            Map.of(
+                    "success", true,
+                    "message",
+                    "If the account exists, a password reset OTP has been sent."
+            )
+    );
+}
+
+
+// ==========================================
+// RESET PASSWORD - VERIFY OTP
+// ==========================================
+
+@PostMapping("/reset-password")
+public ResponseEntity<?> resetPassword(
+        @RequestBody Map<String, String> request) {
+
+    authService.resetPassword(
+            request.get("email"),
+            request.get("otp"),
+            request.get("newPassword"),
+            request.get("confirmPassword")
+    );
+
+    return ResponseEntity.ok(
+            Map.of(
+                    "success", true,
+                    "message", "Password reset successfully"
+            )
+    );
+}
+
 }

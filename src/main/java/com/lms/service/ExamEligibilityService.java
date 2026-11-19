@@ -1,7 +1,6 @@
 package com.lms.service;
 
 import com.lms.dto.ExamEligibilityDTO;
-import com.lms.repository.StudyMaterialProgressRepository;
 import com.lms.repository.StudyMaterialRepository;
 import com.lms.repository.CodingChallengeProgressRepository;
 import com.lms.repository.CodingChallengeRepository;
@@ -10,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.lms.entity.CodingSubmissionStatus;
+import com.lms.repository.CodingSubmissionRepository;
+import com.lms.repository.MaterialProgressRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -18,11 +20,12 @@ public class ExamEligibilityService {
 
     private final StudyMaterialRepository studyMaterialRepository;
 
-    private final StudyMaterialProgressRepository studyMaterialProgressRepository;
+private final MaterialProgressRepository materialProgressRepository;
 
     private final CodingChallengeRepository codingChallengeRepository;
 
     private final CodingChallengeProgressRepository codingChallengeProgressRepository;
+    private final CodingSubmissionRepository codingSubmissionRepository;
 
     // ==========================================
     // CHECK EXAM ELIGIBILITY
@@ -47,10 +50,11 @@ public class ExamEligibilityService {
                         .countByCourse_IdAndActiveTrue(courseId);
 
         long completedMaterials =
-                studyMaterialProgressRepository
-                        .countCompletedActiveMaterials(
+                materialProgressRepository
+                        .countByStudent_IdAndMaterial_Course_IdAndCompleted(
                                 studentId,
-                                courseId
+                                courseId,
+                                true
                         );
 
         // Prevent completed count from exceeding total.
@@ -67,38 +71,38 @@ public class ExamEligibilityService {
                 totalMaterials > 0
                 && completedMaterials == totalMaterials;
 
-        // ==========================================
-        // 2. CODING CHALLENGES
-        // ==========================================
+// ==========================================
+// 2. CODING CHALLENGES
+// ==========================================
 
-        long totalCodingChallenges =
-                codingChallengeRepository
-                        .countByCourse_IdAndActive(
-                                courseId,
-                                true
-                        );
+long totalCodingChallenges =
+        codingChallengeRepository
+                .countByCourse_IdAndActive(
+                        courseId,
+                        true
+                );
 
-        long completedCodingChallenges =
-                codingChallengeProgressRepository
-                        .countByStudent_IdAndChallenge_Course_IdAndCompleted(
-                                studentId,
-                                courseId,
-                                true
-                        );
+long completedCodingChallenges =
+        codingSubmissionRepository
+                .countByStudent_IdAndChallenge_Course_IdAndStatus(
+                        studentId,
+                        courseId,
+                        CodingSubmissionStatus.APPROVED
+                );
 
-        completedCodingChallenges = Math.min(
-                completedCodingChallenges,
-                totalCodingChallenges
-        );
+completedCodingChallenges = Math.min(
+        completedCodingChallenges,
+        totalCodingChallenges
+);
 
-        double codingPercentage = totalCodingChallenges == 0
-                ? 0.0
-                : completedCodingChallenges * 100.0
-                        / totalCodingChallenges;
+double codingPercentage = totalCodingChallenges == 0
+        ? 0.0
+        : completedCodingChallenges * 100.0
+                / totalCodingChallenges;
 
-        boolean codingCompleted =
-                totalCodingChallenges > 0
-                && completedCodingChallenges == totalCodingChallenges;
+boolean codingCompleted =
+        totalCodingChallenges > 0
+        && completedCodingChallenges == totalCodingChallenges;
 
         // ==========================================
         // 3. FINAL ELIGIBILITY

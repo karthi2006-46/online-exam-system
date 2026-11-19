@@ -165,29 +165,25 @@ public class StudyMaterialService {
             return course;
         }
 
-        // STUDENT must be enrolled in the requested course.
-        if (isStudent(user)) {
+// STUDENT must have an active enrollment.
+if (isStudent(user)) {
 
-            Enrollment enrollment = enrollmentRepository
-                    .findByStudent_IdAndCourse_Id(
-                            user.getId(),
-                            courseId)
-                    .orElseThrow(() ->
-                            new AccessDeniedException(
-                                    "You are not enrolled in this course"));
+    Enrollment enrollment = enrollmentRepository
+            .findByStudent_IdAndCourse_Id(
+                    user.getId(),
+                    courseId)
+            .orElseThrow(() ->
+                    new AccessDeniedException(
+                            "You are not enrolled in this course"));
 
-            // Optional status validation:
-            // If your application uses an enrollment status named
-            // ACTIVE, add the appropriate status check here.
-            if (enrollment.getStudent() == null
-                    || enrollment.getCourse() == null) {
+if (!"ACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
+    throw new AccessDeniedException(
+            "Your course enrollment is inactive. Please request an extension."
+    );
+}
 
-                throw new AccessDeniedException(
-                        "Invalid course enrollment");
-            }
-
-            return course;
-        }
+    return course;
+}
 
         throw new AccessDeniedException(
                 "You do not have permission to access this course");

@@ -36,6 +36,7 @@ public class StudentProgressReportService {
     private final ResultRepository resultRepository;
     private final ReportMetadataRepository reportMetadataRepository;
     private final StudentProgressPdfGenerator pdfGenerator;
+    private final StudentDashboardService studentDashboardService;
 
     public StudentProgressReportService(
             UserRepository userRepository,
@@ -43,7 +44,8 @@ public class StudentProgressReportService {
             EnrollmentRepository enrollmentRepository,
             ResultRepository resultRepository,
             ReportMetadataRepository reportMetadataRepository,
-            StudentProgressPdfGenerator pdfGenerator) {
+            StudentProgressPdfGenerator pdfGenerator,
+            StudentDashboardService studentDashboardService) {
 
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
@@ -51,12 +53,13 @@ public class StudentProgressReportService {
         this.resultRepository = resultRepository;
         this.reportMetadataRepository = reportMetadataRepository;
         this.pdfGenerator = pdfGenerator;
+        this.studentDashboardService = studentDashboardService;
     }
 
-    /**
-     * Generates a PDF for one student in a course.
-     * Only the faculty assigned to the course can download it.
-     */
+    // ==========================================
+    // GENERATE INDIVIDUAL STUDENT PDF
+    // ==========================================
+
     @Transactional
     public byte[] generateStudentReport(Long studentId, Long courseId) {
 
@@ -70,16 +73,15 @@ public class StudentProgressReportService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Student is not enrolled in this course"));
 
-        StudentProgressReportDTO report =
-                buildReport(enrollment);
+        StudentProgressReportDTO report = buildReport(enrollment);
 
         return generateAndRegisterPdf(report);
     }
 
-    /**
-     * Generates one PDF per enrollment and packages all PDFs into a ZIP.
-     * ACTIVE, COMPLETED, and DROPPED enrollments are included.
-     */
+    // ==========================================
+    // GENERATE ALL STUDENT REPORTS AS ZIP
+    // ==========================================
+
     @Transactional
     public byte[] generateCourseReportsZip(Long courseId) {
 
@@ -96,17 +98,21 @@ public class StudentProgressReportService {
                     "No students are enrolled in this course");
         }
 
-        try (ByteArrayOutputStream outputStream =
-                     new ByteArrayOutputStream();
-             ZipOutputStream zipOutputStream =
-                     new ZipOutputStream(outputStream)) {
+        try (
+                ByteArrayOutputStream outputStream =
+                        new ByteArrayOutputStream();
+
+                ZipOutputStream zipOutputStream =
+                        new ZipOutputStream(outputStream)
+        ) {
 
             for (Enrollment enrollment : enrollments) {
 
                 StudentProgressReportDTO report =
                         buildReport(enrollment);
 
-                byte[] pdfBytes = generateAndRegisterPdf(report);
+                byte[] pdfBytes =
+                        generateAndRegisterPdf(report);
 
                 String fileName =
                         "Student_" + enrollment.getStudent().getId()
@@ -125,15 +131,17 @@ public class StudentProgressReportService {
             return outputStream.toByteArray();
 
         } catch (Exception exception) {
+
             throw new IllegalStateException(
                     "Failed to generate course report ZIP",
                     exception);
         }
     }
 
-    /**
-     * Builds a report DTO using existing entity relationships.
-     */
+    // ==========================================
+    // BUILD STUDENT PROGRESS REPORT
+    // ==========================================
+
     private StudentProgressReportDTO buildReport(
             Enrollment enrollment) {
 
@@ -143,9 +151,16 @@ public class StudentProgressReportService {
         StudentProgressReportDTO report =
                 new StudentProgressReportDTO();
 
+        // Student details
         report.setStudentId(student.getId());
+
         report.setStudentName(
-                joinName(student.getFirstName(), student.getLastName()));
+                joinName(
+                        student.getFirstName(),
+                        student.getLastName()
+                )
+        );
+
         report.setEmail(student.getEmail());
         report.setPhone(student.getPhone());
         report.setAddress(student.getAddress());
@@ -153,17 +168,32 @@ public class StudentProgressReportService {
         report.setAccountStatus(
                 Boolean.TRUE.equals(student.getActive())
                         ? "ACTIVE"
-                        : "INACTIVE");
+                        : "INACTIVE"
+        );
 
         report.setRegistrationDate(student.getCreatedAt());
 
+        // Enrollment details
         report.setEnrollmentId(enrollment.getId());
         report.setEnrollmentDate(enrollment.getEnrollmentDate());
         report.setDueDate(enrollment.getDueDate());
         report.setEnrollmentStatus(enrollment.getStatus());
-        report.setCompletionPercentage(
-                enrollment.getCompletionPercentage());
 
+        // Existing enrollment completion percentage
+        report.setCompletionPercentage(
+                enrollment.getCompletionPercentage()
+        );
+
+        // IMPORTANT:
+        // Use the same overall progress calculation as the dashboard.
+        report.setOverallProgress(
+                studentDashboardService.getCourseOverallProgress(
+                        student.getId(),
+                        course.getId()
+                )
+        );
+
+        // Course details
         report.setCourseId(course.getId());
         report.setCourseTitle(course.getTitle());
         report.setCourseCode(course.getCourseCode());
@@ -172,58 +202,85 @@ public class StudentProgressReportService {
         report.setCourseFees(course.getTotalFees());
 
         if (course.getFaculty() != null) {
+
             report.setFacultyName(
                     joinName(
                             course.getFaculty().getFirstName(),
-                            course.getFaculty().getLastName()));
+                            course.getFaculty().getLastName()
+                    )
+            );
         }
 
+        // Exam performance
         List<Result> results =
                 resultRepository
                         .findByStudent_IdAndExam_Course_IdOrderByCreatedAtDesc(
                                 student.getId(),
-                                course.getId());
+                                course.getId()
+                        );
 
-        List<ExamPerformanceDTO> performances = results.stream()
-                .sorted(Comparator.comparing(
-                        Result::getCreatedAt,
-                        Comparator.nullsLast(Comparator.naturalOrder())))
-                .map(this::toExamPerformance)
-                .toList();
+        List<ExamPerformanceDTO> performances =
+                results.stream()
+                        .sorted(
+                                Comparator.comparing(
+                                        Result::getCreatedAt,
+                                        Comparator.nullsLast(
+                                                Comparator.naturalOrder()
+                                        )
+                                )
+                        )
+                        .map(this::toExamPerformance)
+                        .toList();
 
         report.setExamPerformances(performances);
         report.setTotalExamsAttempted(performances.size());
 
-        report.setExamsPassed((int) performances.stream()
-                .filter(result ->
-                        "PASS".equalsIgnoreCase(result.getStatus()))
-                .count());
+        report.setExamsPassed(
+                (int) performances.stream()
+                        .filter(result ->
+                                "PASS".equalsIgnoreCase(
+                                        result.getStatus()
+                                ))
+                        .count()
+        );
 
-        report.setExamsFailed((int) performances.stream()
-                .filter(result ->
-                        "FAIL".equalsIgnoreCase(result.getStatus()))
-                .count());
+        report.setExamsFailed(
+                (int) performances.stream()
+                        .filter(result ->
+                                "FAIL".equalsIgnoreCase(
+                                        result.getStatus()
+                                ))
+                        .count()
+        );
 
-        double average = performances.stream()
-                .map(ExamPerformanceDTO::getPercentage)
-                .filter(value -> value != null)
-                .mapToDouble(Double::doubleValue)
-                .average()
-                .orElse(0.0);
+        double average =
+                performances.stream()
+                        .map(ExamPerformanceDTO::getPercentage)
+                        .filter(value -> value != null)
+                        .mapToDouble(Double::doubleValue)
+                        .average()
+                        .orElse(0.0);
 
         report.setAveragePercentage(
-                Math.round(average * 100.0) / 100.0);
+                Math.round(average * 100.0) / 100.0
+        );
 
         return report;
     }
 
+    // ==========================================
+    // MAP EXAM RESULT
+    // ==========================================
+
     private ExamPerformanceDTO toExamPerformance(Result result) {
 
-        ExamPerformanceDTO dto = new ExamPerformanceDTO();
+        ExamPerformanceDTO dto =
+                new ExamPerformanceDTO();
 
         dto.setResultId(result.getId());
 
         if (result.getExam() != null) {
+
             dto.setExamId(result.getExam().getId());
             dto.setExamTitle(result.getExam().getTitle());
             dto.setTotalMarks(result.getExam().getTotalMarks());
@@ -237,33 +294,39 @@ public class StudentProgressReportService {
         dto.setSkippedQuestions(result.getSkippedQuestions());
 
         if (result.getExamAttempt() != null) {
+
             dto.setSubmissionDate(
-                    result.getExamAttempt().getSubmissionTime());
+                    result.getExamAttempt().getSubmissionTime()
+            );
         }
 
         return dto;
     }
 
-    /**
-     * Generates a unique report ID, creates the PDF, and stores
-     * its metadata and SHA-256 hash for later verification.
-     */
+    // ==========================================
+    // GENERATE AND REGISTER PDF
+    // ==========================================
+
     private byte[] generateAndRegisterPdf(
             StudentProgressReportDTO report) {
 
         String reportId = UUID.randomUUID().toString();
+
         LocalDateTime generatedAt = LocalDateTime.now();
 
         report.setReportId(reportId);
         report.setGeneratedAt(generatedAt);
 
-        // The QR code currently contains the report ID.
         report.setVerificationCode(reportId);
 
-        byte[] pdfBytes = pdfGenerator.generatePdf(report);
-        String sha256 = pdfGenerator.calculateSha256(pdfBytes);
+        byte[] pdfBytes =
+                pdfGenerator.generatePdf(report);
 
-        ReportMetadata metadata = new ReportMetadata();
+        String sha256 =
+                pdfGenerator.calculateSha256(pdfBytes);
+
+        ReportMetadata metadata =
+                new ReportMetadata();
 
         metadata.setReportId(reportId);
         metadata.setStudentId(report.getStudentId());
@@ -276,15 +339,21 @@ public class StudentProgressReportService {
         return pdfBytes;
     }
 
+    // ==========================================
+    // AUTHENTICATED USER
+    // ==========================================
+
     private User getAuthenticatedUser() {
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
         if (authentication == null
                 || !authentication.isAuthenticated()
                 || authentication.getPrincipal() == null
-                || "anonymousUser".equals(authentication.getPrincipal())) {
+                || "anonymousUser".equals(
+                        authentication.getPrincipal())) {
 
             throw new AccessDeniedException(
                     "Authentication is required");
@@ -293,36 +362,59 @@ public class StudentProgressReportService {
         String email = authentication.getName();
 
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new AccessDeniedException(
-                        "Authenticated user was not found"));
+                .orElseThrow(() ->
+                        new AccessDeniedException(
+                                "Authenticated user was not found"));
     }
+
+    // ==========================================
+    // GET COURSE
+    // ==========================================
 
     private Course getCourse(Long courseId) {
 
         return courseRepository.findById(courseId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Course not found"));
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Course not found"));
     }
+
+    // ==========================================
+    // VERIFY FACULTY OWNERSHIP
+    // ==========================================
 
     private void verifyFacultyOwnsCourse(
             User faculty,
             Course course) {
 
         if (course.getFaculty() == null
-                || !course.getFaculty().getId().equals(faculty.getId())) {
+                || !course.getFaculty().getId()
+                        .equals(faculty.getId())) {
 
             throw new AccessDeniedException(
                     "You are not authorized to access reports for this course");
         }
     }
 
-    private String joinName(String firstName, String lastName) {
+    // ==========================================
+    // JOIN FIRST NAME AND LAST NAME
+    // ==========================================
 
-        String first = firstName == null ? "" : firstName.trim();
-        String last = lastName == null ? "" : lastName.trim();
+    private String joinName(
+            String firstName,
+            String lastName) {
 
-        String fullName = (first + " " + last).trim();
+        String first =
+                firstName == null ? "" : firstName.trim();
 
-        return fullName.isEmpty() ? "Not available" : fullName;
+        String last =
+                lastName == null ? "" : lastName.trim();
+
+        String fullName =
+                (first + " " + last).trim();
+
+        return fullName.isEmpty()
+                ? "Not available"
+                : fullName;
     }
 }

@@ -52,7 +52,7 @@ function checkConfirm() {
     }
 
     const same = confirmInput.value === passwordInput.value;
-    confirmHint.textContent = same ? 'Passwords match' : 'Passwords do not match';
+    confirmHint.textContent = same ? 'Passwords match' : 'Incorrect password';
     confirmHint.className = 'field-hint ' + (same ? 'is-ok' : 'is-bad');
     return same;
 }
@@ -80,7 +80,7 @@ signupForm.addEventListener('submit', async (e) => {
 
     // Confirm password
     if (!checkConfirm()) {
-        showError('Passwords do not match.');
+        showError('Incorrect password.');
         confirmInput.focus();
         return;
     }

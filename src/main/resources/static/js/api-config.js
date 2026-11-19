@@ -9,4 +9,4 @@ window.API_BASE_URL = (() => {
     return "http://localhost:8080";
 })();
 
-console.log("API Base URL:", window.API_BASE_URL);
+console.log("API Base URL:", window.API_BASE_URL);  

@@ -1,8 +1,3 @@
-/* ==================================================
-   ONLINE EXAM (PREMIUM, FOCUS MODE)
-   Load order: student-theme.css -> exam.css
-   No sidebar on this page, so students stay focused.
-   ================================================== */
 
 /* ---------- Sticky top bar ---------- */
 .exam-topbar {

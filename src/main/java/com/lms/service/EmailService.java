@@ -109,4 +109,58 @@ public class EmailService {
             log.error("Could not send welcome email to {}", toEmail, e);
         }
     }
+    // ==========================================
+// SEND PASSWORD RESET OTP EMAIL
+// ==========================================
+
+public void sendPasswordResetOtp(String toEmail, String otp) {
+
+    try {
+        MimeMessage message = mailSender.createMimeMessage();
+
+        MimeMessageHelper helper =
+                new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom(from); // Corrected variable
+        helper.setTo(toEmail);
+        helper.setSubject("LMS - Password Reset OTP");
+
+        String html = """
+                <div style="font-family:Arial,sans-serif;padding:30px;">
+                    <h2>Password Reset Request</h2>
+
+                    <p>We received a request to reset your LMS account password.</p>
+
+                    <p>Your verification OTP is:</p>
+
+                    <h1 style="color:#2563eb;letter-spacing:8px;">
+                        %s
+                    </h1>
+
+                    <p>This OTP expires in 5 minutes.</p>
+
+                    <p>If you did not request a password reset,
+                    please ignore this email.</p>
+
+                    <br>
+                    <p>Regards,<br>LMS Team</p>
+                </div>
+                """.formatted(otp);
+
+        helper.setText(html, true);
+
+        mailSender.send(message);
+
+        log.info("Password reset OTP email sent to {}", toEmail);
+
+    } catch (MessagingException | RuntimeException e) {
+
+        log.error("Could not send password reset OTP to {}", toEmail, e);
+
+        throw new RuntimeException(
+                "Unable to send password reset email"
+        );
+    }
+}
+    
 }

@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
+import com.lms.dto.CodingSubmissionResponseDTO;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -26,6 +29,7 @@ public class CodingSubmissionService {
     private final UserRepository userRepository;
 
     private final EnrollmentRepository enrollmentRepository;
+    private final CodingChallengeProgressRepository codingChallengeProgressRepository;
 
 
     // =====================================================
@@ -69,36 +73,35 @@ public class CodingSubmissionService {
         if (sourceCode == null || sourceCode.isBlank()) {
             throw new RuntimeException("Source code cannot be empty");
         }
+// Check the latest submission for this student and challenge
+CodingSubmission latestSubmission =
+        submissionRepository
+                .findFirstByStudent_IdAndChallenge_IdOrderBySubmittedAtDesc(
+                        studentId,
+                        challengeId
+                )
+                .orElse(null);
 
-        // Check previous attempt
-        var previousSubmission =
-                submissionRepository
-                        .findFirstByStudent_IdAndChallenge_IdOrderBySubmittedAtDesc(
-                                studentId,
-                                challengeId
-                        );
+if (latestSubmission != null) {
 
-        if (previousSubmission.isPresent()) {
+    if (latestSubmission.getStatus() ==
+            CodingSubmissionStatus.PENDING_REVIEW) {
 
-            CodingSubmission previous = previousSubmission.get();
+        throw new RuntimeException(
+                "Your previous submission is waiting for faculty review."
+        );
+    }
 
-            if (previous.getStatus() ==
-                    CodingSubmissionStatus.PENDING_REVIEW) {
+    if (latestSubmission.getStatus() ==
+            CodingSubmissionStatus.APPROVED) {
 
-                throw new RuntimeException(
-                        "Your previous submission is waiting for faculty review"
-                );
-            }
+        throw new RuntimeException(
+                "This coding challenge has already been approved."
+        );
+    }
 
-            if (previous.getStatus() ==
-                    CodingSubmissionStatus.APPROVED) {
-
-                throw new RuntimeException(
-                        "This coding challenge is already approved"
-                );
-            }
-        }
-
+    // REJECTED: allow the student to submit a new attempt
+}
         // Create new submission
         CodingSubmission submission = new CodingSubmission();
 
@@ -134,143 +137,174 @@ public class CodingSubmissionService {
     // 2. STUDENT - VIEW SUBMISSION HISTORY
     // =====================================================
 
-    @Transactional(readOnly = true)
-    public List<CodingSubmission> getStudentSubmissionHistory(
-            Long studentId,
-            Long challengeId
-    ) {
+@Transactional(readOnly = true)
+public List<CodingSubmissionResponseDTO> getStudentSubmissionHistory(
+        Long studentId,
+        Long challengeId
+) {
 
-        User student = userRepository.findById(studentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Student not found"));
+    User student = userRepository.findById(studentId)
+            .orElseThrow(() ->
+                    new RuntimeException("Student not found"));
 
-        validateStudent(student);
+    validateStudent(student);
 
-        CodingChallenge challenge = challengeRepository
-                .findById(challengeId)
-                .orElseThrow(() ->
-                        new RuntimeException("Coding challenge not found"));
+    CodingChallenge challenge = challengeRepository
+            .findById(challengeId)
+            .orElseThrow(() ->
+                    new RuntimeException("Coding challenge not found"));
 
-        validateEnrollment(studentId, challenge.getCourse().getId());
+    validateEnrollment(studentId, challenge.getCourse().getId());
 
-        return submissionRepository
-                .findByStudent_IdAndChallenge_IdOrderBySubmittedAtDesc(
-                        studentId,
-                        challengeId
-                );
-    }
+    return submissionRepository
+            .findByStudent_IdAndChallenge_IdOrderBySubmittedAtDesc(
+                    studentId,
+                    challengeId
+            )
+            .stream()
+            .map(CodingSubmissionResponseDTO::fromEntity)
+            .collect(Collectors.toList());
+}
 
 
     // =====================================================
     // 3. FACULTY - VIEW PENDING CODING SUBMISSIONS
     // =====================================================
 
-    @Transactional(readOnly = true)
-    public List<CodingSubmission> getFacultyPendingSubmissions(
-            Authentication authentication
-    ) {
+ @Transactional(readOnly = true)
+public List<CodingSubmissionResponseDTO> getFacultyPendingSubmissions(
+        Authentication authentication
+) {
 
-        User faculty = getAuthenticatedFaculty(authentication);
+    User faculty = getAuthenticatedFaculty(authentication);
 
-        return submissionRepository
-                .findByChallenge_Course_Faculty_IdAndStatusOrderBySubmittedAtAsc(
-                        faculty.getId(),
-                        CodingSubmissionStatus.PENDING_REVIEW
-                );
-    }
+    return submissionRepository
+            .findByChallenge_Course_Faculty_IdAndStatusOrderBySubmittedAtAsc(
+                    faculty.getId(),
+                    CodingSubmissionStatus.PENDING_REVIEW
+            )
+            .stream()
+            .map(CodingSubmissionResponseDTO::fromEntity)
+            .collect(Collectors.toList());
+}
 
 
     // =====================================================
     // 4. FACULTY - APPROVE CODING SUBMISSION
     // =====================================================
+public CodingSubmissionResponseDTO approveSubmission(
+        Long submissionId,
+        String feedback,
+        Authentication authentication
+) {
 
-    public CodingSubmission approveSubmission(
-            Long submissionId,
-            String feedback,
-            Authentication authentication
-    ) {
+    User faculty = getAuthenticatedFaculty(authentication);
 
-        User faculty = getAuthenticatedFaculty(authentication);
+    CodingSubmission submission =
+            getFacultySubmission(submissionId, faculty);
 
-        CodingSubmission submission =
-                getFacultySubmission(submissionId, faculty);
-
-        if (submission.getStatus() !=
-                CodingSubmissionStatus.PENDING_REVIEW) {
-
-            throw new RuntimeException(
-                    "This submission has already been reviewed"
-            );
-        }
-
-        submission.setStatus(
-                CodingSubmissionStatus.APPROVED
+    if (submission.getStatus() != CodingSubmissionStatus.PENDING_REVIEW) {
+        throw new RuntimeException(
+                "This submission has already been reviewed"
         );
-
-        submission.setFacultyFeedback(feedback);
-        submission.setReviewedBy(faculty);
-        submission.setReviewedAt(LocalDateTime.now());
-
-        return submissionRepository.save(submission);
     }
 
+    // Update submission status
+    submission.setStatus(CodingSubmissionStatus.APPROVED);
+    submission.setFacultyFeedback(feedback);
+    submission.setReviewedBy(faculty);
+    submission.setReviewedAt(LocalDateTime.now());
+
+    // Update coding challenge progress
+    User student = submission.getStudent();
+    CodingChallenge challenge = submission.getChallenge();
+
+    CodingChallengeProgress progress =
+            codingChallengeProgressRepository
+                    .findByStudent_IdAndChallenge_Id(
+                            student.getId(),
+                            challenge.getId()
+                    )
+                    .orElseGet(() -> {
+                        CodingChallengeProgress newProgress =
+                                new CodingChallengeProgress();
+
+                        newProgress.setStudent(student);
+                        newProgress.setChallenge(challenge);
+
+                        return newProgress;
+                    });
+
+    progress.setCompleted(true);
+
+    codingChallengeProgressRepository.save(progress);
+
+    // Save and return DTO
+    CodingSubmission saved =
+            submissionRepository.save(submission);
+
+    return CodingSubmissionResponseDTO.fromEntity(saved);
+}
 
     // =====================================================
     // 5. FACULTY - REJECT CODING SUBMISSION
     // =====================================================
 
-    public CodingSubmission rejectSubmission(
-            Long submissionId,
-            String feedback,
-            Authentication authentication
-    ) {
+   public CodingSubmissionResponseDTO rejectSubmission(
+        Long submissionId,
+        String feedback,
+        Authentication authentication
+) {
 
-        User faculty = getAuthenticatedFaculty(authentication);
+    User faculty = getAuthenticatedFaculty(authentication);
 
-        CodingSubmission submission =
-                getFacultySubmission(submissionId, faculty);
+    CodingSubmission submission =
+            getFacultySubmission(submissionId, faculty);
 
-        if (submission.getStatus() !=
-                CodingSubmissionStatus.PENDING_REVIEW) {
+    if (submission.getStatus() !=
+            CodingSubmissionStatus.PENDING_REVIEW) {
 
-            throw new RuntimeException(
-                    "This submission has already been reviewed"
-            );
-        }
-
-        if (feedback == null || feedback.isBlank()) {
-
-            throw new RuntimeException(
-                    "Please provide a rejection reason"
-            );
-        }
-
-        submission.setStatus(
-                CodingSubmissionStatus.REJECTED
+        throw new RuntimeException(
+                "This submission has already been reviewed"
         );
-
-        submission.setFacultyFeedback(feedback);
-        submission.setReviewedBy(faculty);
-        submission.setReviewedAt(LocalDateTime.now());
-
-        return submissionRepository.save(submission);
     }
+
+    if (feedback == null || feedback.isBlank()) {
+
+        throw new RuntimeException(
+                "Please provide a rejection reason"
+        );
+    }
+
+    submission.setStatus(CodingSubmissionStatus.REJECTED);
+    submission.setFacultyFeedback(feedback);
+    submission.setReviewedBy(faculty);
+    submission.setReviewedAt(LocalDateTime.now());
+
+    CodingSubmission saved =
+            submissionRepository.save(submission);
+
+    return CodingSubmissionResponseDTO.fromEntity(saved);
+}
 
 
     // =====================================================
     // 6. FACULTY - GET INDIVIDUAL SUBMISSION
     // =====================================================
 
-    @Transactional(readOnly = true)
-    public CodingSubmission getFacultySubmissionDetails(
-            Long submissionId,
-            Authentication authentication
-    ) {
+@Transactional(readOnly = true)
+public CodingSubmissionResponseDTO getFacultySubmissionDetails(
+        Long submissionId,
+        Authentication authentication
+) {
 
-        User faculty = getAuthenticatedFaculty(authentication);
+    User faculty = getAuthenticatedFaculty(authentication);
 
-        return getFacultySubmission(submissionId, faculty);
-    }
+    CodingSubmission submission =
+            getFacultySubmission(submissionId, faculty);
+
+    return CodingSubmissionResponseDTO.fromEntity(submission);
+}
 
 
     // =====================================================
@@ -296,25 +330,24 @@ public class CodingSubmissionService {
     // PRIVATE - VALIDATE ENROLLMENT
     // =====================================================
 
-    private void validateEnrollment(
-            Long studentId,
-            Long courseId
-    ) {
+private void validateEnrollment(
+        Long studentId,
+        Long courseId) {
 
-        Enrollment enrollment = enrollmentRepository
-                .findByStudent_IdAndCourse_Id(studentId, courseId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "You are not enrolled in this course"
-                        ));
+    Enrollment enrollment = enrollmentRepository
+            .findByStudent_IdAndCourse_Id(
+                    studentId,
+                    courseId)
+            .orElseThrow(() ->
+                    new RuntimeException(
+                            "You are not enrolled in this course"));
 
-        if ("DROPPED".equalsIgnoreCase(enrollment.getStatus())) {
-
-            throw new RuntimeException(
-                    "Your course enrollment is inactive"
-            );
-        }
-    }
+ if (!"ACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
+    throw new RuntimeException(
+            "Your course enrollment is inactive. Please request an extension."
+    );
+}
+}
 
 
     // =====================================================

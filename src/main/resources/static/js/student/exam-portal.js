@@ -81,7 +81,9 @@ function extractData(result) {
 async function getCourseIds() {
 
     // Use the selected course if available.
-    const selectedCourseId = localStorage.getItem("courseId");
+  const selectedCourseId =
+    new URLSearchParams(window.location.search).get("courseId") ||
+    localStorage.getItem("courseId");
 
     if (selectedCourseId) {
         return [selectedCourseId];
@@ -479,7 +481,7 @@ function startSelectedExam(exam) {
     localStorage.setItem("selectedExamId", String(exam.id));
 
     window.location.href =
-        `exam.html?examId=${encodeURIComponent(exam.id)}`;
+        `exam.html?examId=${encodeURIComponent(exam.id)}&courseId=${encodeURIComponent(exam.courseId ?? "")}`;
 }
 
 

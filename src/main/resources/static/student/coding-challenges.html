@@ -15,107 +15,77 @@
 <body>
 <div class="container">
 
-    <!-- Shared Student Sidebar -->
     <div id="studentSidebar"></div>
 
     <main class="main-content">
+
         <header class="header">
             <div class="page-heading">
-                <div class="eyebrow">STUDENT WORKSPACE</div>
                 <h1>Coding Challenges</h1>
-                <p>Build your skills one problem at a time.</p>
+                <p>Write your solution, submit it, and wait for faculty approval.</p>
             </div>
-            <button type="button" class="btn-secondary refresh-button" onclick="loadChallenges()">
-                <span aria-hidden="true">↻</span> Refresh challenges
-            </button>
+            <div class="header-actions">
+                <a class="btn-secondary" href="my-courses.html">Back to My Courses</a>
+                <button type="button" class="btn-secondary" id="refreshBtn">Refresh</button>
+            </div>
         </header>
 
         <section class="summary" aria-labelledby="courseTitle">
-            <div class="summary-top">
-                <div class="course-icon" aria-hidden="true">&lt;/&gt;</div>
-                <div class="course-info">
-                    <span class="section-label">CURRENT COURSE</span>
-                    <h2 id="courseTitle">Loading course...</h2>
-                    <p>Complete the coding exercises to build your practical experience.</p>
-                </div>
-            </div>
-            <div class="summary-divider"></div>
-            <div class="progress-heading">
+            <div class="summary-row">
                 <div>
-                    <span class="section-label">YOUR PROGRESS</span>
-                    <p class="progress-number"><strong id="completedCount">0 / 0</strong><span>challenges completed</span></p>
+                    <span class="section-label">Course</span>
+                    <h2 id="courseTitle">Loading course...</h2>
                 </div>
-                <span class="progress-percent" id="progressText">Progress: 0%</span>
+                <div class="summary-count">
+                    <strong id="completedCount">0 / 0</strong>
+                    <span>approved</span>
+                </div>
             </div>
-            <div class="progress-track" role="progressbar" aria-label="Coding challenge completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+
+            <div class="progress-track" role="progressbar" aria-label="Approved coding challenges"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
-            <div class="eligibility-panel">
-                <span class="eligibility-icon" aria-hidden="true">✓</span>
-                <p id="eligibilityText" aria-live="polite">Checking exam eligibility...</p>
-            </div>
+
+            <p class="eligibility" id="eligibilityText" aria-live="polite">Checking exam eligibility...</p>
         </section>
 
-        <section class="challenge-list-section" aria-labelledby="challengeListTitle">
-            <div class="section-heading">
-                <div>
-                    <span class="section-label">PRACTICE AREA</span>
-                    <h2 id="challengeListTitle">Available challenges</h2>
-                    <p>Review the requirements, write your solution, and track your progress.</p>
-                </div>
-            </div>
+        <section class="challenge-list-section" aria-label="Coding challenges">
             <div id="challengesContainer" aria-live="polite" aria-busy="false">
-                <div class="empty">
-                    <div class="empty-icon" aria-hidden="true">&lt;/&gt;</div>
-                    <h3>Loading coding challenges</h3>
-                    <p>Your practice problems will appear here shortly.</p>
-                </div>
+                <div class="empty"><p>Loading coding challenges...</p></div>
             </div>
         </section>
 
         <footer class="page-footer">
             <span>LMS Student Portal</span><span>Keep practising. Keep improving.</span>
         </footer>
+
     </main>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", async function () {
     const sidebarContainer = document.getElementById("studentSidebar");
-
-    if (!sidebarContainer) {
-        console.error("Sidebar container not found.");
-        return;
-    }
+    if (!sidebarContainer) return;
 
     try {
         const response = await fetch("student-sidebar.html");
-
-        if (!response.ok) {
-            throw new Error("HTTP " + response.status);
-        }
+        if (!response.ok) throw new Error("HTTP " + response.status);
 
         sidebarContainer.innerHTML = await response.text();
 
         const script = document.createElement("script");
         script.src = "../js/student/student-sidebar.js";
-
         script.onload = function () {
             if (typeof window.initializeStudentSidebar === "function") {
                 window.initializeStudentSidebar();
             }
         };
-
-        script.onerror = function () {
-            console.error("Unable to load student-sidebar.js");
-        };
-
         document.body.appendChild(script);
 
     } catch (error) {
         console.error("Sidebar loading failed:", error);
-        sidebarContainer.innerHTML =
-            "<p>Unable to load navigation. Please refresh the page.</p>";
+        sidebarContainer.innerHTML = "<p>Unable to load navigation. Please refresh the page.</p>";
     }
 });
 </script>

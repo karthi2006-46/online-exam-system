@@ -50,5 +50,9 @@ findByChallenge_Course_Faculty_IdAndStatusOrderBySubmittedAtAsc(
         Long facultyId,
         CodingSubmissionStatus status
 );
+boolean existsByStudent_IdAndChallenge_Id(
+        Long studentId,
+        Long challengeId
+);
 
 }

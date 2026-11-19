@@ -5,75 +5,278 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Exam Approvals | LearnHub Faculty Portal</title>
+    <title>Faculty Reviews | LearnHub Faculty Portal</title>
 
     <link rel="stylesheet" href="/css/faculty/faculty-sidebar.css">
     <link rel="stylesheet" href="/css/faculty/exam-approval-requests.css">
+
+    <style>
+        .review-tabs {
+            display: flex;
+            gap: 12px;
+            margin: 25px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .review-tab {
+            padding: 14px 22px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+        }
+
+        .review-tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .review-panel {
+            display: none;
+        }
+
+        .review-panel.active {
+            display: block;
+        }
+
+        .review-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 18px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+        }
+
+        .review-card h3 {
+            margin: 0 0 12px;
+        }
+
+        .review-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin: 15px 0;
+            color: #64748b;
+        }
+
+        .review-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .review-status.approved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .review-status.rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .review-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .review-actions button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-review {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-approve {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-reject {
+            background: #dc2626;
+            color: white;
+        }
+
+        .code-preview {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 18px;
+            border-radius: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .feedback-box {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        .empty-state {
+            background: white;
+            padding: 35px;
+            text-align: center;
+            border-radius: 12px;
+            color: #64748b;
+        }
+
+        .review-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .review-modal.show {
+            display: block;
+        }
+
+        .review-modal-content {
+            background: white;
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 25px;
+            border-radius: 14px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .modal-close {
+            border: none;
+            background: transparent;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        @media(max-width: 600px) {
+            .review-tabs {
+                overflow-x: auto;
+            }
+
+            .review-tab {
+                white-space: nowrap;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-    <div class="fs-layout">
+<div class="fs-layout">
 
-        <!-- Faculty Sidebar -->
-        <div id="facultySidebar"></div>
+    <div id="facultySidebar"></div>
 
-        <!-- Main Content -->
-        <main class="main-content">
+    <main class="main-content">
 
-            <div class="container">
+        <div class="container">
 
-                <div class="page-header">
-                    <div>
-                        <div class="breadcrumb">
-                            Faculty Portal / Exam Approvals
-                        </div>
+            <div class="page-header">
 
-                        <h1>Exam Approval Management</h1>
-
-                        <p>
-                            Review student eligibility and manage
-                            exam access requests.
-                        </p>
+                <div>
+                    <div class="breadcrumb">
+                        Faculty Portal / Student Reviews
                     </div>
 
-                    <button class="refresh-btn"
-                            onclick="loadApprovalRequests()">
-                        ↻ Refresh
-                    </button>
+                    <h1>Student Review Management</h1>
+
+                    <p>
+                        Review coding submissions and manage student exam approval requests.
+                    </p>
                 </div>
 
-                <!-- Statistics -->
-                <div class="stats-grid">
+                <button class="refresh-btn" id="refreshButton">
+                    ↻ Refresh
+                </button>
 
-                    <div class="stat-card">
-                        <span>Total Requests</span>
-                        <h2 id="totalRequests">0</h2>
-                    </div>
+            </div>
 
-                    <div class="stat-card">
-                        <span>Pending</span>
-                        <h2 id="pendingRequests">0</h2>
-                    </div>
+            <!-- Statistics -->
 
-                    <div class="stat-card">
-                        <span>Approved</span>
-                        <h2 id="approvedRequests">0</h2>
-                    </div>
+            <div class="stats-grid">
 
-                    <div class="stat-card">
-                        <span>Rejected</span>
-                        <h2 id="rejectedRequests">0</h2>
-                    </div>
-
+                <div class="stat-card">
+                    <span>Total Exam Requests</span>
+                    <h2 id="totalRequests">0</h2>
                 </div>
 
-                <!-- Requests -->
+                <div class="stat-card">
+                    <span>Pending Exam Requests</span>
+                    <h2 id="pendingRequests">0</h2>
+                </div>
+
+                <div class="stat-card">
+                    <span>Pending Coding Reviews</span>
+                    <h2 id="pendingCoding">0</h2>
+                </div>
+
+                <div class="stat-card">
+                    <span>Approved Coding</span>
+                    <h2 id="approvedCoding">0</h2>
+                </div>
+
+            </div>
+
+            <!-- Tabs -->
+
+            <div class="review-tabs">
+
+                <button class="review-tab active"
+                        data-tab="examPanel">
+                    Exam Approval Requests
+                </button>
+
+                <button class="review-tab"
+                        data-tab="codingPanel">
+                    Coding Submission Reviews
+                </button>
+
+            </div>
+
+            <!-- Exam Approval Panel -->
+
+            <section class="review-panel active" id="examPanel">
+
                 <div class="requests-section">
 
                     <div class="section-header">
-                        <h2>Student Approval Requests</h2>
-                        <span>Review and manage requests</span>
+                        <h2>Student Exam Requests</h2>
+                        <span>Review and manage exam access</span>
                     </div>
 
                     <div id="requestsContainer">
@@ -82,15 +285,80 @@
 
                 </div>
 
-            </div>
+            </section>
 
-        </main>
+            <!-- Coding Review Panel -->
+
+            <section class="review-panel" id="codingPanel">
+
+                <div class="requests-section">
+
+                    <div class="section-header">
+                        <h2>Coding Submissions</h2>
+                        <span>Review submitted student programs</span>
+                    </div>
+
+                    <div id="codingContainer">
+                        <p class="loading">Loading coding submissions...</p>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- Coding Review Modal -->
+
+<div class="review-modal" id="codingModal">
+
+    <div class="review-modal-content">
+
+        <div class="modal-header">
+
+            <h2>Review Coding Submission</h2>
+
+            <button class="modal-close" id="closeCodingModal">
+                &times;
+            </button>
+
+        </div>
+
+        <div id="codingDetails"></div>
+
+        <h3>Faculty Feedback</h3>
+
+        <textarea
+            id="codingFeedback"
+            class="feedback-box"
+            placeholder="Enter feedback for the student...">
+        </textarea>
+
+        <div class="review-actions">
+
+            <button class="btn-approve" id="approveCoding">
+                Approve Submission
+            </button>
+
+            <button class="btn-reject" id="rejectCoding">
+                Reject Submission
+            </button>
+
+        </div>
 
     </div>
 
-    <script src="/js/api-config.js"></script>
-    <script src="/js/faculity/faculty-sidebar.js"></script>
-    <script src="/js/faculity/exam-approval-requests.js"></script>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/faculity/faculty-sidebar.js"></script>
+<script src="/js/faculity/exam-approval-requests.js"></script>
 
 </body>
 </html>

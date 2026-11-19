@@ -1,0 +1,81 @@
+/* LMS Student Portal protection */
+
+/* Smooth reveal: the page fades back in when released */
+body.lms-student-protection > *:not(#lmsProtectionWarning) {
+    transition: filter .25s ease, opacity .25s ease;
+    will-change: filter;
+}
+
+/* Instant hide: no transition on the way in, so the blur lands before the capture */
+body.lms-protection-blurred > *:not(#lmsProtectionWarning) {
+    filter: blur(40px) brightness(.3) !important;
+    opacity: .6 !important;
+    transition: none !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+#lmsProtectionWarning {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(10, 18, 38, .96);
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#lmsProtectionWarning.lms-protection-visible {
+    display: flex;
+    animation: lmsFadeIn .2s ease;
+}
+
+@keyframes lmsFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+#lmsProtectionWarning .lms-protection-card {
+    width: min(460px, 100%);
+    padding: 32px;
+    border-radius: 16px;
+    background: #1e293b;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, .35);
+}
+
+#lmsProtectionWarning h2 {
+    margin: 0 0 12px;
+    font-size: 25px;
+}
+
+#lmsProtectionWarning p {
+    line-height: 1.6;
+    margin: 0 0 22px;
+}
+
+#lmsProtectionWarning button {
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 24px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+#lmsProtectionWarning button:hover {
+    background: #1d4ed8;
+}
+
+/* Printing is discouraged; browser/OS print paths may still bypass this. */
+@media print {
+    body.lms-student-protection {
+        visibility: hidden !important;
+    }
+}

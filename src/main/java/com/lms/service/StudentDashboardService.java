@@ -8,7 +8,7 @@ import com.lms.repository.CodingChallengeRepository;
 import com.lms.repository.EnrollmentRepository;
 import com.lms.repository.ExamAttemptRepository;
 import com.lms.repository.ExamRepository;
-import com.lms.repository.StudyMaterialProgressRepository;
+import com.lms.repository.MaterialProgressRepository;
 import com.lms.repository.StudyMaterialRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class StudentDashboardService {
     private final ExamAttemptRepository examAttemptRepository;
     private final CodingChallengeRepository codingChallengeRepository;
     private final CodingChallengeProgressRepository codingChallengeProgressRepository;
-    private final StudyMaterialProgressRepository studyMaterialProgressRepository;
+    private final MaterialProgressRepository materialProgressRepository;
 
     private static final double DURATION_WEIGHT = 20.0;
     private static final double MATERIAL_WEIGHT = 25.0;
@@ -139,10 +139,12 @@ public class StudentDashboardService {
         long totalMaterials =
                 studyMaterialRepository.countByCourse_IdAndActiveTrue(courseId);
 
-        long completedMaterials =
-                studyMaterialProgressRepository.countCompletedActiveMaterials(
+     long completedMaterials =
+        materialProgressRepository
+                .countByStudent_IdAndMaterial_Course_IdAndCompleted(
                         studentId,
-                        courseId
+                        courseId,
+                        true
                 );
 
         completedMaterials = Math.min(completedMaterials, totalMaterials);

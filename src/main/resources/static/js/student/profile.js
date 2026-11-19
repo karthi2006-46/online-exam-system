@@ -30,9 +30,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadProfile();
 
-    setupPasswordForm();
+    // setupPasswordForm();
 
-    setupPasswordVisibility();
+    // setupPasswordVisibility();
 
     setupProfilePicture();
 
@@ -473,244 +473,244 @@ function formatDate(value) {
 // PASSWORD FORM
 // =====================================================
 
-function setupPasswordForm() {
+// function setupPasswordForm() {
 
-    const form =
-        document.getElementById("passwordForm");
+//     const form =
+//         document.getElementById("passwordForm");
 
-    if (!form) {
-        return;
-    }
+//     if (!form) {
+//         return;
+//     }
 
-    form.addEventListener("submit", async event => {
+//     form.addEventListener("submit", async event => {
 
-        event.preventDefault();
-
-
-        const currentPassword =
-            getValue("currentPassword");
-
-        const newPassword =
-            getValue("newPassword");
-
-        const confirmPassword =
-            getValue("confirmPassword");
+//         event.preventDefault();
 
 
-        // Required fields
-        if (
-            !currentPassword ||
-            !newPassword ||
-            !confirmPassword
-        ) {
+//         const currentPassword =
+//             getValue("currentPassword");
 
-            showMessage(
-                "passwordMessage",
-                "Please fill in all password fields.",
-                "error"
-            );
+//         const newPassword =
+//             getValue("newPassword");
 
-            return;
-        }
+//         const confirmPassword =
+//             getValue("confirmPassword");
 
 
-        // Minimum password length
-        if (newPassword.length < 8) {
+//         // Required fields
+//         if (
+//             !currentPassword ||
+//             !newPassword ||
+//             !confirmPassword
+//         ) {
 
-            showMessage(
-                "passwordMessage",
-                "Your new password must contain at least 8 characters.",
-                "error"
-            );
+//             showMessage(
+//                 "passwordMessage",
+//                 "Please fill in all password fields.",
+//                 "error"
+//             );
 
-            return;
-        }
-
-
-        // New password must differ from current password
-        if (newPassword === currentPassword) {
-
-            showMessage(
-                "passwordMessage",
-                "Your new password must differ from your current password.",
-                "error"
-            );
-
-            return;
-        }
+//             return;
+//         }
 
 
-        // Confirm password
-        if (newPassword !== confirmPassword) {
+//         // Minimum password length
+//         if (newPassword.length < 8) {
 
-            showMessage(
-                "passwordMessage",
-                "The new password and confirmation do not match.",
-                "error"
-            );
+//             showMessage(
+//                 "passwordMessage",
+//                 "Your new password must contain at least 8 characters.",
+//                 "error"
+//             );
 
-            return;
-        }
+//             return;
+//         }
 
 
-        await submitPasswordChange({
-            currentPassword,
-            newPassword,
-            confirmPassword
-        });
+//         // New password must differ from current password
+//         if (newPassword === currentPassword) {
 
-    });
+//             showMessage(
+//                 "passwordMessage",
+//                 "Your new password must differ from your current password.",
+//                 "error"
+//             );
 
-}
+//             return;
+//         }
+
+
+//         // Confirm password
+//         if (newPassword !== confirmPassword) {
+
+//             showMessage(
+//                 "passwordMessage",
+//                 "The new password and confirmation do not match.",
+//                 "error"
+//             );
+
+//             return;
+//         }
+
+
+//         await submitPasswordChange({
+//             currentPassword,
+//             newPassword,
+//             confirmPassword
+//         });
+
+//     });
+
+// }
 
 
 // =====================================================
 // SUBMIT PASSWORD CHANGE
 // =====================================================
 
-async function submitPasswordChange(passwordData) {
+// async function submitPasswordChange(passwordData) {
 
-    const button =
-        document.getElementById("changePasswordBtn");
+//     const button =
+//         document.getElementById("changePasswordBtn");
 
-    if (button) {
+//     if (button) {
 
-        button.disabled = true;
+//         button.disabled = true;
 
-        button.textContent = "Updating...";
+//         button.textContent = "Updating...";
 
-    }
+//     }
 
-    try {
+//     try {
 
-        const response = await fetch(
-            CHANGE_PASSWORD_ENDPOINT,
-            {
-                method: "POST",
-                headers: getHeaders(),
-                body: JSON.stringify(passwordData)
-            }
-        );
-
-
-        const result =
-            await readResponse(response);
+//         const response = await fetch(
+//             CHANGE_PASSWORD_ENDPOINT,
+//             {
+//                 method: "POST",
+//                 headers: getHeaders(),
+//                 body: JSON.stringify(passwordData)
+//             }
+//         );
 
 
-        if (!response.ok) {
-
-            throw new Error(
-                result.message ||
-                result.error ||
-                "Unable to change password."
-            );
-
-        }
+//         const result =
+//             await readResponse(response);
 
 
-        showMessage(
-            "passwordMessage",
-            result.message ||
-                "Password changed successfully.",
-            "success"
-        );
+//         if (!response.ok) {
+
+//             throw new Error(
+//                 result.message ||
+//                 result.error ||
+//                 "Unable to change password."
+//             );
+
+//         }
 
 
-        // Clear password fields after success
-        document
-            .getElementById("passwordForm")
-            .reset();
+//         showMessage(
+//             "passwordMessage",
+//             result.message ||
+//                 "Password changed successfully.",
+//             "success"
+//         );
 
 
-        // Reset visibility buttons
-        document
-            .querySelectorAll(".toggle-password")
-            .forEach(button => {
-
-                button.textContent = "Show";
-
-                const input =
-                    document.getElementById(
-                        button.dataset.target
-                    );
-
-                if (input) {
-                    input.type = "password";
-                }
-
-            });
+//         // Clear password fields after success
+//         document
+//             .getElementById("passwordForm")
+//             .reset();
 
 
-    } catch (error) {
+//         // Reset visibility buttons
+//         document
+//             .querySelectorAll(".toggle-password")
+//             .forEach(button => {
 
-        console.error(
-            "Password change error:",
-            error
-        );
+//                 button.textContent = "Show";
 
-        showMessage(
-            "passwordMessage",
-            error.message ||
-                "Unable to change password.",
-            "error"
-        );
+//                 const input =
+//                     document.getElementById(
+//                         button.dataset.target
+//                     );
 
-    } finally {
+//                 if (input) {
+//                     input.type = "password";
+//                 }
 
-        if (button) {
+//             });
 
-            button.disabled = false;
 
-            button.textContent = "Change Password";
+//     } catch (error) {
 
-        }
+//         console.error(
+//             "Password change error:",
+//             error
+//         );
 
-    }
+//         showMessage(
+//             "passwordMessage",
+//             error.message ||
+//                 "Unable to change password.",
+//             "error"
+//         );
 
-}
+//     } finally {
+
+//         if (button) {
+
+//             button.disabled = false;
+
+//             button.textContent = "Change Password";
+
+//         }
+
+//     }
+
+// }
 
 
 // =====================================================
 // SHOW / HIDE PASSWORD
 // =====================================================
 
-function setupPasswordVisibility() {
+// function setupPasswordVisibility() {
 
-    document
-        .querySelectorAll(".toggle-password")
-        .forEach(button => {
+//     document
+//         .querySelectorAll(".toggle-password")
+//         .forEach(button => {
 
-            button.addEventListener("click", () => {
+//             button.addEventListener("click", () => {
 
-                const input =
-                    document.getElementById(
-                        button.dataset.target
-                    );
+//                 const input =
+//                     document.getElementById(
+//                         button.dataset.target
+//                     );
 
-                if (!input) {
-                    return;
-                }
+//                 if (!input) {
+//                     return;
+//                 }
 
-                const shouldShow =
-                    input.type === "password";
+//                 const shouldShow =
+//                     input.type === "password";
 
-                input.type =
-                    shouldShow ? "text" : "password";
+//                 input.type =
+//                     shouldShow ? "text" : "password";
 
-                button.textContent =
-                    shouldShow ? "Hide" : "Show";
+//                 button.textContent =
+//                     shouldShow ? "Hide" : "Show";
 
 
-                button.setAttribute(
-                    "aria-label",
-                    `${shouldShow ? "Hide" : "Show"} password`
-                );
+//                 button.setAttribute(
+//                     "aria-label",
+//                     `${shouldShow ? "Hide" : "Show"} password`
+//                 );
 
-            });
+//             });
 
-        });
+//         });
 
-}
+// }
 
 
 // =====================================================

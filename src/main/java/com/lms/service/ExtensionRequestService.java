@@ -84,10 +84,11 @@ public class ExtensionRequestService {
                     "You can request an extension only after the course duration expires");
         }
 
-        if (!"ACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
-            throw new BadRequestException(
-                    "Extension requests are allowed only for active enrollments");
-        }
+// Allow extension requests only for expired enrollments.
+if (!"INACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
+    throw new BadRequestException(
+            "Extension requests are allowed only for expired enrollments");
+}
 
         long pendingRequests =
                 extensionRepository.countByEnrollment_IdAndStatus(
@@ -221,10 +222,24 @@ public class ExtensionRequestService {
                     "Enrollment due date is not configured");
         }
 
-        enrollment.setDueDate(
-                enrollment.getDueDate().plusDays(request.getDaysRequested()));
+// Extend the existing due date
+LocalDateTime newDueDate =
+        enrollment.getDueDate().plusDays(request.getDaysRequested());
 
-        enrollmentRepository.save(enrollment);
+enrollment.setDueDate(newDueDate);
+
+// Reactivate enrollment after approval
+if (!"COMPLETED".equalsIgnoreCase(enrollment.getStatus())
+        && !"DROPPED".equalsIgnoreCase(enrollment.getStatus())) {
+
+    if (newDueDate.isAfter(LocalDateTime.now())) {
+        enrollment.setStatus("ACTIVE");
+    } else {
+        enrollment.setStatus("INACTIVE");
+    }
+}
+
+enrollmentRepository.save(enrollment);
 
         request.setStatus("APPROVED");
         request.setReviewedBy(reviewer);

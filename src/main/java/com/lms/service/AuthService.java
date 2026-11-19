@@ -28,6 +28,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import com.lms.dto.StudentProfileDTO;
 import com.lms.service.EmailService;
+import com.lms.entity.PasswordResetOtp;
+import com.lms.repository.PasswordResetOtpRepository;
+
+import java.security.SecureRandom;
 
 @Service
 @Transactional
@@ -55,6 +59,10 @@ private EnrollmentRepository enrollmentRepository;
 
 @Autowired
 private EmailService emailService;
+@Autowired
+private PasswordResetOtpRepository passwordResetOtpRepository;
+
+private final SecureRandom secureRandom = new SecureRandom();
 
 
     public UserDTO signup(SignupRequest request) {
@@ -313,5 +321,128 @@ public StudentProfileDTO getCompleteStudentProfile(Long userId) {
                     .collect(Collectors.toList());
 
     return new StudentProfileDTO(userDTO, courses);
+}
+// ==========================================
+// SEND PASSWORD RESET OTP
+// ==========================================
+
+public void sendPasswordResetOtp(String email) {
+
+    if (!StringUtils.hasText(email)) {
+        throw new BadRequestException("Email is required");
+    }
+
+    email = email.trim().toLowerCase();
+
+    // Do not reveal whether the account exists.
+    User user = userRepository.findByEmail(email).orElse(null);
+
+    if (user == null || !Boolean.TRUE.equals(user.getActive())) {
+        return;
+    }
+
+    // Prevent repeated OTP requests within 60 seconds.
+    PasswordResetOtp existing =
+            passwordResetOtpRepository.findByEmail(email).orElse(null);
+
+    if (existing != null &&
+            existing.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(60))) {
+        throw new BadRequestException(
+                "Please wait before requesting another OTP"
+        );
+    }
+
+    passwordResetOtpRepository.deleteByEmail(email);
+
+    int otpNumber = 100000 + secureRandom.nextInt(900000);
+    String otp = String.valueOf(otpNumber);
+
+    PasswordResetOtp resetOtp = new PasswordResetOtp();
+
+    resetOtp.setEmail(email);
+    resetOtp.setOtpHash(passwordEncoder.encode(otp));
+    resetOtp.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+    resetOtp.setCreatedAt(LocalDateTime.now());
+    resetOtp.setAttempts(0);
+
+    passwordResetOtpRepository.save(resetOtp);
+
+    emailService.sendPasswordResetOtp(email, otp);
+}
+
+
+// ==========================================
+// VERIFY OTP AND RESET PASSWORD
+// ==========================================
+
+public void resetPassword(
+        String email,
+        String otp,
+        String newPassword,
+        String confirmPassword) {
+
+    if (!StringUtils.hasText(email)
+            || !StringUtils.hasText(otp)
+            || !StringUtils.hasText(newPassword)
+            || !StringUtils.hasText(confirmPassword)) {
+
+        throw new BadRequestException("All fields are required");
+    }
+
+    email = email.trim().toLowerCase();
+
+    if (!newPassword.equals(confirmPassword)) {
+        throw new BadRequestException(
+                "New password and confirmation do not match"
+        );
+    }
+
+    if (newPassword.length() < 8) {
+        throw new BadRequestException(
+                "Password must contain at least 8 characters"
+        );
+    }
+
+    PasswordResetOtp resetOtp =
+            passwordResetOtpRepository.findByEmail(email)
+                    .orElseThrow(() ->
+                            new BadRequestException("Invalid or expired OTP"));
+
+    if (resetOtp.getExpiresAt().isBefore(LocalDateTime.now())) {
+        passwordResetOtpRepository.deleteByEmail(email);
+        throw new BadRequestException("OTP has expired. Request a new OTP.");
+    }
+
+    if (resetOtp.getAttempts() >= 5) {
+        passwordResetOtpRepository.deleteByEmail(email);
+        throw new BadRequestException(
+                "Maximum OTP attempts exceeded. Request a new OTP."
+        );
+    }
+
+    if (!passwordEncoder.matches(otp, resetOtp.getOtpHash())) {
+
+        resetOtp.setAttempts(resetOtp.getAttempts() + 1);
+        passwordResetOtpRepository.save(resetOtp);
+
+        throw new BadRequestException("Incorrect OTP");
+    }
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
+
+    if (passwordEncoder.matches(newPassword, user.getPassword())) {
+        throw new BadRequestException(
+                "New password must be different from the current password"
+        );
+    }
+
+    user.setPassword(passwordEncoder.encode(newPassword));
+
+    userRepository.save(user);
+
+    // OTP cannot be reused.
+    passwordResetOtpRepository.deleteByEmail(email);
 }
 }

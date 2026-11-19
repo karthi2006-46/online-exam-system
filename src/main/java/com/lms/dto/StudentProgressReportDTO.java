@@ -25,6 +25,7 @@ private LocalDateTime enrollmentDate;
 private LocalDateTime dueDate;
     private String enrollmentStatus;
     private Double completionPercentage;
+    private Double overallProgress;
 
     // Course details
     private Long courseId;
@@ -263,6 +264,13 @@ private LocalDateTime dueDate;
     public void setCompletionPercentage(Double completionPercentage) {
         this.completionPercentage = completionPercentage;
     }
+    public Double getOverallProgress() {
+    return overallProgress;
+}
+
+public void setOverallProgress(Double overallProgress) {
+    this.overallProgress = overallProgress;
+}
 
     public Long getCourseId() {
         return courseId;

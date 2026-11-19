@@ -1,15 +1,32 @@
 // =====================================================
 // STUDENT MY COURSES MODULE
-// Course Progress + Study Materials + Coding Challenges
-// Exam Approval + Course Extension
+// Six-step path per course:
+// 1 Study materials  2 Coding challenges  3 Coding approval
+// 4 Request exam approval  5 Approval status  6 Take exam
 // =====================================================
 
 const API_BASE = `${window.API_BASE_URL}`;
 const EXTENSION_API = `${API_BASE}/api/extensions`;
 
 let selectedExtensionEnrollment = null;
-
 const extensionCoursesByEnrollment = new Map();
+
+const CHECK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+
+
+// =====================================================
+// COURSE ID RESOLVER (permanent fix)
+// Always returns the REAL course ID, never the enrollment ID.
+// The backend must send `courseId` (or a nested `course.id`).
+// We deliberately do NOT fall back to `course.id`, because in
+// an enrollment row that is the enrollment/row ID (this was
+// the cause of /api/materials/course/1 instead of /course/2).
+// =====================================================
+
+function resolveCourseId(course) {
+    const id = course?.courseId ?? course?.course?.id;
+    return id !== undefined && id !== null && id !== "" ? Number(id) : null;
+}
 
 
 // =====================================================
@@ -20,35 +37,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const form = document.getElementById("extensionForm");
     const cancelButton = document.getElementById("cancelExtensionBtn");
+    const closeButton = document.getElementById("closeExtensionModalBtn");
     const logoutLink = document.getElementById("logoutLink");
     const modal = document.getElementById("extensionModal");
 
-    if (form) {
-        form.addEventListener("submit", submitExtensionRequest);
-    }
-
-    if (cancelButton) {
-        cancelButton.addEventListener("click", closeExtensionModal);
-    }
+    if (form) form.addEventListener("submit", submitExtensionRequest);
+    if (cancelButton) cancelButton.addEventListener("click", closeExtensionModal);
+    if (closeButton) closeButton.addEventListener("click", closeExtensionModal);
 
     if (logoutLink) {
         logoutLink.addEventListener("click", () => {
             localStorage.removeItem("token");
             localStorage.removeItem("userId");
             localStorage.removeItem("role");
+            localStorage.removeItem("courseId");
+            localStorage.removeItem("examId");
         });
     }
 
-    // Close modal when clicking outside the form.
     if (modal) {
         modal.addEventListener("click", event => {
-            if (event.target === modal) {
-                closeExtensionModal();
-            }
+            if (event.target === modal) closeExtensionModal();
         });
     }
 
-    // Load extension history.
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && modal && modal.classList.contains("show")) {
+            closeExtensionModal();
+        }
+    });
+
     loadStudentExtensionHistory();
 
 });
@@ -83,14 +101,10 @@ async function loadCourses() {
         );
 
         if (!response.ok) {
-            throw new Error(
-                `Failed to load courses. HTTP ${response.status}`
-            );
+            throw new Error(`Failed to load courses. HTTP ${response.status}`);
         }
 
         const courses = await response.json();
-
-        console.log("Student Courses:", courses);
 
         const container = document.getElementById("coursesContainer");
 
@@ -99,278 +113,52 @@ async function loadCourses() {
             return;
         }
 
-        container.innerHTML = "";
-
         if (!Array.isArray(courses) || courses.length === 0) {
-
-            container.innerHTML = `
-                <h3>No Enrolled Courses Found</h3>
-            `;
-
+            container.innerHTML = `<div class="courses-empty">You are not enrolled in any courses yet.</div>`;
             return;
         }
 
-        // Render each enrolled course.
-        for (const course of courses) {
-
-            const courseId = course.courseId ?? course.id;
-            const enrollmentId = course.enrollmentId;
-
-            if (!courseId) {
-                console.error("Course ID missing:", course);
-                continue;
+        const validCourses = courses.filter(course => {
+            const ok = resolveCourseId(course) != null;
+            if (!ok) {
+                console.error("Course ID missing (backend must send courseId):", course);
             }
+            return ok;
+        });
 
-            // Remember course name for extension history.
-            if (enrollmentId != null) {
-                extensionCoursesByEnrollment.set(
-                    Number(enrollmentId),
-                    course.courseTitle ??
-                    course.courseName ??
-                    "Course"
-                );
-            }
-
-            // Calculate displayed progress.
-            const progress = Math.min(
-                100,
-                Math.max(0, Number(course.progress ?? 0))
-            );
-
-            // Get material and coding eligibility.
-            const eligibility = await getExamEligibility(
-                studentId,
-                courseId,
-                token
-            );
-
-            // Get faculty exam approval.
-            const approvalStatus = await getApprovalStatus(
-                studentId,
-                courseId,
-                token
-            );
-
-            const examApproved = approvalStatus === "APPROVED";
-
-            // Check whether the enrollment deadline has expired.
-            const dueDate = course.dueDate
-                ? new Date(course.dueDate)
-                : null;
-
-            const deadlineExpired =
-                dueDate !== null &&
-                !Number.isNaN(dueDate.getTime()) &&
-                Date.now() >= dueDate.getTime();
-
-            // Build the course card.
-            const card = document.createElement("div");
-            card.className = "course-card";
-
-            card.innerHTML = `
-
-                <h3>
-                    ${escapeHTML(
-                        course.courseTitle ??
-                        course.courseName ??
-                        "Course"
-                    )}
-                </h3>
-
-                <p>
-                    <strong>Duration:</strong>
-                    ${escapeHTML(course.durationDays ?? "-")} Days
-                </p>
-
-                <p>
-                    <strong>Overall Progress:</strong>
-                    ${progress.toFixed(1)}%
-                </p>
-
-                <div style="
-                    width:100%;
-                    background:#ddd;
-                    height:20px;
-                    border-radius:10px;
-                    overflow:hidden;
-                    margin-bottom:12px;
-                ">
-                    <div style="
-                        width:${progress}%;
-                        height:100%;
-                        background:green;
-                        transition:width 0.4s;
-                    "></div>
-                </div>
-
-                <p>
-                    <strong>Status:</strong>
-                    ${escapeHTML(course.status ?? "-")}
-                </p>
-
-                <p>
-                    <strong>Due Date:</strong>
-                    ${course.dueDate
-                        ? escapeHTML(formatExtensionDateTime(course.dueDate))
-                        : "-"
-                    }
-                </p>
-
-                <div class="course-actions" style="
-                    display:flex;
-                    flex-wrap:wrap;
-                    gap:8px;
-                    margin-top:12px;
-                ">
-
-                    <button
-                        type="button"
-                        class="materials-btn">
-                        Study Materials
-                    </button>
-
-                    <button
-                        type="button"
-                        class="coding-btn">
-                        Coding Challenges
-                    </button>
-
-                    <button
-                        type="button"
-                        class="approval-btn">
-                        ${
-                            examApproved
-                                ? "Exam Approved"
-                                : approvalStatus === "PENDING"
-                                    ? "Approval Pending"
-                                    : approvalStatus === "REJECTED"
-                                        ? "Request Approval Again"
-                                        : "Complete Materials & Coding"
-                        }
-                    </button>
-
-                    <button
-                        type="button"
-                        class="exam-btn"
-                        ${examApproved ? "" : "disabled"}>
-                        ${
-                            examApproved
-                                ? "Take Exam"
-                                : "Await Faculty Approval"
-                        }
-                    </button>
-
-                    ${
-                        enrollmentId != null && deadlineExpired
-                            ? `
-                                <button
-                                    type="button"
-                                    class="extension-btn">
-                                    Request Extension
-                                </button>
-                            `
-                            : ""
-                    }
-
-                </div>
-
-                <div class="eligibility-message" style="
-                    margin-top:10px;
-                    font-size:14px;
-                    color:#555;
-                ">
-                    ${escapeHTML(
-                        getEligibilityMessage(
-                            eligibility,
-                            approvalStatus
-                        )
-                    )}
-                </div>
-
-            `;
-
-            // ---------------------------------------------
-            // STUDY MATERIALS
-            // ---------------------------------------------
-
-            card.querySelector(".materials-btn").addEventListener(
-                "click",
-                () => openMaterials(courseId)
-            );
-
-            // ---------------------------------------------
-            // CODING CHALLENGES
-            // ---------------------------------------------
-
-            card.querySelector(".coding-btn").addEventListener(
-                "click",
-                () => openCodingChallenges(courseId)
-            );
-
-            // ---------------------------------------------
-            // EXAM APPROVAL
-            // ---------------------------------------------
-
-            const approvalButton =
-                card.querySelector(".approval-btn");
-
-            if (
-                approvalStatus === "PENDING" ||
-                approvalStatus === "APPROVED"
-            ) {
-
-                approvalButton.disabled = true;
-
-            } else {
-
-                approvalButton.addEventListener(
-                    "click",
-                    () => requestExamApproval(
-                        studentId,
-                        courseId,
-                        token
-                    )
-                );
-
-            }
-
-            // ---------------------------------------------
-            // TAKE EXAM
-            // ---------------------------------------------
-
-            card.querySelector(".exam-btn").addEventListener(
-                "click",
-                () => startExam(courseId, studentId, token)
-            );
-
-            // ---------------------------------------------
-            // REQUEST COURSE EXTENSION
-            // ---------------------------------------------
-
-            const extensionButton =
-                card.querySelector(".extension-btn");
-
-            if (extensionButton) {
-
-                extensionButton.addEventListener("click", () => {
-
-                    openExtensionModal(course);
-
-                });
-
-            }
-
-            container.appendChild(card);
-
+        if (validCourses.length === 0) {
+            container.innerHTML = `<div class="courses-empty">Course data is incomplete. Please contact support.</div>`;
+            return;
         }
+
+        // Fetch eligibility and approval for all courses in parallel.
+        const cards = await Promise.all(validCourses.map(async course => {
+
+            const courseId = resolveCourseId(course);
+
+            if (course.enrollmentId != null) {
+                extensionCoursesByEnrollment.set(
+                    Number(course.enrollmentId),
+                    course.courseTitle ?? course.courseName ?? "Course"
+                );
+            }
+
+            const [eligibility, approvalStatus] = await Promise.all([
+                getExamEligibility(studentId, courseId, token),
+                getApprovalStatus(studentId, courseId, token)
+            ]);
+
+            return buildCourseCard(course, courseId, eligibility, approvalStatus, studentId, token);
+
+        }));
+
+        container.innerHTML = "";
+        cards.forEach(card => container.appendChild(card));
 
     } catch (error) {
 
         console.error("Load Courses Error:", error);
-
-        showPageMessage(
-            "Unable to load courses. Check the browser console."
-        );
+        showPageMessage("Unable to load courses. Please refresh the page.");
 
     }
 
@@ -378,69 +166,243 @@ async function loadCourses() {
 
 
 // =====================================================
-// EXTENSION API HELPER
+// BUILD ONE COURSE CARD
 // =====================================================
+
+function buildCourseCard(course, courseId, eligibility, approvalStatus, studentId, token) {
+
+    const enrollmentId = course.enrollmentId;
+    const title = course.courseTitle ?? course.courseName ?? "Course";
+
+    const progress = Math.min(100, Math.max(0, Number(course.progress ?? 0)));
+
+    const dueDate = course.dueDate ? new Date(course.dueDate) : null;
+    const deadlineExpired =
+        dueDate !== null &&
+        !Number.isNaN(dueDate.getTime()) &&
+        Date.now() >= dueDate.getTime();
+
+    const card = document.createElement("article");
+    card.className = "course-card";
+
+    card.innerHTML = `
+        <div class="course-head">
+            <div>
+                <h3 class="course-title">${escapeHTML(title)}</h3>
+                <ul class="course-meta">
+                    <li><strong>Duration:</strong> ${escapeHTML(course.durationDays ?? "-")} days</li>
+                    <li><strong>Status:</strong> ${escapeHTML(course.status ?? "-")}</li>
+                    <li>
+                        <strong>Due:</strong>
+                        <span class="${deadlineExpired ? "overdue" : ""}">
+                            ${course.dueDate ? escapeHTML(formatExtensionDateTime(course.dueDate)) : "-"}
+                            ${deadlineExpired ? "(expired)" : ""}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+            ${enrollmentId != null && deadlineExpired
+                ? `<button type="button" class="extension-btn">Request extension</button>`
+                : ""}
+        </div>
+
+        <div class="course-progress">
+            <div class="course-progress-row">
+                <span>Overall progress</span>
+                <strong>${progress.toFixed(1)}%</strong>
+            </div>
+            <div class="progress-bar"
+                 role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                 aria-valuenow="${progress.toFixed(0)}">
+                <div class="progress" style="width:${progress}%"></div>
+            </div>
+        </div>
+
+        <ol class="steps" aria-label="Exam path for ${escapeHTML(title)}">
+            ${renderSteps(eligibility, approvalStatus)}
+        </ol>
+    `;
+
+    // Actions
+    const on = (selector, handler) => {
+        const el = card.querySelector(selector);
+        if (el && !el.disabled) el.addEventListener("click", handler);
+    };
+
+    on('[data-action="materials"]', () => openMaterials(courseId));
+    on('[data-action="coding"]', () => openCodingChallenges(courseId));
+    on('[data-action="request"]', () => requestExamApproval(studentId, courseId, token));
+    on('[data-action="exam"]', () => startExam(courseId, studentId, token));
+    on(".extension-btn", () => openExtensionModal(course));
+
+    return card;
+
+}
+
+
+// =====================================================
+// STEP PATH
+// =====================================================
+
+function renderSteps(eligibility, approvalStatus) {
+
+    const e = eligibility || {};
+    const eligible = e.eligibleForExamApproval === true;
+
+    const materialsDone = e.materialsCompleted === true;
+    const codingApproved = e.codingCompleted === true;
+
+    // Coding is "completed" once all challenges are submitted, or once approved.
+    const submitted = e.submittedCodingChallenges;
+    const codingDone =
+        codingApproved ||
+        (submitted != null && e.totalCodingChallenges > 0 && submitted >= e.totalCodingChallenges);
+
+    const requested = ["PENDING", "APPROVED"].includes(approvalStatus);
+    const approved = approvalStatus === "APPROVED";
+    const rejected = approvalStatus === "REJECTED";
+
+    const mDone = e.completedMaterials ?? 0, mTotal = e.totalMaterials ?? 0;
+    const cDone = e.completedCodingChallenges ?? 0, cTotal = e.totalCodingChallenges ?? 0;
+
+    // done flags, in order
+    const done = [materialsDone, codingDone, codingApproved, requested, approved, false];
+
+    // The first step that is not done is the current one.
+    const currentIndex = done.findIndex(flag => !flag);
+
+    const defs = [
+        {
+            title: "Study materials",
+            desc: materialsDone ? "All materials completed." : `${mDone}/${mTotal} completed.`,
+            action: `<button type="button" class="step-btn ${materialsDone ? "secondary" : ""}" data-action="materials">
+                        ${materialsDone ? "Review materials" : "Open materials"}</button>`
+        },
+        {
+            title: "Coding challenges",
+            desc: codingDone ? "All challenges completed." : (submitted != null
+                ? `${submitted}/${cTotal} submitted.` : "Complete every challenge."),
+            action: `<button type="button" class="step-btn ${codingDone ? "secondary" : ""}" data-action="coding">
+                        ${codingDone ? "Review challenges" : "Open challenges"}</button>`
+        },
+        {
+            title: "Coding approval",
+            desc: codingApproved ? "Faculty approved all challenges." : `${cDone}/${cTotal} approved by faculty.`,
+            action: codingApproved
+                ? `<span class="pill pill-approved">Approved</span>`
+                : codingDone
+                    ? `<span class="pill pill-pending">Awaiting review</span>`
+                    : `<span class="pill pill-wait">Not approved</span>`
+        },
+        {
+            title: "Request approval",
+            desc: requested ? "Request sent to faculty."
+                : rejected ? "Your last request was rejected."
+                : eligible ? "You can request now." : "Finish steps 1 to 3 first.",
+            action: `<button type="button" class="step-btn" data-action="request" ${!eligible || requested ? "disabled" : ""}>
+                        ${requested ? "Requested" : rejected ? "Request again" : "Request approval"}</button>`
+        },
+        {
+            title: "Approval status",
+            desc: approved ? "Faculty approved your exam."
+                : approvalStatus === "PENDING" ? "Waiting for faculty review."
+                : rejected ? "Check your progress, then request again."
+                : "No request sent yet.",
+            action: approved ? `<span class="pill pill-approved">Approved</span>`
+                : approvalStatus === "PENDING" ? `<span class="pill pill-pending">Pending</span>`
+                : rejected ? `<span class="pill pill-rejected">Rejected</span>`
+                : `<span class="pill pill-wait">Not requested</span>`
+        },
+        {
+            title: "Take exam",
+            desc: approved ? "You are cleared to start." : "Unlocks after approval.",
+            action: `<button type="button" class="step-btn success" data-action="exam" ${approved ? "" : "disabled"}>
+                        Take exam</button>`
+        }
+    ];
+
+    return defs.map((step, i) => {
+
+        let state = "is-locked";
+        if (done[i]) state = "is-done";
+        else if (i === currentIndex) state = "is-current";
+
+        // Step 5 shows the red state when the request was rejected.
+        if (i === 4 && rejected) state = "is-error";
+
+        const marker = state === "is-done" ? CHECK_ICON : i + 1;
+        const current = state === "is-current" ? ' aria-current="step"' : "";
+
+        return `
+            <li class="step ${state}"${current}>
+                <span class="step-marker">${marker}</span>
+                <span class="step-title">${step.title}</span>
+                <p class="step-desc">${escapeHTML(step.desc)}</p>
+                <div class="step-action">${step.action}</div>
+            </li>
+        `;
+
+    }).join("");
+
+}
+
+
+// =====================================================
+// API RESPONSE HELPERS
+// =====================================================
+
+async function parseApiResponse(response) {
+
+    const responseText = await response.text();
+
+    if (!responseText) return null;
+
+    try {
+        return JSON.parse(responseText);
+    } catch {
+        return responseText;
+    }
+
+}
+
+function extractErrorMessage(result, status) {
+
+    if (typeof result === "string") return result;
+
+    if (result && typeof result === "object") {
+        return (
+            result.message ||
+            result.error ||
+            result.data?.message ||
+            `Request failed. HTTP ${status}`
+        );
+    }
+
+    return `Request failed. HTTP ${status}`;
+
+}
 
 async function extensionApiRequest(url, options = {}) {
 
     const token = localStorage.getItem("token");
 
     if (!token) {
-        throw new Error(
-            "Your session has expired. Please log in again."
-        );
+        throw new Error("Your session has expired. Please log in again.");
     }
 
     const response = await fetch(url, {
-
         ...options,
-
         headers: {
             "Authorization": `Bearer ${token}`,
             "Accept": "application/json",
             ...(options.headers || {})
         }
-
     });
 
-    const responseText = await response.text();
-
-    let result = null;
-
-    try {
-
-        result = responseText
-            ? JSON.parse(responseText)
-            : null;
-
-    } catch {
-
-        result = responseText;
-
-    }
+    const result = await parseApiResponse(response);
 
     if (!response.ok) {
-
-        let errorMessage;
-
-        if (typeof result === "string") {
-
-            errorMessage = result;
-
-        } else if (result && typeof result === "object") {
-
-            errorMessage =
-                result.message ||
-                result.error ||
-                result.data?.message;
-
-        }
-
-        throw new Error(
-            errorMessage ||
-            `Request failed. HTTP ${response.status}`
-        );
-
+        throw new Error(extractErrorMessage(result, response.status));
     }
 
     return result;
@@ -449,30 +411,18 @@ async function extensionApiRequest(url, options = {}) {
 
 
 // =====================================================
-// LOAD STUDENT EXTENSION HISTORY
+// EXTENSION HISTORY
 // =====================================================
 
 async function loadStudentExtensionHistory() {
 
     const studentId = localStorage.getItem("userId");
+    const tbody = document.getElementById("extensionHistoryBody");
+    const message = document.getElementById("extensionHistoryMessage");
 
-    const tbody = document.getElementById(
-        "extensionHistoryBody"
-    );
+    if (!studentId || !tbody) return;
 
-    const message = document.getElementById(
-        "extensionHistoryMessage"
-    );
-
-    if (!studentId || !tbody) {
-        return;
-    }
-
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="5">Loading extension history...</td>
-        </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="5">Loading extension history...</td></tr>`;
 
     try {
 
@@ -480,7 +430,6 @@ async function loadStudentExtensionHistory() {
             `${EXTENSION_API}/student/${encodeURIComponent(studentId)}`
         );
 
-        // Support direct arrays and common response wrappers.
         const requests = Array.isArray(result)
             ? result
             : Array.isArray(result?.data)
@@ -491,70 +440,39 @@ async function loadStudentExtensionHistory() {
 
         renderExtensionHistory(requests);
 
-        if (message) {
-            message.textContent = "";
-        }
+        if (message) message.textContent = "";
 
     } catch (error) {
 
         console.error("Extension History Error:", error);
 
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5">
-                    Unable to load extension history.
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="5">Unable to load extension history.</td></tr>`;
 
-        if (message) {
-            message.textContent = error.message;
-        }
+        if (message) message.textContent = error.message;
 
     }
 
 }
 
-
-// =====================================================
-// RENDER EXTENSION HISTORY
-// =====================================================
-
 function renderExtensionHistory(requests) {
 
-    const tbody = document.getElementById(
-        "extensionHistoryBody"
-    );
+    const tbody = document.getElementById("extensionHistoryBody");
 
-    if (!tbody) {
-        return;
-    }
+    if (!tbody) return;
 
     if (!requests.length) {
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5">
-                    You have not submitted any extension requests.
-                </td>
-            </tr>
-        `;
-
+        tbody.innerHTML = `<tr><td colspan="5">You have not submitted any extension requests.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = requests.map(request => {
 
-        const status = String(
-            request.status || "PENDING"
-        ).toUpperCase();
+        const status = String(request.status || "PENDING").toUpperCase();
 
         const statusClass = {
-
             PENDING: "status-pending",
             APPROVED: "status-approved",
             REJECTED: "status-rejected"
-
         }[status] || "";
 
         const enrollmentId = request.enrollmentId;
@@ -562,39 +480,17 @@ function renderExtensionHistory(requests) {
         const courseName =
             request.courseTitle ||
             request.courseName ||
-            extensionCoursesByEnrollment.get(
-                Number(enrollmentId)
-            ) ||
+            extensionCoursesByEnrollment.get(Number(enrollmentId)) ||
             `Enrollment #${enrollmentId ?? "-"}`;
 
         return `
-
             <tr>
-
-                <td>
-                    ${escapeHTML(courseName)}
-                </td>
-
-                <td>
-                    ${escapeHTML(request.daysRequested ?? "-")}
-                </td>
-
-                <td>
-                    ${escapeHTML(request.reason || "-")}
-                </td>
-
-                <td>
-                    <span class="extension-status ${statusClass}">
-                        ${escapeHTML(status)}
-                    </span>
-                </td>
-
-                <td>
-                    ${escapeHTML(request.rejectionReason || "-")}
-                </td>
-
+                <td>${escapeHTML(courseName)}</td>
+                <td>${escapeHTML(request.daysRequested ?? "-")}</td>
+                <td>${escapeHTML(request.reason || "-")}</td>
+                <td><span class="extension-status ${statusClass}">${escapeHTML(status)}</span></td>
+                <td>${escapeHTML(request.rejectionReason || "-")}</td>
             </tr>
-
         `;
 
     }).join("");
@@ -603,215 +499,118 @@ function renderExtensionHistory(requests) {
 
 
 // =====================================================
-// OPEN EXTENSION REQUEST MODAL
+// EXTENSION MODAL
 // =====================================================
 
 function openExtensionModal(course) {
 
-    const modal = document.getElementById(
-        "extensionModal"
-    );
+    const modal = document.getElementById("extensionModal");
 
-    if (!modal) {
-        return;
-    }
+    if (!modal) return;
 
     if (!course.enrollmentId) {
-
-        alert(
-            "Enrollment ID is missing. Please refresh the page."
-        );
-
+        alert("Enrollment ID is missing. Please refresh the page.");
         return;
     }
 
-    // Verify the deadline again before opening.
-    const dueDate = course.dueDate
-        ? new Date(course.dueDate)
-        : null;
+    const dueDate = course.dueDate ? new Date(course.dueDate) : null;
 
-    if (
-        !dueDate ||
-        Number.isNaN(dueDate.getTime()) ||
-        Date.now() < dueDate.getTime()
-    ) {
-
-        alert(
-            "You can request an extension only after the course deadline expires."
-        );
-
+    if (!dueDate || Number.isNaN(dueDate.getTime()) || Date.now() < dueDate.getTime()) {
+        alert("You can request an extension only after the course deadline expires.");
         return;
     }
 
-    selectedExtensionEnrollment = Number(
-        course.enrollmentId
-    );
+    selectedExtensionEnrollment = Number(course.enrollmentId);
 
-    document.getElementById(
-        "extensionEnrollmentId"
-    ).value = String(course.enrollmentId);
-
-    document.getElementById(
-        "extensionCourseName"
-    ).textContent =
-        `Course: ${course.courseTitle || course.courseName || "Course"}`;
-
-    document.getElementById(
-        "extensionDueDate"
-    ).textContent =
+    document.getElementById("extensionEnrollmentId").value = String(course.enrollmentId);
+    document.getElementById("extensionCourseName").textContent =
+        course.courseTitle || course.courseName || "Course";
+    document.getElementById("extensionDueDate").textContent =
         `Due date: ${formatExtensionDateTime(course.dueDate)}`;
 
-    document.getElementById(
-        "daysRequested"
-    ).value = "";
-
-    document.getElementById(
-        "extensionReason"
-    ).value = "";
-
-    document.getElementById(
-        "extensionFormMessage"
-    ).textContent = "";
-
-    document.getElementById(
-        "submitExtensionBtn"
-    ).disabled = false;
+    document.getElementById("daysRequested").value = "";
+    document.getElementById("extensionReason").value = "";
+    document.getElementById("extensionFormMessage").textContent = "";
+    document.getElementById("submitExtensionBtn").disabled = false;
 
     modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
 
 }
-
-
-// =====================================================
-// CLOSE EXTENSION MODAL
-// =====================================================
 
 function closeExtensionModal() {
 
-    const modal = document.getElementById(
-        "extensionModal"
-    );
+    const modal = document.getElementById("extensionModal");
 
     if (modal) {
         modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
     }
 
+    document.body.classList.remove("modal-open");
     selectedExtensionEnrollment = null;
 
 }
-
-
-// =====================================================
-// SUBMIT EXTENSION REQUEST
-// =====================================================
 
 async function submitExtensionRequest(event) {
 
     event.preventDefault();
 
     const enrollmentId = selectedExtensionEnrollment;
-
-    const daysRequested = Number(
-        document.getElementById("daysRequested").value
-    );
-
-    const reason = document.getElementById(
-        "extensionReason"
-    ).value.trim();
-
-    const message = document.getElementById(
-        "extensionFormMessage"
-    );
-
-    const submitButton = document.getElementById(
-        "submitExtensionBtn"
-    );
+    const daysRequested = Number(document.getElementById("daysRequested").value);
+    const reason = document.getElementById("extensionReason").value.trim();
+    const message = document.getElementById("extensionFormMessage");
+    const submitButton = document.getElementById("submitExtensionBtn");
 
     if (!enrollmentId) {
-
         message.textContent = "Please select a course.";
-
         return;
-
     }
 
-    if (
-        !Number.isInteger(daysRequested) ||
-        daysRequested < 1 ||
-        daysRequested > 90
-    ) {
-
-        message.textContent =
-            "Enter a number of days between 1 and 90.";
-
+    if (!Number.isInteger(daysRequested) || daysRequested < 1 || daysRequested > 90) {
+        message.textContent = "Enter a number of days between 1 and 90.";
         return;
-
     }
 
     if (!reason) {
-
-        message.textContent =
-            "Please enter a reason for your request.";
-
-        return;
-
-    }
-
-    const confirmed = confirm(
-        `Submit a request for ${daysRequested} additional days?`
-    );
-
-    if (!confirmed) {
+        message.textContent = "Please enter a reason for your request.";
         return;
     }
+
+    if (!confirm(`Submit a request for ${daysRequested} additional days?`)) return;
 
     submitButton.disabled = true;
-
     message.textContent = "Submitting request...";
 
     try {
 
         const params = new URLSearchParams({
-
             enrollmentId: String(enrollmentId),
-
             daysRequested: String(daysRequested),
-
             reason: reason
-
         });
 
         const result = await extensionApiRequest(
             `${EXTENSION_API}/request?${params.toString()}`,
-            {
-                method: "POST"
-            }
+            { method: "POST" }
         );
 
-        const successMessage =
+        alert(
             result?.message ||
             result?.data?.message ||
-            "Extension request submitted successfully.";
-
-        alert(successMessage);
+            "Extension request submitted successfully."
+        );
 
         closeExtensionModal();
 
-        // Refresh request history.
         await loadStudentExtensionHistory();
-
-        // Refresh courses and deadline information.
         await loadCourses();
 
     } catch (error) {
 
-        console.error(
-            "Submit Extension Request Error:",
-            error
-        );
-
+        console.error("Submit Extension Request Error:", error);
         message.textContent = error.message;
-
         alert(error.message);
 
     } finally {
@@ -824,19 +623,15 @@ async function submitExtensionRequest(event) {
 
 
 // =====================================================
-// CHECK EXAM ELIGIBILITY
+// ELIGIBILITY + APPROVAL APIs
 // =====================================================
 
-async function getExamEligibility(
-    studentId,
-    courseId,
-    token
-) {
+async function getExamEligibility(studentId, courseId, token) {
 
     try {
 
         const response = await fetch(
-            `${API_BASE}/api/exam-eligibility/student/${studentId}/course/${courseId}`,
+            `${API_BASE}/api/exam-eligibility/student/${encodeURIComponent(studentId)}/course/${encodeURIComponent(courseId)}`,
             {
                 method: "GET",
                 headers: {
@@ -846,52 +641,31 @@ async function getExamEligibility(
             }
         );
 
+        const result = await parseApiResponse(response);
+
         if (!response.ok) {
-
-            console.error(
-                "Eligibility API failed:",
-                response.status,
-                courseId
-            );
-
+            console.error("Eligibility API failed:", response.status, result);
             return null;
-
         }
-
-        const result = await response.json();
-
-        console.log(
-            `Eligibility for course ${courseId}:`,
-            result
-        );
 
         return result;
 
     } catch (error) {
 
         console.error("Eligibility Error:", error);
-
         return null;
 
     }
 
 }
 
-
-// =====================================================
-// CHECK FACULTY EXAM APPROVAL STATUS
-// =====================================================
-
-async function getApprovalStatus(
-    studentId,
-    courseId,
-    token
-) {
+// GET /api/exam-approval/course/{courseId}
+async function getApprovalStatus(studentId, courseId, token) {
 
     try {
 
         const response = await fetch(
-            `${API_BASE}/api/exam-approval/student/${studentId}/course/${courseId}`,
+            `${API_BASE}/api/exam-approval/course/${encodeURIComponent(courseId)}`,
             {
                 method: "GET",
                 headers: {
@@ -901,34 +675,23 @@ async function getApprovalStatus(
             }
         );
 
+        const result = await parseApiResponse(response);
+
         if (!response.ok) {
-
-            console.error(
-                "Approval Status API failed:",
-                response.status
-            );
-
+            console.error("Approval Status API failed:", response.status, result);
             return "NOT_REQUESTED";
-
         }
 
-        const status = await response.text();
-
-        const cleanStatus = status
+        const status = String(result ?? "NOT_REQUESTED")
             .trim()
-            .replace(/^"|"$/g, "");
+            .replace(/^"|"$/g, "")
+            .toUpperCase();
 
-        console.log(
-            `Approval Status for course ${courseId}:`,
-            cleanStatus
-        );
-
-        return cleanStatus;
+        return status || "NOT_REQUESTED";
 
     } catch (error) {
 
         console.error("Approval Status Error:", error);
-
         return "NOT_REQUESTED";
 
     }
@@ -937,172 +700,85 @@ async function getApprovalStatus(
 
 
 // =====================================================
-// DISPLAY EXAM ELIGIBILITY MESSAGE
-// =====================================================
-
-function getEligibilityMessage(
-    eligibility,
-    approvalStatus
-) {
-
-    if (!eligibility) {
-
-        return "Unable to check exam eligibility. Please refresh.";
-
-    }
-
-    if (approvalStatus === "APPROVED") {
-
-        return "Faculty approved your exam. You can take the exam.";
-
-    }
-
-    if (approvalStatus === "PENDING") {
-
-        return "Your exam approval request is waiting for faculty review.";
-
-    }
-
-    if (approvalStatus === "REJECTED") {
-
-        return "Your previous approval request was rejected. You can request approval again after checking your progress.";
-
-    }
-
-    if (!eligibility.materialsCompleted) {
-
-        return "Complete all study materials first.";
-
-    }
-
-    if (!eligibility.codingCompleted) {
-
-        return "Complete all coding challenges first.";
-
-    }
-
-    return "You have completed the requirements. Request faculty approval.";
-
-}
-
-
-// =====================================================
-// OPEN STUDY MATERIALS
+// NAVIGATION
+// The course ID is passed in the URL (source of truth) and
+// also saved to localStorage as a fallback. Destination pages
+// must read the URL first (see getSelectedCourseId below).
 // =====================================================
 
 function openMaterials(courseId) {
 
-    console.log(
-        "Opening materials for course:",
-        courseId
-    );
+    if (courseId == null) {
+        alert("Course ID is missing. Please refresh the page.");
+        return;
+    }
 
-    localStorage.setItem(
-        "courseId",
-        String(courseId)
-    );
-
-    window.location.href = "study-material.html";
+    localStorage.setItem("courseId", String(courseId));
+    window.location.href = `study-material.html?courseId=${encodeURIComponent(courseId)}`;
 
 }
 
-
-// =====================================================
-// OPEN CODING CHALLENGES
-// =====================================================
-
 function openCodingChallenges(courseId) {
 
-    console.log(
-        "Opening coding challenges for course:",
-        courseId
-    );
+    if (courseId == null) {
+        alert("Course ID is missing. Please refresh the page.");
+        return;
+    }
 
-    localStorage.setItem(
-        "courseId",
-        String(courseId)
-    );
-
-    window.location.href = "coding-challenges.html";
+    localStorage.setItem("courseId", String(courseId));
+    window.location.href = `coding-challenges.html?courseId=${encodeURIComponent(courseId)}`;
 
 }
 
 
 // =====================================================
 // REQUEST FACULTY EXAM APPROVAL
+// POST /api/exam-approval/request?courseId={courseId}
 // =====================================================
 
-async function requestExamApproval(
-    studentId,
-    courseId,
-    token
-) {
+async function requestExamApproval(studentId, courseId, token) {
 
-    if (!studentId || !courseId || !token) {
-
-        alert(
-            "Student ID, Course ID, or authentication token is missing."
-        );
-
+    if (!courseId || !token) {
+        alert("Course ID or authentication token is missing.");
         return;
-
     }
 
-    const confirmed = confirm(
-        "Have you completed all study materials and coding challenges? " +
-        "Submit an exam approval request?"
-    );
+    const eligibility = await getExamEligibility(studentId, courseId, token);
 
-    if (!confirmed) {
+    if (!eligibility?.eligibleForExamApproval) {
+        alert("Complete 100% of study materials and get 100% of coding challenges approved by faculty first.");
+        await loadCourses();
+        return;
+    }
+
+    if (!confirm(
+        "You have completed all study materials and received faculty approval for all coding challenges. Submit your exam approval request?"
+    )) {
         return;
     }
 
     try {
 
-        const params = new URLSearchParams({
-            studentId: String(studentId),
-            courseId: String(courseId)
-        });
-
-        const url =
-            `${API_BASE}/api/exam-approval/request?${params.toString()}`;
-
-        const response = await fetch(url, {
-
-            method: "POST",
-
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/json, text/plain"
+        const response = await fetch(
+            `${API_BASE}/api/exam-approval/request?courseId=${encodeURIComponent(courseId)}`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json"
+                }
             }
-
-        });
-
-        const responseText = await response.text();
-
-        console.log(
-            "Approval request HTTP status:",
-            response.status
         );
 
-        console.log(
-            "Approval request response:",
-            responseText
-        );
+        const result = await parseApiResponse(response);
 
         if (!response.ok) {
-
-            alert(
-                `Approval request failed (${response.status}).\n\n` +
-                (responseText || "The server did not provide an error message.")
-            );
-
-            return;
-
+            throw new Error(extractErrorMessage(result, response.status));
         }
 
         alert(
-            responseText ||
+            result?.message ||
+            result?.data?.message ||
             "Exam approval request submitted successfully."
         );
 
@@ -1110,14 +786,8 @@ async function requestExamApproval(
 
     } catch (error) {
 
-        console.error(
-            "Request Approval Error:",
-            error
-        );
-
-        alert(
-            "Unable to connect to the server. Check whether Spring Boot is running."
-        );
+        console.error("Request Approval Error:", error);
+        alert(error.message);
 
     }
 
@@ -1128,33 +798,19 @@ async function requestExamApproval(
 // START EXAM
 // =====================================================
 
-async function startExam(
-    courseId,
-    studentId,
-    token
-) {
+async function startExam(courseId, studentId, token) {
 
     try {
 
-        // Always recheck faculty approval.
-        const approvalStatus = await getApprovalStatus(
-            studentId,
-            courseId,
-            token
-        );
+        const approvalStatus = await getApprovalStatus(studentId, courseId, token);
 
         if (approvalStatus !== "APPROVED") {
-
-            alert(
-                "Your exam must be approved by faculty first."
-            );
-
+            alert("Your exam must be approved by faculty first.");
             return;
-
         }
 
         const response = await fetch(
-            `${API_BASE}/api/exams/course/${courseId}/published`,
+            `${API_BASE}/api/exams/course/${encodeURIComponent(courseId)}/published`,
             {
                 method: "GET",
                 headers: {
@@ -1164,70 +820,36 @@ async function startExam(
             }
         );
 
+        const result = await parseApiResponse(response);
+
         if (!response.ok) {
-
-            throw new Error(
-                `Failed to load published exams: ${response.status}`
-            );
-
+            throw new Error(extractErrorMessage(result, response.status));
         }
 
-        const result = await response.json();
-
-        console.log(
-            "Published Exam Response:",
-            result
-        );
-
-        const exams = Array.isArray(result)
-            ? result
-            : result?.data;
+        const exams = Array.isArray(result) ? result : result?.data;
 
         if (!Array.isArray(exams) || exams.length === 0) {
-
-            alert(
-                "No published exam found for this course."
-            );
-
+            alert("No published exam found for this course.");
             return;
-
         }
 
         const examId = exams[0].id;
 
         if (!examId) {
-
-            alert(
-                "Exam ID was not returned by the server."
-            );
-
+            alert("Exam ID was not returned by the server.");
             return;
-
         }
 
-        localStorage.setItem(
-            "examId",
-            String(examId)
-        );
-
-        localStorage.setItem(
-            "courseId",
-            String(courseId)
-        );
+        localStorage.setItem("examId", String(examId));
+        localStorage.setItem("courseId", String(courseId));
 
         window.location.href =
-            `exam-portal.html?examId=${encodeURIComponent(examId)}`;
+            `exam-portal.html?examId=${encodeURIComponent(examId)}&courseId=${encodeURIComponent(courseId)}`;
 
     } catch (error) {
 
-        console.error(
-            "Start Exam Error:",
-            error
-        );
-
-        alert(
-            "Unable to start the exam. Check the browser console."
-        );
+        console.error("Start Exam Error:", error);
+        alert(error.message || "Unable to start the exam.");
 
     }
 
@@ -1235,52 +857,41 @@ async function startExam(
 
 
 // =====================================================
-// DATE HELPERS
+// HELPERS
 // =====================================================
 
-function formatExtensionDate(value) {
+// Copy this into study-material.js, coding-challenges.js and
+// exam-portal.js (or a shared utils file). URL first, then localStorage.
+function getSelectedCourseId() {
 
-    if (!value) {
-        return "Not available";
+    const fromUrl = new URLSearchParams(window.location.search).get("courseId");
+    const id = fromUrl || localStorage.getItem("courseId");
+
+    if (!id) {
+        alert("No course selected. Please open the course from My Courses.");
+        window.location.href = "my-courses.html";
+        return null;
     }
 
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return String(value);
-    }
-
-    return date.toLocaleDateString();
+    return id;
 
 }
-
 
 function formatExtensionDateTime(value) {
 
-    if (!value) {
-        return "Not available";
-    }
+    if (!value) return "Not available";
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
-        return String(value);
-    }
+    if (Number.isNaN(date.getTime())) return String(value);
 
     return date.toLocaleString();
 
 }
 
-
-// =====================================================
-// PAGE MESSAGE
-// =====================================================
-
 function showPageMessage(message) {
 
-    const pageMessage = document.getElementById(
-        "pageMessage"
-    );
+    const pageMessage = document.getElementById("pageMessage");
 
     if (pageMessage) {
         pageMessage.textContent = message;
@@ -1289,11 +900,6 @@ function showPageMessage(message) {
     }
 
 }
-
-
-// =====================================================
-// ESCAPE HTML
-// =====================================================
 
 function escapeHTML(value) {
 

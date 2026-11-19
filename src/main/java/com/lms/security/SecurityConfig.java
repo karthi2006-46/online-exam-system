@@ -74,23 +74,24 @@ public class SecurityConfig {
 
                 // Public frontend pages and static resources.
                 .requestMatchers(
-                        "/",
-                        "/login.html",
-                        "/signup.html",
-                        "/dashboard.html",
-                        "/exam.html",
-                        "/student/studentdashboard.html",
-                        "/student/my-courses.html",
-                        "/student/study-material.html",
-                        "/faculty/exam-approval-requests.html",
-                        "/student/**",
-                        "/faculty/**",
-                        "/admin/**",
-                        "/css/**",
-                        "/js/**",
-                        "/images/**",
-                        "/favicon.ico"
-                ).permitAll()
+        "/",
+        "/login.html",
+        "/signup.html",
+        "/forgot-password.html",
+        "/dashboard.html",
+        "/exam.html",
+        "/student/studentdashboard.html",
+        "/student/my-courses.html",
+        "/student/study-material.html",
+        "/faculty/exam-approval-requests.html",
+        "/student/**",
+        "/faculty/**",
+        "/admin/**",
+        "/css/**",
+        "/js/**",
+        "/images/**",
+        "/favicon.ico"
+).permitAll()
 
                 // Authentication endpoints.
                 .requestMatchers("/api/auth/**").permitAll()

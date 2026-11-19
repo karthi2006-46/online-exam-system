@@ -1,7 +1,6 @@
 /* ==================================================
-   LOGIN + SIGN UP (PREMIUM)
+   LOGIN + SIGN UP | Likers Software Solutions
    Self-contained: these pages only need this file.
-   (style.css is no longer required on login / signup.)
    ================================================== */
 
 :root {
@@ -38,109 +37,126 @@ a { color: var(--primary); text-decoration: none; }
 /* ---------- Page layout ---------- */
 .auth-page {
     display: grid;
-    grid-template-columns: minmax(360px, 44%) minmax(0, 1fr);
+    grid-template-columns: minmax(380px, 42%) minmax(0, 1fr);
     min-height: 100vh;
     min-height: 100dvh;
 }
 
-/* ---------- Brand panel ---------- */
+/* ==================================================
+   BRAND PANEL
+   Fixed to the viewport height, so it stays put while
+   a long form scrolls. One left edge for every block.
+   ================================================== */
 .auth-brand {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    color: #fff;
+    background:
+        radial-gradient(520px 360px at 0% 0%, rgba(61, 123, 255, 0.35), transparent 70%),
+        radial-gradient(460px 340px at 100% 100%, rgba(122, 77, 240, 0.22), transparent 70%),
+        linear-gradient(165deg, #12204a 0%, #0a1226 100%);
+}
+/* faint grid texture */
+.auth-brand::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%);
+    mask-image: linear-gradient(180deg, #000, transparent 85%);
+    pointer-events: none;
+}
+
+.brand-inner {
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 40px;
-    padding: 48px 56px;
-    overflow: hidden;
-    color: #fff;
-    background: linear-gradient(160deg, #12204a 0%, #0a1226 100%);
+    gap: 32px;
+    height: 100%;
+    max-width: 520px;
+    padding: 44px 56px;
 }
-.auth-brand::before,
-.auth-brand::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(70px);
-    pointer-events: none;
-}
-.auth-brand::before {
-    top: -120px;
-    left: -100px;
-    width: 420px;
-    height: 420px;
-    background: rgba(57, 120, 246, 0.45);
-    animation: orbA 14s ease-in-out infinite alternate;
-}
-.auth-brand::after {
-    right: -120px;
-    bottom: -120px;
-    width: 380px;
-    height: 380px;
-    background: rgba(122, 77, 240, 0.32);
-    animation: orbB 17s ease-in-out infinite alternate;
-}
-@keyframes orbA { to { transform: translate(70px, 60px) scale(1.1); } }
-@keyframes orbB { to { transform: translate(-60px, -50px) scale(1.12); } }
 
-.auth-brand > * { position: relative; z-index: 1; }
-
-.brand-logo { display: flex; align-items: center; gap: 13px; }
+/* Logo */
+.brand-logo { display: flex; align-items: center; gap: 14px; }
 .brand-mark {
     display: grid;
     place-items: center;
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     background: linear-gradient(140deg, #5b97ff, #2b5be0);
-    box-shadow: 0 10px 24px rgba(43, 91, 224, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    font-size: 24px;
+    box-shadow: 0 8px 20px rgba(43, 91, 224, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    font-size: 22px;
     font-weight: 800;
 }
-.brand-name { display: grid; line-height: 1.25; }
-.brand-name strong { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; }
+.brand-name { display: grid; line-height: 1.3; }
+.brand-name strong { font-size: 16.5px; font-weight: 700; letter-spacing: 0.1px; }
 .brand-name small { color: #8fa0c4; font-size: 12.5px; }
 
+/* Hero */
+.brand-eyebrow {
+    display: inline-block;
+    margin-bottom: 16px;
+    padding: 5px 12px;
+    border: 1px solid rgba(143, 178, 255, 0.3);
+    border-radius: 999px;
+    background: rgba(79, 141, 255, 0.12);
+    color: #a9c4ff;
+    font-size: 12px;
+    font-weight: 600;
+}
 .brand-hero h2 {
-    max-width: 420px;
-    margin-bottom: 14px;
-    font-size: clamp(30px, 3.4vw, 42px);
+    margin-bottom: 12px;
+    font-size: clamp(30px, 3vw, 38px);
     font-weight: 750;
     letter-spacing: -0.03em;
     line-height: 1.15;
 }
-.brand-hero h2 span { color: #8fb2ff; }
-.brand-hero > p { max-width: 400px; margin-bottom: 32px; color: #aebad3; font-size: 15.5px; line-height: 1.7; }
+.brand-hero > p { max-width: 400px; margin-bottom: 30px; color: #aebad3; font-size: 15px; line-height: 1.7; }
 
-.brand-features { display: grid; gap: 14px; list-style: none; }
+/* Features: icon column + text column, divided by hairlines */
+.brand-features { list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.1); }
 .brand-features li {
-    display: flex;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
     align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 14px;
-    color: #dbe6ff;
-    font-size: 14.5px;
-    font-weight: 500;
-    animation: authRise 0.7s var(--ease) both;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-.brand-features li:nth-child(1) { animation-delay: 0.15s; }
-.brand-features li:nth-child(2) { animation-delay: 0.25s; }
-.brand-features li:nth-child(3) { animation-delay: 0.35s; }
 .feature-icon {
     display: grid;
-    flex: 0 0 38px;
-    width: 38px;
-    height: 38px;
     place-items: center;
+    width: 40px;
+    height: 40px;
     border-radius: 11px;
-    background: rgba(79, 141, 255, 0.2);
-    color: #8fb2ff;
+    background: rgba(79, 141, 255, 0.18);
+    color: #9dbbff;
 }
 .feature-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.brand-features li > div { display: grid; gap: 1px; min-width: 0; }
+.brand-features strong { color: #fff; font-size: 14.5px; font-weight: 650; }
+.brand-features li > div > span { color: #93a3c4; font-size: 13px; line-height: 1.5; }
 
-.brand-foot { color: #6f7fa3; font-size: 12.5px; }
+/* Footer */
+.brand-foot {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    color: #6f7fa3;
+    font-size: 12.5px;
+}
 
 /* ---------- Form panel ---------- */
 .auth-panel {
@@ -151,7 +167,6 @@ a { color: var(--primary); text-decoration: none; }
         radial-gradient(700px 360px at 100% 0%, rgba(57, 120, 246, 0.08), transparent 70%),
         var(--page-bg);
 }
-
 .auth-container { width: 100%; display: flex; justify-content: center; }
 
 .auth-card {
@@ -160,15 +175,15 @@ a { color: var(--primary); text-decoration: none; }
     padding: 40px 38px 32px;
     background: #fff;
     border: 1px solid var(--border);
-    border-radius: 26px;
+    border-radius: 24px;
     box-shadow: 0 2px 4px rgba(15, 27, 61, 0.04), 0 24px 60px rgba(15, 27, 61, 0.1);
-    animation: authRise 0.7s var(--ease) both;
+    animation: authRise 0.6s var(--ease) both;
 }
 .auth-card.is-wide { max-width: 620px; }
 
-@keyframes authRise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes authRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-.auth-header { margin-bottom: 28px; }
+.auth-header { margin-bottom: 26px; }
 .auth-chip {
     display: inline-flex;
     margin-bottom: 14px;
@@ -250,11 +265,11 @@ a { color: var(--primary); text-decoration: none; }
 
 .auth-form select {
     padding-left: 16px;
+    padding-right: 42px;
     appearance: none;
     -webkit-appearance: none;
     cursor: pointer;
     background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2362708f' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 14px center / 18px no-repeat;
-    padding-right: 42px;
 }
 
 /* Password field with show/hide */
@@ -376,20 +391,33 @@ a { color: var(--primary); text-decoration: none; }
 .auth-footer a { font-weight: 650; }
 .auth-footer a:hover { text-decoration: underline; }
 
+/* ---------- Login helper ---------- */
+.forgot-password { display: flex; justify-content: flex-end; margin: 8px 0 20px; }
+.forgot-password a { color: #2f62e6; font-size: 13px; font-weight: 600; transition: color 0.2s ease; }
+.forgot-password a:hover { color: #1746bd; text-decoration: underline; }
+
 /* ==================================================
    RESPONSIVE
    ================================================== */
-@media (max-width: 1000px) {
-    .auth-brand { padding: 40px 36px; }
+@media (max-width: 1100px) {
+    .brand-inner { padding: 40px 40px; }
+}
+
+/* Short screens: drop the feature descriptions so nothing overflows */
+@media (max-height: 760px) {
+    .brand-features li > div > span { display: none; }
+    .brand-features li { padding: 12px 0; }
+    .brand-hero > p { margin-bottom: 20px; }
 }
 
 @media (max-width: 860px) {
     .auth-page { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
 
-    /* Brand panel collapses into a slim app-style header */
-    .auth-brand { padding: 22px 22px 46px; gap: 0; }
+    /* Brand panel collapses into a slim header */
+    .auth-brand { position: relative; height: auto; }
+    .brand-inner { height: auto; max-width: none; padding: 20px 22px 44px; }
     .brand-hero, .brand-foot { display: none; }
-    .brand-mark { width: 40px; height: 40px; border-radius: 12px; font-size: 21px; }
+    .brand-mark { flex-basis: 40px; width: 40px; height: 40px; font-size: 20px; }
 
     .auth-panel {
         position: relative;

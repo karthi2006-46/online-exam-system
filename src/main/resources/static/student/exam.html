@@ -1,238 +1,419 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Online Exam | LMS</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Online Exam | LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Inter font (falls back to Segoe UI / system fonts if offline) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- All exam styling lives in this file so no other stylesheet can break the layout -->
+<style>
+:root{
+  --ink:#0f1b3d; --text:#2b3857; --muted:#6b7893; --line:#dfe6f3;
+  --bg:#f3f6fc; --card:#fff; --primary:#2f62e6; --primary-soft:#eaf0ff;
+  --warn:#b97100; --warn-soft:#fff6e5; --danger:#d02a40;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.5}
+h1,h2,p{margin:0}
+body.dialog-open{overflow:hidden}
 
-    <!-- Shared theme (tokens, font, reset) + exam styles -->
-    <link rel="stylesheet" href="../css/student/student-theme.css">
-    <link rel="stylesheet" href="../css/student/exam.css">
+/* ---------- Top bar ---------- */
+.topbar{position:sticky;top:0;z-index:100;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:28px;
+  padding:12px 24px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:linear-gradient(140deg,#5b97ff,#2b5be0);color:#fff;font-weight:800;font-size:20px}
+.brand-text{display:grid;line-height:1.25}
+.brand-text strong{color:var(--ink);font-size:15px}
+.brand-text small{color:var(--muted);font-size:12px}
+
+.progress{width:100%;max-width:440px;margin:0 auto}
+.progress[hidden]{display:none}
+.progress-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.progress-row strong{color:var(--ink)}
+.progress-track{height:7px;border-radius:20px;background:#e3e9f6;overflow:hidden}
+.progress-fill{width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#2f62e6,#6ea2ff);transition:width .4s var(--ease)}
+
+.timer-box{display:inline-flex;align-items:center;gap:10px;padding:8px 18px 8px 14px;border-radius:14px;background:var(--ink);color:#fff;white-space:nowrap;transition:background .4s}
+.timer-box svg{width:20px;height:20px;fill:none;stroke:#8fb2ff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.timer-label{font-size:12.5px;font-weight:500;color:#aebad3}
+#timer{min-width:62px;font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+.timer-box.is-warning{background:var(--warn)}
+.timer-box.is-danger{background:var(--danger);animation:pulse 1s ease-in-out infinite}
+.timer-box.is-warning svg,.timer-box.is-danger svg{stroke:#fff}
+.timer-box.is-warning .timer-label,.timer-box.is-danger .timer-label{color:rgba(255,255,255,.85)}
+@keyframes pulse{50%{transform:scale(1.04)}}
+
+/* ---------- Page ---------- */
+.exam-container{max-width:820px;margin:0 auto;padding:28px 20px calc(60px + env(safe-area-inset-bottom))}
+
+.exam-header{margin-bottom:24px;padding:32px 34px;border-radius:22px;color:#fff;
+  background:radial-gradient(420px 240px at 0 0,rgba(57,120,246,.35),transparent 70%),linear-gradient(160deg,#12204a,#0a1226);
+  box-shadow:0 16px 36px rgba(10,18,38,.22)}
+.chip{display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;padding:5px 13px;border-radius:999px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#cfdcff;font-size:12px;font-weight:600}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:#39d98a;box-shadow:0 0 0 4px rgba(57,217,138,.18)}
+.exam-header h1{margin-bottom:8px;font-size:clamp(24px,3.4vw,32px);font-weight:700;letter-spacing:-.02em;line-height:1.25;overflow-wrap:anywhere}
+.exam-header p{max-width:520px;color:#aebad3;font-size:14.5px;line-height:1.65}
+
+/* ---------- Questions (works for the markup exam.js outputs, before and after normalising) ---------- */
+#questionsContainer{display:grid;gap:18px}
+.q-card{position:relative;display:block;padding:24px 26px 22px;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 1px 2px rgba(15,27,61,.05),0 6px 18px rgba(15,27,61,.04);transition:border-color .25s,box-shadow .25s}
+.q-card:focus-within{border-color:#c3d5fb;box-shadow:0 10px 26px rgba(47,98,230,.1)}
+.q-card::before{content:"";position:absolute;left:0;top:22px;bottom:22px;width:4px;border-radius:0 4px 4px 0;background:linear-gradient(180deg,#4f8dff,#2f62e6)}
+.q-card.is-answered::before{background:linear-gradient(180deg,#39d98a,#1fa866)}
+
+/* Everything in the card that is not the option list is the question text */
+.q-card > :not(.opts){display:block;margin:0 0 16px;color:var(--ink);font-size:17px;font-weight:650;line-height:1.55;overflow-wrap:anywhere}
+.q-card > br{display:none}
+.opts{display:grid;gap:10px}
+
+.opt{display:flex;align-items:center;gap:14px;width:100%;margin:0;padding:13px 16px;background:#fff;border:1.5px solid var(--line);border-radius:13px;
+  color:var(--text);font-size:15px;font-weight:500;line-height:1.5;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background .2s,border-color .2s,box-shadow .2s,transform .2s var(--ease)}
+.opt:hover{background:#f7faff;border-color:#b9cdf9}
+.opt:active{transform:scale(.99)}
+.opt.is-selected{background:var(--primary-soft);border-color:var(--primary);color:var(--ink);font-weight:600;box-shadow:0 0 0 4px rgba(47,98,230,.1)}
+
+.opt-key{flex:0 0 32px;display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#eef2fa;color:var(--muted);font-size:13px;font-weight:700;transition:background .2s,color .2s}
+.opt.is-selected .opt-key{background:var(--primary);color:#fff}
+.opt-text{flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* Native input is hidden; the lettered tile is the visible control */
+.opt input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+.opt:has(input:focus-visible){outline:3px solid rgba(47,98,230,.35);outline-offset:2px}
+
+/* Text / short-answer questions, if any */
+.q-card textarea,.q-card input[type="text"]{display:block;width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font:inherit;color:var(--ink)}
+.q-card textarea:focus,.q-card input[type="text"]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(47,98,230,.12)}
+
+/* ---------- Submit ---------- */
+.submit-section{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;margin-top:24px;padding:20px 24px;background:#fff;border:1px solid var(--line);border-radius:18px}
+.submit-summary{display:grid;gap:2px}
+.submit-summary strong{color:var(--ink);font-size:15.5px}
+.submit-summary small{color:var(--muted);font-size:13px}
+#submitBtn{display:inline-flex;justify-content:center;align-items:center;gap:10px;min-height:50px;padding:0 28px;border:0;border-radius:13px;
+  background:linear-gradient(135deg,#3d7bff,#2f62e6);box-shadow:0 10px 22px rgba(47,98,230,.32);color:#fff;font:700 15.5px inherit;font-family:inherit;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s}
+#submitBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#submitBtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 14px 28px rgba(47,98,230,.42)}
+#submitBtn:focus-visible{outline:3px solid rgba(47,98,230,.35);outline-offset:3px}
+#submitBtn:disabled{opacity:.6;cursor:not-allowed;box-shadow:none}
+
+/* ---------- Confirm dialog ---------- */
+.submit-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(7,12,28,.55);
+  opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s}
+.submit-overlay.is-open{opacity:1;visibility:visible;transition-delay:0s}
+.submit-dialog{width:100%;max-width:420px;padding:30px 28px 24px;text-align:center;background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(7,12,28,.35);
+  transform:translateY(16px) scale(.96);opacity:0;transition:transform .4s var(--ease),opacity .25s}
+.submit-overlay.is-open .submit-dialog{transform:none;opacity:1}
+.submit-icon{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 16px;border-radius:50%;background:var(--primary-soft);color:var(--primary);box-shadow:0 0 0 8px #f5f8ff}
+.submit-icon svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.submit-dialog.has-unanswered .submit-icon{background:var(--warn-soft);color:var(--warn);box-shadow:0 0 0 8px #fffaf0}
+.submit-dialog h2{margin-bottom:8px;color:var(--ink);font-size:20px}
+.submit-dialog p{margin:0 auto 24px;max-width:320px;color:var(--muted);font-size:14px;line-height:1.65}
+.submit-dialog p strong{color:var(--ink)}
+.submit-actions{display:flex;gap:12px}
+.dialog-btn{flex:1;min-height:48px;padding:0 16px;border:0;border-radius:13px;font:650 14.5px inherit;font-family:inherit;cursor:pointer}
+.dialog-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.dialog-btn.secondary{background:#eef1f7;color:#26324f}
+.dialog-btn.primary{background:linear-gradient(135deg,#3d7bff,#2f62e6);color:#fff;box-shadow:0 8px 20px rgba(47,98,230,.3)}
+
+/* ---------- Mobile ---------- */
+@media (max-width:760px){
+  .topbar{grid-template-columns:minmax(0,1fr) auto;gap:10px 14px;padding:10px 14px}
+  .brand-text small,.timer-label{display:none}
+  .progress{grid-column:1/-1;grid-row:2;max-width:none}
+  #timer{font-size:19px;min-width:56px}
+  .exam-container{padding:18px 14px calc(50px + env(safe-area-inset-bottom))}
+  .exam-header{padding:24px 20px;border-radius:18px}
+  .q-card{padding:20px 16px 18px;border-radius:16px}
+  .q-card > :not(.opts){font-size:16px}
+  .opt{padding:12px 12px;font-size:14.5px;gap:12px}
+  .submit-section{flex-direction:column;align-items:stretch;text-align:center}
+  #submitBtn{width:100%}
+  .submit-overlay{align-items:flex-end;padding:0}
+  .submit-dialog{max-width:none;padding:22px 22px calc(24px + env(safe-area-inset-bottom));border-radius:24px 24px 0 0;transform:translateY(100%)}
+}
+@media (max-width:420px){.submit-actions{flex-direction:column-reverse}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+</style>
 </head>
 <body>
 
-<!-- Sticky top bar: brand, answered progress, timer -->
-<header class="exam-topbar">
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">L</span>
+    <span class="brand-text"><strong>LMS</strong><small>Online examination</small></span>
+  </div>
 
-    <div class="exam-brand">
-        <span class="exam-brand-mark">L</span>
-        <span class="exam-brand-text">
-            <strong>LMS</strong>
-            <small>Online examination</small>
-        </span>
-    </div>
+  <div class="progress" id="examProgress" hidden>
+    <div class="progress-row"><span>Progress</span><strong id="answeredText">0 of 0 answered</strong></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
 
-    <div class="exam-progress" id="examProgress" hidden>
-        <div class="exam-progress-row">
-            <span>Progress</span>
-            <strong id="answeredText">0 of 0 answered</strong>
-        </div>
-        <div class="exam-progress-track">
-            <div class="exam-progress-fill" id="progressFill"></div>
-        </div>
-    </div>
-
-    <div class="timer-box" role="timer" aria-label="Time remaining">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
-        <span class="timer-label">Time left</span>
-        <span id="timer">00:00</span>
-    </div>
-
+  <div class="timer-box" role="timer" aria-label="Time remaining">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+    <span class="timer-label">Time left</span>
+    <span id="timer">00:00</span>
+  </div>
 </header>
 
 <main class="exam-container">
+  <section class="exam-header">
+    <span class="chip">Exam in progress</span>
+    <h1 id="examTitle">Loading Exam...</h1>
+    <p>Read each question carefully and choose your answers before the timer runs out.</p>
+  </section>
 
-    <section class="exam-header">
-        <div>
-            <span class="exam-header-chip">Exam in progress</span>
-            <h1 id="examTitle">Loading Exam...</h1>
-            <p>Read each question carefully and choose your answers before the timer runs out.</p>
-        </div>
-    </section>
+  <div id="questionsContainer"><!-- rendered by exam.js, then tidied by the script below --></div>
 
-    <div id="questionsContainer">
-        <!-- Questions are rendered by exam.js -->
+  <div class="submit-section">
+    <div class="submit-summary">
+      <strong id="answeredSummary">Ready to submit?</strong>
+      <small>Review your answers before you submit.</small>
     </div>
-
-    <div class="submit-section">
-        <div class="submit-summary">
-            <strong id="answeredSummary">Ready to submit?</strong>
-            <small>Review your answers before you submit.</small>
-        </div>
-
-        <button id="submitBtn" type="button">
-            <span>Submit Exam</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </button>
-    </div>
-
+    <button id="submitBtn" type="button">
+      <span>Submit exam</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
 </main>
 
-<!-- Submit confirmation dialog -->
 <div class="submit-overlay" id="submitOverlay">
-    <div class="submit-dialog" id="submitDialog" role="alertdialog" aria-modal="true"
-         aria-labelledby="submitTitle" aria-describedby="submitDesc">
-        <div class="submit-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>
-        </div>
-        <h2 id="submitTitle">Submit your exam?</h2>
-        <p id="submitDesc">Once submitted, you cannot change your answers.</p>
-        <div class="submit-actions">
-            <button type="button" class="dialog-btn secondary" id="submitCancel">Review answers</button>
-            <button type="button" class="dialog-btn primary" id="submitConfirm">Yes, submit</button>
-        </div>
+  <div class="submit-dialog" id="submitDialog" role="alertdialog" aria-modal="true" aria-labelledby="submitTitle" aria-describedby="submitDesc">
+    <div class="submit-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg></div>
+    <h2 id="submitTitle">Submit your exam?</h2>
+    <p id="submitDesc">Once submitted, you cannot change your answers.</p>
+    <div class="submit-actions">
+      <button type="button" class="dialog-btn secondary" id="submitCancel">Review answers</button>
+      <button type="button" class="dialog-btn primary" id="submitConfirm">Yes, submit</button>
     </div>
+  </div>
 </div>
 
 <script src="/js/api-config.js"></script>
 <script src="../js/student/exam.js"></script>
 
-<!-- UI enhancements: progress, timer colours, submit confirmation.
-     These only read the page; exam.js logic is not modified. -->
 <script>
 (function () {
-    "use strict";
+  "use strict";
 
-    var container = document.getElementById("questionsContainer");
-    var timerEl = document.getElementById("timer");
-    var timerBox = document.querySelector(".timer-box");
-    var submitBtn = document.getElementById("submitBtn");
-    var progressWrap = document.getElementById("examProgress");
-    var answeredText = document.getElementById("answeredText");
-    var progressFill = document.getElementById("progressFill");
-    var summary = document.getElementById("answeredSummary");
+  var container = document.getElementById("questionsContainer");
+  var timerEl = document.getElementById("timer");
+  var timerBox = document.querySelector(".timer-box");
+  var submitBtn = document.getElementById("submitBtn");
+  var progressWrap = document.getElementById("examProgress");
+  var answeredText = document.getElementById("answeredText");
+  var progressFill = document.getElementById("progressFill");
+  var summary = document.getElementById("answeredSummary");
 
-    /* ---------- Answered progress ---------- */
-    function counts() {
-        var items = container.querySelectorAll(".question-item");
-        var answered = 0;
+  /* ---------- 1. Rebuild MCQ markup into clean question cards ----------
+     Whatever structure exam.js outputs (radio, then text underneath, etc.),
+     each radio/checkbox is wrapped in a single <label class="opt"> with a
+     letter badge and its text. The inputs themselves are moved, not copied,
+     so names, values and ids that exam.js reads on submit stay the same. */
+  var busy = false;
 
-        items.forEach(function (item) {
-            var done = false;
-            item.querySelectorAll("input, textarea, select").forEach(function (f) {
-                if (f.type === "radio" || f.type === "checkbox") {
-                    if (f.checked) done = true;
-                } else if (f.value && f.value.trim()) {
-                    done = true;
-                }
-            });
-            if (done) answered++;
-        });
+  function isChoice(el) {
+    return el.tagName === "INPUT" && (el.type === "radio" || el.type === "checkbox");
+  }
 
-        return { total: items.length, answered: answered };
+  function cardFor(input, all) {
+    var node = input;
+    while (node.parentElement && node.parentElement !== container) {
+      var p = node.parentElement;
+      var foreign = all.some(function (o) { return o.name !== input.name && p.contains(o); });
+      if (foreign) break;
+      node = p;
     }
+    return node === input ? input.parentElement : node;
+  }
 
-    function updateProgress() {
-        var c = counts();
-        if (!c.total) { progressWrap.hidden = true; return; }
+  function textFor(input, card, trash) {
+    var text = "";
+    var lbl = input.id && card.querySelector('label[for="' + input.id.replace(/"/g, '\\"') + '"]');
+    if (lbl) { text = lbl.textContent; trash.push(lbl); }
 
-        progressWrap.hidden = false;
-        answeredText.textContent = c.answered + " of " + c.total + " answered";
-        progressFill.style.width = Math.round((c.answered / c.total) * 100) + "%";
-        summary.textContent = c.answered === c.total
-            ? "All questions answered"
-            : c.answered + " of " + c.total + " questions answered";
-    }
-
-    container.addEventListener("change", updateProgress);
-    container.addEventListener("input", updateProgress);
-    new MutationObserver(updateProgress).observe(container, { childList: true, subtree: true });
-    updateProgress();
-
-    /* ---------- Timer colours ---------- */
-    var timerStarted = false;
-
-    function toSeconds(text) {
-        var parts = text.trim().split(":").map(Number);
-        if (!parts.length || parts.some(isNaN)) return null;
-        return parts.reduce(function (total, v) { return total * 60 + v; }, 0);
-    }
-
-    function updateTimer() {
-        var secs = toSeconds(timerEl.textContent);
-        if (secs === null) return;
-        if (secs > 0) timerStarted = true;
-        if (!timerStarted) return;
-
-        timerBox.classList.toggle("is-danger", secs <= 60);
-        timerBox.classList.toggle("is-warning", secs > 60 && secs <= 300);
-    }
-
-    new MutationObserver(updateTimer).observe(timerEl, { childList: true, characterData: true, subtree: true });
-
-    /* ---------- Submit confirmation ---------- */
-    var overlay = document.getElementById("submitOverlay");
-    var dialog = document.getElementById("submitDialog");
-    var desc = document.getElementById("submitDesc");
-    var cancelBtn = document.getElementById("submitCancel");
-    var confirmBtn = document.getElementById("submitConfirm");
-    var confirmed = false;
-    var lastFocus = null;
-
-    function openDialog() {
-        var c = counts();
-        var left = c.total - c.answered;
-
-        dialog.classList.toggle("has-unanswered", left > 0);
-        desc.textContent = "";
-
-        if (c.total && left > 0) {
-            var strong = document.createElement("strong");
-            strong.textContent = left + (left === 1 ? " unanswered question" : " unanswered questions");
-            desc.appendChild(document.createTextNode("You still have "));
-            desc.appendChild(strong);
-            desc.appendChild(document.createTextNode(". Once submitted, you cannot change your answers."));
-        } else {
-            desc.textContent = "Once submitted, you cannot change your answers.";
+    if (!text.trim()) {
+      var wrap = input;
+      while (wrap.parentElement && wrap.parentElement !== card) wrap = wrap.parentElement;
+      var inputsInside = wrap.querySelectorAll ? wrap.querySelectorAll("input[type=radio],input[type=checkbox]").length : 0;
+      if (wrap !== input && inputsInside === 1) {
+        text = wrap.textContent; trash.push(wrap);
+      } else {
+        var n = input.nextSibling;
+        while (n && !(n.nodeType === 1 && (n.tagName === "BR" || isChoice(n) || n.querySelector && n.querySelector("input[type=radio],input[type=checkbox]")))) {
+          var next = n.nextSibling;
+          if (n.nodeType === 3 || n.nodeType === 1) { text += n.textContent; trash.push(n); }
+          n = next;
         }
-
-        lastFocus = document.activeElement;
-        overlay.classList.add("is-open");
-        document.body.classList.add("dialog-open");
-        setTimeout(function () { cancelBtn.focus(); }, 60);
+      }
     }
+    return text.replace(/\s+/g, " ").trim();
+  }
 
-    function closeDialog() {
-        overlay.classList.remove("is-open");
-        document.body.classList.remove("dialog-open");
-        if (lastFocus && lastFocus.focus) lastFocus.focus();
-    }
+  function normalize() {
+    if (busy) return;
+    var all = Array.prototype.slice.call(container.querySelectorAll("input[type=radio],input[type=checkbox]"));
+    var fresh = all.filter(function (i) { return !i.closest(".opt"); });
+    if (!fresh.length) return;
+    busy = true;
 
-    // Capture phase: intercept the first click, ask, then re-send it once confirmed.
-    document.addEventListener("click", function (e) {
-        var btn = e.target.closest && e.target.closest("#submitBtn");
-        if (!btn || confirmed || btn.disabled) return;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        openDialog();
-    }, true);
-
-    cancelBtn.addEventListener("click", closeDialog);
-    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeDialog(); });
-
-    confirmBtn.addEventListener("click", function () {
-        closeDialog();
-        confirmed = true;
-        submitBtn.click();
-        confirmed = false;
+    var cards = [];
+    fresh.forEach(function (i) {
+      var c = cardFor(i, all);
+      if (cards.indexOf(c) === -1) cards.push(c);
     });
 
-    document.addEventListener("keydown", function (e) {
-        if (!overlay.classList.contains("is-open")) return;
-        if (e.key === "Escape") { closeDialog(); return; }
-        if (e.key === "Tab") {
-            if (e.shiftKey && document.activeElement === cancelBtn) { e.preventDefault(); confirmBtn.focus(); }
-            else if (!e.shiftKey && document.activeElement === confirmBtn) { e.preventDefault(); cancelBtn.focus(); }
-        }
+    cards.forEach(function (card) {
+      var inputs = fresh.filter(function (i) { return card.contains(i); });
+      var trash = [];
+      var opts = card.querySelector(":scope > .opts");
+      if (!opts) { opts = document.createElement("div"); opts.className = "opts"; card.appendChild(opts); }
+      card.classList.add("q-card");
+
+      inputs.forEach(function (input) {
+        var label = document.createElement("label");
+        label.className = "opt";
+        var key = document.createElement("span");
+        key.className = "opt-key";
+        key.textContent = String.fromCharCode(65 + opts.children.length);
+        var txt = document.createElement("span");
+        txt.className = "opt-text";
+        txt.textContent = textFor(input, card, trash);
+        label.appendChild(input);
+        label.appendChild(key);
+        label.appendChild(txt);
+        opts.appendChild(label);
+      });
+
+      trash.forEach(function (t) { if (t.parentNode && !t.querySelector || (t.parentNode && !t.querySelector("input"))) t.parentNode.removeChild(t); });
+      card.appendChild(opts); // keep options after the question text
     });
+
+    syncSelected();
+    busy = false;
+  }
+
+  function syncSelected() {
+    container.querySelectorAll(".opt").forEach(function (o) {
+      var i = o.querySelector("input");
+      o.classList.toggle("is-selected", !!(i && i.checked));
+    });
+    container.querySelectorAll(".q-card").forEach(function (c) {
+      c.classList.toggle("is-answered", !!c.querySelector(".opt.is-selected"));
+    });
+  }
+
+  /* ---------- 2. Answered progress ---------- */
+  function counts() {
+    var cards = container.querySelectorAll(".q-card, .question-item");
+    var seen = [];
+    var answered = 0;
+    cards.forEach(function (card) {
+      if (seen.some(function (s) { return s.contains(card) || card.contains(s); })) return;
+      seen.push(card);
+      var done = false;
+      card.querySelectorAll("input, textarea, select").forEach(function (f) {
+        if (f.type === "radio" || f.type === "checkbox") { if (f.checked) done = true; }
+        else if (f.value && f.value.trim()) done = true;
+      });
+      if (done) answered++;
+    });
+    return { total: seen.length, answered: answered };
+  }
+
+  function updateProgress() {
+    syncSelected();
+    var c = counts();
+    if (!c.total) { progressWrap.hidden = true; return; }
+    progressWrap.hidden = false;
+    answeredText.textContent = c.answered + " of " + c.total + " answered";
+    progressFill.style.width = Math.round((c.answered / c.total) * 100) + "%";
+    summary.textContent = c.answered === c.total ? "All questions answered" : c.answered + " of " + c.total + " questions answered";
+  }
+
+  container.addEventListener("change", updateProgress);
+  container.addEventListener("input", updateProgress);
+  new MutationObserver(function () { normalize(); updateProgress(); })
+    .observe(container, { childList: true, subtree: true });
+  normalize();
+  updateProgress();
+
+  /* ---------- 3. Timer colours ---------- */
+  var timerStarted = false;
+  function toSeconds(t) {
+    var p = t.trim().split(":").map(Number);
+    if (!p.length || p.some(isNaN)) return null;
+    return p.reduce(function (a, v) { return a * 60 + v; }, 0);
+  }
+  new MutationObserver(function () {
+    var s = toSeconds(timerEl.textContent);
+    if (s === null) return;
+    if (s > 0) timerStarted = true;
+    if (!timerStarted) return;
+    timerBox.classList.toggle("is-danger", s <= 60);
+    timerBox.classList.toggle("is-warning", s > 60 && s <= 300);
+  }).observe(timerEl, { childList: true, characterData: true, subtree: true });
+
+  /* ---------- 4. Submit confirmation ---------- */
+  var overlay = document.getElementById("submitOverlay");
+  var dialog = document.getElementById("submitDialog");
+  var desc = document.getElementById("submitDesc");
+  var cancelBtn = document.getElementById("submitCancel");
+  var confirmBtn = document.getElementById("submitConfirm");
+  var confirmed = false, lastFocus = null;
+
+  function openDialog() {
+    var c = counts(), left = c.total - c.answered;
+    dialog.classList.toggle("has-unanswered", left > 0);
+    desc.textContent = "";
+    if (c.total && left > 0) {
+      var s = document.createElement("strong");
+      s.textContent = left + (left === 1 ? " unanswered question" : " unanswered questions");
+      desc.appendChild(document.createTextNode("You still have "));
+      desc.appendChild(s);
+      desc.appendChild(document.createTextNode(". Once submitted, you cannot change your answers."));
+    } else {
+      desc.textContent = "Once submitted, you cannot change your answers.";
+    }
+    lastFocus = document.activeElement;
+    overlay.classList.add("is-open");
+    document.body.classList.add("dialog-open");
+    setTimeout(function () { cancelBtn.focus(); }, 60);
+  }
+  function closeDialog() {
+    overlay.classList.remove("is-open");
+    document.body.classList.remove("dialog-open");
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("#submitBtn");
+    if (!b || confirmed || b.disabled) return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    openDialog();
+  }, true);
+
+  cancelBtn.addEventListener("click", closeDialog);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) closeDialog(); });
+  confirmBtn.addEventListener("click", function () {
+    closeDialog(); confirmed = true; submitBtn.click(); confirmed = false;
+  });
+  document.addEventListener("keydown", function (e) {
+    if (!overlay.classList.contains("is-open")) return;
+    if (e.key === "Escape") { closeDialog(); return; }
+    if (e.key === "Tab") {
+      if (e.shiftKey && document.activeElement === cancelBtn) { e.preventDefault(); confirmBtn.focus(); }
+      else if (!e.shiftKey && document.activeElement === confirmBtn) { e.preventDefault(); cancelBtn.focus(); }
+    }
+  });
 })();
 </script>
-
 </body>
 </html>

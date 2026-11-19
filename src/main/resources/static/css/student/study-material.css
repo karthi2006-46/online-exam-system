@@ -1,13 +1,15 @@
 /* =====================================================
-   STUDY MATERIALS - PAGE STYLES (PREMIUM)
+   STUDY MATERIALS - PAGE STYLES (COMPACT)
    Load order: student-theme.css -> student-sidebar.css -> study-material.css
    Uses design tokens from student-theme.css. Layout, reset, sidebar
    and typography are NOT redefined here.
+   NOTE: the material viewer (popup) styles are in section 8 of
+   this file - they are no longer injected by JavaScript.
    ===================================================== */
 
 
 /* =====================================================
-   1. PAGE HEADER
+   1. PAGE HEADER (compact)
    ===================================================== */
 
 .main-content .study-page-header {
@@ -15,15 +17,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 24px;
+    gap: 20px;
 
-    margin-bottom: 24px;
-    padding: 32px 36px;
+    margin-bottom: 18px;
+    padding: 24px 28px;
 
     overflow: hidden;
 
     border: 1px solid var(--border);
-    border-radius: 22px;
+    border-radius: 18px;
 
     background:
         radial-gradient(520px 220px at 100% 0%, rgba(61, 123, 255, 0.14), transparent 70%),
@@ -37,7 +39,7 @@
     left: 0;
 
     width: 100%;
-    height: 4px;
+    height: 3px;
 
     background: linear-gradient(90deg, #2f62e6, #6ea2ff);
     content: "";
@@ -46,29 +48,29 @@
 .page-label {
     display: inline-block;
 
-    margin-bottom: 10px;
-    padding: 5px 12px;
+    margin-bottom: 8px;
+    padding: 4px 10px;
 
     border-radius: 999px;
 
     background: var(--primary-light);
     color: var(--primary);
 
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
-    letter-spacing: 1.4px;
+    letter-spacing: 1.3px;
 }
 
 .main-content .study-page-header h1 {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .study-page-header p {
-    max-width: 640px;
+    max-width: 620px;
 
     color: var(--text-secondary);
-    font-size: 15px;
-    line-height: 1.75;
+    font-size: 14px;
+    line-height: 1.65;
 }
 
 .study-header-icon {
@@ -76,40 +78,40 @@
     justify-content: center;
     align-items: center;
 
-    width: 80px;
-    height: 80px;
-    min-width: 80px;
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
 
-    border-radius: 22px;
+    border-radius: 18px;
 
     background: linear-gradient(135deg, #3d7bff, #2f62e6);
     color: #ffffff;
 
-    box-shadow: 0 12px 26px rgba(47, 98, 230, 0.32);
+    box-shadow: 0 10px 22px rgba(47, 98, 230, 0.3);
 }
 
 .study-header-icon span {
-    font-size: 38px;
+    font-size: 30px;
     font-weight: 700;
     line-height: 1;
 }
 
 
 /* =====================================================
-   2. INFORMATION BANNER
+   2. INFORMATION BANNER (compact)
    ===================================================== */
 
 .study-info-banner {
     display: flex;
     align-items: flex-start;
-    gap: 16px;
+    gap: 14px;
 
-    margin-bottom: 36px;
-    padding: 20px 24px;
+    margin-bottom: 26px;
+    padding: 14px 18px;
 
     border: 1px solid #d6e2ff;
     border-left: 4px solid var(--primary);
-    border-radius: 14px;
+    border-radius: 12px;
 
     background: linear-gradient(90deg, var(--primary-light), #f7faff);
 }
@@ -119,9 +121,9 @@
     justify-content: center;
     align-items: center;
 
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
 
     border-radius: 50%;
 
@@ -129,22 +131,22 @@
     color: #ffffff;
 
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 17px;
+    font-size: 14px;
     font-style: italic;
     font-weight: 700;
 }
 
 .study-info-banner h3 {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 
     color: var(--ink);
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .study-info-banner p {
     color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.7;
+    font-size: 13px;
+    line-height: 1.6;
 }
 
 
@@ -153,7 +155,7 @@
    ===================================================== */
 
 .materials-section {
-    margin-bottom: 36px;
+    margin-bottom: 28px;
 }
 
 .materials-section-header {
@@ -162,31 +164,31 @@
     align-items: center;
     gap: 16px;
 
-    margin-bottom: 22px;
+    margin-bottom: 16px;
 }
 
 .materials-section-header h2 {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .materials-section-header p {
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13.5px;
 }
 
 #materialsContainer,
 .materials-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
     align-items: stretch;
-    gap: 24px;
+    gap: 16px;
 
     min-width: 0;
 }
 
 
 /* =====================================================
-   4. MATERIAL CARD
+   4. MATERIAL CARD (compact)
    ===================================================== */
 
 .material-card {
@@ -194,16 +196,16 @@
 
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: stretch;
+    gap: 8px;
 
     min-width: 0;
-    padding: 28px 26px 26px;
+    padding: 16px 16px 14px;
 
     overflow: hidden;
 
     border: 1px solid var(--border);
-    border-radius: var(--border-radius);
+    border-radius: 14px;
 
     background: var(--surface);
     box-shadow: var(--shadow-sm);
@@ -217,14 +219,14 @@
     left: 0;
 
     width: 100%;
-    height: 4px;
+    height: 3px;
 
     background: linear-gradient(90deg, #2f62e6, #6ea2ff);
     content: "";
 }
 
 .material-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
 
     border-color: var(--border-strong);
     box-shadow: var(--shadow-md);
@@ -234,64 +236,85 @@
     background: linear-gradient(90deg, #12a15a, #3fd08a);
 }
 
-/* Icon tile */
+/* Top row: file icon (left) + icon buttons (right) */
+.material-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
 .material-icon {
     display: flex;
     justify-content: center;
     align-items: center;
 
-    width: 58px;
-    height: 58px;
-    margin-bottom: 4px;
+    width: 42px;
+    height: 42px;
 
     border: 1px solid #d6e2ff;
-    border-radius: 16px;
+    border-radius: 11px;
 
     background: linear-gradient(135deg, #f3f7ff, var(--primary-light));
     color: var(--primary);
 
-    font-size: 14px;
+    font-size: 11.5px;
     font-weight: 800;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.3px;
+}
+
+.material-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .material-card .material-title {
-    margin: 0;
+    margin: 2px 0 0;
 
     color: var(--ink);
-    font-size: 19px;
-    font-weight: 750;
-    line-height: 1.4;
-    letter-spacing: -0.01em;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
 
     overflow-wrap: anywhere;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .material-card .material-type {
-    display: inline-flex;
-    align-items: center;
+    align-self: flex-start;
 
     margin: 0;
-    padding: 5px 12px;
+    padding: 3px 9px;
 
     border-radius: 999px;
 
     background: var(--primary-light);
     color: var(--primary-hover);
 
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
 }
 
 .material-card .material-desc {
     flex: 1;
-    margin: 0 0 6px;
+    margin: 0;
 
     color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.75;
+    font-size: 12.5px;
+    line-height: 1.55;
 
     overflow-wrap: anywhere;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 
@@ -302,19 +325,20 @@
 .material-status {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 
-    padding: 6px 12px;
+    padding: 4px 10px;
 
     border-radius: 999px;
 
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .status-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
 
     border-radius: 50%;
 }
@@ -339,106 +363,132 @@
 
 
 /* =====================================================
-   6. ACTION BUTTONS
+   6. BUTTONS
    ===================================================== */
 
-.material-actions {
+/* Footer row: status (left) + small Open button (right) */
+.material-footer {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
 
-    width: 100%;
-    margin-top: auto;
-    padding-top: 14px;
+    margin-top: 4px;
+    padding-top: 10px;
 
     border-top: 1px solid var(--border);
 }
 
-.download-btn,
-.complete-btn,
-.retry-btn {
+/* Small professional Open button */
+.open-btn {
     display: inline-flex;
-    justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 
-    width: 100%;
-    min-height: 46px;
-    padding: 11px 18px;
+    height: 32px;
+    padding: 0 13px;
 
-    border: 1px solid transparent;
-    border-radius: 11px;
+    border: 0;
+    border-radius: 8px;
 
-    font-size: 14px;
-    font-weight: 650;
-    line-height: 1.4;
-    text-align: center;
-    text-decoration: none;
+    background: var(--primary);
+    color: #ffffff;
+
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1;
 
     cursor: pointer;
 
-    transition: var(--transition);
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-/* Primary: matches theme .btn */
-.download-btn,
-.retry-btn {
-    background: linear-gradient(135deg, #3d7bff, #2f62e6);
-    color: #ffffff;
-    box-shadow: 0 6px 16px rgba(47, 98, 230, 0.28);
+.open-btn svg {
+    transition: transform 0.2s ease;
 }
 
-.download-btn:hover,
-.retry-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 22px rgba(47, 98, 230, 0.36);
+.open-btn:hover {
+    background: var(--primary-hover);
+    box-shadow: 0 4px 12px rgba(47, 98, 230, 0.3);
 }
 
-.download-btn:active,
-.retry-btn:active,
-.complete-btn:active:not(:disabled) {
-    transform: scale(0.98);
+.open-btn:hover svg {
+    transform: translateX(2px);
 }
 
-/* Secondary: mark as completed */
-.complete-btn {
-    border-color: var(--border-strong);
+.open-btn:active {
+    transform: scale(0.97);
+}
+
+/* Small icon-only buttons (completed / download) */
+.icon-btn {
+    display: inline-grid;
+    place-items: center;
+
+    width: 30px;
+    height: 30px;
+    padding: 0;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
     background: var(--surface);
-    color: var(--primary-hover);
+    color: var(--text-secondary);
+
+    cursor: pointer;
+
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
-.complete-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-
+.icon-btn:hover:not(:disabled) {
     border-color: var(--primary);
     background: var(--primary-light);
+    color: var(--primary);
 }
 
-.complete-btn:disabled {
+.icon-btn:active:not(:disabled) {
+    transform: scale(0.94);
+}
+
+.icon-btn.is-done,
+.icon-btn.is-done:disabled {
     border-color: #bfe9d1;
     background: var(--success-light);
     color: #0d7a43;
     cursor: default;
 }
 
-.download-btn:disabled {
-    background: #a9b4cc;
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.download-btn:focus-visible,
-.complete-btn:focus-visible,
+.open-btn:focus-visible,
+.icon-btn:focus-visible,
 .retry-btn:focus-visible {
     outline: 3px solid rgba(47, 98, 230, 0.3);
-    outline-offset: 3px;
+    outline-offset: 2px;
 }
 
 .retry-btn {
-    width: auto;
-    min-width: 160px;
-    margin: 18px auto 0;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    min-width: 140px;
+    height: 38px;
+    margin-top: 6px;
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: var(--primary);
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.retry-btn:hover {
+    background: var(--primary-hover);
 }
 
 
@@ -455,13 +505,13 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 
-    min-height: 240px;
-    padding: 40px 24px;
+    min-height: 200px;
+    padding: 32px 20px;
 
     border: 1px dashed var(--border-strong);
-    border-radius: var(--border-radius);
+    border-radius: 14px;
 
     background: var(--surface);
     color: var(--text-secondary);
@@ -472,13 +522,13 @@
 .empty-state h3,
 .error-state h3 {
     color: var(--ink);
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .empty-state p,
 .error-state p {
     max-width: 420px;
-    font-size: 14px;
+    font-size: 13.5px;
 }
 
 .error-state {
@@ -491,11 +541,11 @@
 }
 
 .loading-spinner {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
 
     border: 3px solid #dbe6ff;
-    border-top-color: var(--primary);
+    border-top-color: var(--primary, #2f62e6);
     border-radius: 50%;
 
     animation: studySpin 0.8s linear infinite;
@@ -507,7 +557,387 @@
 
 
 /* =====================================================
-   8. FOOTER
+   8. MATERIAL VIEWER (popup)
+   ===================================================== */
+
+body.study-viewer-open {
+    overflow: hidden;
+}
+
+.study-viewer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 16px;
+
+    background: rgba(10, 20, 40, 0.72);
+    backdrop-filter: blur(3px);
+
+    animation: viewerFade 0.2s ease;
+}
+
+.study-viewer {
+    display: flex;
+    flex-direction: column;
+
+    width: min(1100px, 100%);
+    height: min(92vh, 900px);
+    height: min(92dvh, 900px);
+
+    overflow: hidden;
+
+    border-radius: 14px;
+
+    background: #ffffff;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+
+    animation: viewerPop 0.28s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+@keyframes viewerFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes viewerPop {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ----- Header ----- */
+
+.study-viewer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding: 10px 14px 10px 18px;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.study-viewer-header h3 {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.study-viewer-close {
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: #f1f3f8;
+    color: #334155;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.study-viewer-close:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* ----- PDF toolbar ----- */
+
+.study-viewer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+
+    padding: 8px 12px;
+
+    background: #f4f6fa;
+}
+
+.study-tool-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.study-tool-btn {
+    display: inline-grid;
+    place-items: center;
+
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: #e5eaf4;
+    color: #1e293b;
+
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.study-tool-btn:hover:not(:disabled) {
+    background: #d5def0;
+}
+
+.study-tool-btn:active:not(:disabled) {
+    transform: scale(0.94);
+}
+
+.study-tool-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.study-tool-btn:focus-visible {
+    outline: 2px solid var(--primary, #2f62e6);
+    outline-offset: 2px;
+}
+
+.study-tool-text {
+    padding: 0 12px;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.study-page-info {
+    min-width: 58px;
+
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.study-zoom-info {
+    min-width: 44px;
+
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* ----- Reading progress bar ----- */
+
+.study-progress {
+    height: 3px;
+    background: #e5eaf4;
+}
+
+.study-progress span {
+    display: block;
+
+    width: 0;
+    height: 100%;
+
+    background: var(--primary, #2f62e6);
+
+    transition: width 0.4s ease;
+}
+
+/* ----- Content area ----- */
+
+.study-viewer-content {
+    display: flex;
+
+    flex: 1;
+    min-height: 0;
+    padding: 16px;
+
+    overflow: auto;
+    overscroll-behavior: contain;
+
+    background: #eef1f6;
+}
+
+/* margin:auto keeps zoomed pages scrollable on every side */
+.study-pdf-stage {
+    position: relative;
+
+    display: grid;
+    margin: auto;
+}
+
+.study-pdf-canvas {
+    grid-area: 1 / 1;
+    place-self: center;
+
+    max-width: none;
+
+    background: #ffffff;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.16);
+
+    will-change: transform, opacity;
+}
+
+/* ----- Smooth page transitions ----- */
+
+.study-pdf-canvas.enter-next { z-index: 2; animation: pdfInNext 0.38s cubic-bezier(0.22, 0.8, 0.3, 1) both; }
+.study-pdf-canvas.enter-prev { z-index: 2; animation: pdfInPrev 0.38s cubic-bezier(0.22, 0.8, 0.3, 1) both; }
+.study-pdf-canvas.leave-next { z-index: 1; pointer-events: none; animation: pdfOutNext 0.38s cubic-bezier(0.22, 0.8, 0.3, 1) both; }
+.study-pdf-canvas.leave-prev { z-index: 1; pointer-events: none; animation: pdfOutPrev 0.38s cubic-bezier(0.22, 0.8, 0.3, 1) both; }
+.study-pdf-canvas.enter-fade { animation: pdfFade 0.3s ease both; }
+
+@keyframes pdfInNext {
+    from { opacity: 0; transform: translateX(56px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes pdfInPrev {
+    from { opacity: 0; transform: translateX(-56px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes pdfOutNext {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateX(-56px) scale(0.98); }
+}
+
+@keyframes pdfOutPrev {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateX(56px) scale(0.98); }
+}
+
+@keyframes pdfFade {
+    from { opacity: 0; transform: scale(0.99); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ----- Loading / message ----- */
+
+.study-viewer-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    margin: auto;
+    padding: 24px;
+
+    color: #64748b;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* ----- Video ----- */
+
+.study-video {
+    width: 100%;
+    max-height: 100%;
+    margin: auto;
+
+    border-radius: 8px;
+    background: #000000;
+}
+
+/* ----- Text ----- */
+
+.study-text {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    align-self: flex-start;
+    padding: 24px;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.study-other {
+    margin: auto;
+    padding: 24px;
+
+    text-align: center;
+}
+
+/* ----- Footer ----- */
+
+.study-viewer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding: 10px 16px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+
+    border-top: 1px solid #e5e7eb;
+}
+
+.study-unlock-message {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.study-complete-action {
+    height: 36px;
+    padding: 0 16px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: var(--primary, #2563eb);
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.study-complete-action:hover:not(:disabled) {
+    background: var(--primary-hover, #1d4ed8);
+}
+
+.study-complete-action:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.study-complete-action:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.study-viewer-hidden {
+    display: none !important;
+}
+
+
+/* =====================================================
+   9. FOOTER (page)
    ===================================================== */
 
 .study-page-footer {
@@ -516,8 +946,8 @@
     align-items: center;
     gap: 15px;
 
-    margin-top: 40px;
-    padding: 20px 0 0;
+    margin-top: 32px;
+    padding: 18px 0 0;
 
     border-top: 1px solid var(--border);
 
@@ -532,49 +962,91 @@
 
 
 /* =====================================================
-   9. ENTRY ANIMATION
+   10. ENTRY ANIMATION
    ===================================================== */
 
 .material-card {
-    animation: cardIn 0.5s var(--ease) backwards;
+    animation: cardIn 0.45s var(--ease, ease) backwards;
 }
 
-.material-card:nth-child(2) { animation-delay: 0.05s; }
-.material-card:nth-child(3) { animation-delay: 0.10s; }
-.material-card:nth-child(4) { animation-delay: 0.15s; }
-.material-card:nth-child(5) { animation-delay: 0.20s; }
-.material-card:nth-child(6) { animation-delay: 0.25s; }
+.material-card:nth-child(2) { animation-delay: 0.04s; }
+.material-card:nth-child(3) { animation-delay: 0.08s; }
+.material-card:nth-child(4) { animation-delay: 0.12s; }
+.material-card:nth-child(5) { animation-delay: 0.16s; }
+.material-card:nth-child(6) { animation-delay: 0.20s; }
 
 @keyframes cardIn {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: none; }
 }
 
 
 /* =====================================================
-   10. RESPONSIVE
+   11. RESPONSIVE
    ===================================================== */
 
 @media (max-width: 900px) {
 
     .main-content .study-page-header {
-        padding: 26px 24px;
+        padding: 20px 20px;
     }
 
     #materialsContainer,
     .materials-grid {
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-        gap: 18px;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+        gap: 14px;
+    }
+}
+
+@media (max-width: 700px) {
+
+    /* Viewer becomes full screen on phones */
+    .study-viewer-overlay {
+        padding: 0;
+    }
+
+    .study-viewer {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+
+        border-radius: 0;
+    }
+
+    .study-viewer-header {
+        padding: 8px 10px 8px 14px;
+    }
+
+    .study-viewer-header h3 {
+        font-size: 15px;
+    }
+
+    .study-viewer-toolbar {
+        gap: 4px 12px;
+        padding: 6px 8px;
+    }
+
+    .study-viewer-content {
+        padding: 8px;
+    }
+
+    .study-viewer-footer {
+        padding: 8px 12px;
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+    .study-unlock-message {
+        font-size: 12px;
     }
 }
 
 @media (max-width: 600px) {
 
     .main-content .study-page-header {
-        gap: 14px;
-        margin-bottom: 18px;
-        padding: 22px 18px;
-        border-radius: 18px;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding: 18px 16px;
+        border-radius: 16px;
     }
 
     .study-page-header p {
@@ -582,20 +1054,20 @@
     }
 
     .study-header-icon {
-        width: 50px;
-        height: 50px;
-        min-width: 50px;
-        border-radius: 14px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 13px;
     }
 
     .study-header-icon span {
-        font-size: 25px;
+        font-size: 22px;
     }
 
     .study-info-banner {
-        gap: 12px;
-        margin-bottom: 26px;
-        padding: 16px;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 12px 14px;
     }
 
     .study-info-banner h3 {
@@ -603,22 +1075,14 @@
     }
 
     .study-info-banner p {
-        font-size: 13px;
+        font-size: 12.5px;
     }
 
+    /* Two compact columns on larger phones, one on small ones */
     #materialsContainer,
     .materials-grid {
         grid-template-columns: minmax(0, 1fr);
-        gap: 16px;
-    }
-
-    .material-card {
-        padding: 24px 20px 20px;
-    }
-
-    .material-icon {
-        width: 52px;
-        height: 52px;
+        gap: 12px;
     }
 
     .study-page-footer {
@@ -628,15 +1092,35 @@
     }
 }
 
+@media (max-width: 380px) {
+
+    .study-tool-text {
+        display: none;
+    }
+
+    .study-viewer-toolbar {
+        gap: 4px 8px;
+    }
+}
+
 
 /* =====================================================
-   11. REDUCED MOTION
+   12. REDUCED MOTION
    ===================================================== */
 
 @media (prefers-reduced-motion: reduce) {
 
-    .material-card {
-        animation: none;
+    .material-card,
+    .study-viewer-overlay,
+    .study-viewer,
+    .study-pdf-canvas {
+        animation: none !important;
+    }
+
+    .study-progress span,
+    .open-btn,
+    .open-btn svg {
+        transition: none;
     }
 
     .loading-spinner {
