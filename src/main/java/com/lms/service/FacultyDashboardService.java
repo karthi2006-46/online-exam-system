@@ -70,7 +70,19 @@ public class FacultyDashboardService {
             throw new AccessDeniedException("Faculty access required");
         }
 
-        Long facultyId = faculty.getId();
+        return buildDashboard(faculty.getId());
+    }
+
+    /**
+     * Builds the same dashboard for any faculty member.
+     * Used by the admin module after it has verified the target faculty.
+     */
+    @Transactional(readOnly = true)
+    public FacultyDashboardDTO buildDashboard(Long facultyId) {
+
+        if (facultyId == null) {
+            throw new AccessDeniedException("Faculty id is required");
+        }
 
         FacultyDashboardDTO dto = new FacultyDashboardDTO();
 
@@ -83,9 +95,14 @@ public class FacultyDashboardService {
                 enrollmentRepository.countByCourse_Faculty_IdAndStatusIgnoreCase(
                         facultyId, "ACTIVE");
 
+        long completedEnrollments =
+                enrollmentRepository.countByCourse_Faculty_IdAndStatusIgnoreCase(
+                        facultyId, "COMPLETED");
+
         dto.setTotalStudents(totalEnrollments);
         dto.setActiveStudents(activeEnrollments);
         dto.setInactiveStudents(Math.max(0, totalEnrollments - activeEnrollments));
+        dto.setCompletedStudents(completedEnrollments);
 
         dto.setTotalMaterials(
                 materialRepository.countByCourse_Faculty_IdAndActiveTrue(facultyId));

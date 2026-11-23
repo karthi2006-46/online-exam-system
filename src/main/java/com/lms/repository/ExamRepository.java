@@ -13,4 +13,6 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     List<Exam> findByPublishedTrue();
     List<Exam> findByCourse_IdAndPublishedTrue(Long courseId);
     long countByCourse_Faculty_IdAndActiveTrue(Long facultyId);
+
+    long countByCourse_Id(Long courseId);
 }

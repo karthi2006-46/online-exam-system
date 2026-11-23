@@ -22,4 +22,6 @@ public interface MaterialProgressRepository
             Long courseId,
             Boolean completed
     );
+
+    long countByStudent_Id(Long studentId);
 }

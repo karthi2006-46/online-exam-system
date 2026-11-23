@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Student Performance | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb"><a href="/admin/admindashboard.html">Admin Console</a> / Performance</p>
+                <h1>Student performance</h1>
+                <p class="subtitle">Progress across materials, challenges and examinations for every enrollment.</p>
+            </div>
+
+            <div class="topbar-right">
+                <a href="/admin/results.html" class="button button-light button-sm hide-mobile">Exam results</a>
+                <button class="button button-light button-sm" type="button" id="exportPerformance">Export Excel</button>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading performance data...
+        </div>
+
+        <section class="panel">
+            <div class="filter-bar">
+                <div class="filter-field filter-search">
+                    <label for="performanceSearch">Search student</label>
+                    <input type="search" id="performanceSearch" placeholder="Name or email" autocomplete="off">
+                </div>
+                <div class="filter-field">
+                    <label for="performanceCourse">Course</label>
+                    <select id="performanceCourse">
+                        <option value="">All courses</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="performanceFaculty">Faculty</label>
+                    <select id="performanceFaculty">
+                        <option value="">All faculty</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="performanceStatus">Enrollment</label>
+                    <select id="performanceStatus">
+                        <option value="">Any status</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="DROPPED">Dropped</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="performanceApproval">Exam approval</label>
+                    <select id="performanceApproval">
+                        <option value="">Any</option>
+                        <option value="NOT_REQUESTED">Not requested</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="button button-light button-sm" type="button" id="refreshPerformance">Refresh</button>
+                    <button class="button button-light button-sm" type="button" id="clearPerformanceFilters">Clear</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Faculty</th>
+                            <th>Enrollment</th>
+                            <th>Materials</th>
+                            <th>Challenges</th>
+                            <th>Overall</th>
+                            <th>Exam approval</th>
+                            <th>Coding review</th>
+                            <th>Latest exam</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="performanceTableBody">
+                        <tr><td colspan="11" class="table-state"><strong>Loading performance...</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pager" id="performancePager"></div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-performance.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

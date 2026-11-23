@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Faculty Management | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb"><a href="/admin/admindashboard.html">Admin Console</a> / Faculty</p>
+                <h1>Faculty management</h1>
+                <p class="subtitle">Create faculty accounts, assign courses and track teaching load.</p>
+            </div>
+
+            <div class="topbar-right">
+                <button class="button button-light button-sm" type="button" id="exportFaculty">
+                    Export Excel
+                </button>
+                <button class="button button-primary button-sm" type="button" id="addFaculty">
+                    Add faculty
+                </button>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading faculty accounts...
+        </div>
+
+        <section class="panel">
+            <div class="filter-bar">
+                <div class="filter-field filter-search">
+                    <label for="facultySearch">Search</label>
+                    <input type="search" id="facultySearch" placeholder="Name, email or faculty ID" autocomplete="off">
+                </div>
+                <div class="filter-field">
+                    <label for="facultyStatus">Status</label>
+                    <select id="facultyStatus">
+                        <option value="">All accounts</option>
+                        <option value="true">Active only</option>
+                        <option value="false">Inactive only</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="button button-light button-sm" type="button" id="refreshFaculty">Refresh</button>
+                    <button class="button button-light button-sm" type="button" id="clearFacultyFilters">Clear</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Faculty</th>
+                            <th>Courses</th>
+                            <th class="num">Students</th>
+                            <th class="num">Active</th>
+                            <th class="num">Results</th>
+                            <th>Pass rate</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facultyTableBody">
+                        <tr><td colspan="8" class="table-state"><strong>Loading faculty...</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pager" id="facultyPager"></div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<!-- ================= CREATE / EDIT FACULTY ================= -->
+<div class="modal-overlay" id="facultyModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="facultyModalTitle">
+        <div class="modal-head">
+            <div>
+                <h2 id="facultyModalTitle">Add faculty</h2>
+                <p id="facultyModalSubtitle">Create a faculty account and assign courses.</p>
+            </div>
+            <button class="modal-close" type="button" data-close="facultyModal" aria-label="Close">&times;</button>
+        </div>
+
+        <form id="facultyForm" novalidate>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="facultyFirstName">First name <b>*</b></label>
+                        <input id="facultyFirstName" name="firstName" type="text" maxlength="80" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="facultyLastName">Last name <b>*</b></label>
+                        <input id="facultyLastName" name="lastName" type="text" maxlength="80" required>
+                    </div>
+                    <div class="form-group span-2">
+                        <label for="facultyEmail">Email <b>*</b></label>
+                        <input id="facultyEmail" name="email" type="email" maxlength="120" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="facultyPhone">Phone</label>
+                        <input id="facultyPhone" name="phone" type="tel" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="facultyAddress">Address</label>
+                        <input id="facultyAddress" name="address" type="text" maxlength="500">
+                    </div>
+
+                    <div class="form-group span-2" id="activeGroup" hidden>
+                        <label class="check-row" for="facultyActive">
+                            <input id="facultyActive" type="checkbox">
+                            Active account
+                        </label>
+                        <small>Deactivate only after reassigning this faculty member's courses.</small>
+                    </div>
+
+                    <div class="form-group span-2" id="passwordGroup">
+                        <label for="facultyPassword">Password</label>
+                        <input id="facultyPassword" name="password" type="text" minlength="8" maxlength="100"
+                               placeholder="Leave empty to generate a temporary password">
+                        <small>At least 8 characters. The generated password is shown once.</small>
+                    </div>
+
+                    <div class="form-group span-2" id="courseAssignGroup">
+                        <label>Assign courses</label>
+                        <div class="course-picker" id="createCoursePicker">
+                            <span class="subtle">Loading courses...</span>
+                        </div>
+                        <small>Selecting a course moves it from its current faculty to this one.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-foot">
+                <button class="button button-light" type="button" data-close="facultyModal">Cancel</button>
+                <button class="button button-primary" type="submit" id="saveFaculty">Create faculty</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= ASSIGN COURSES ================= -->
+<div class="modal-overlay" id="assignModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="assignModalTitle">
+        <div class="modal-head">
+            <div>
+                <h2 id="assignModalTitle">Assign courses</h2>
+                <p id="assignModalSubtitle">Move courses to this faculty member.</p>
+            </div>
+            <button class="modal-close" type="button" data-close="assignModal" aria-label="Close">&times;</button>
+        </div>
+
+        <form id="assignForm">
+            <div class="modal-body">
+                <div class="course-picker" id="assignCoursePicker">
+                    <span class="subtle">Loading courses...</span>
+                </div>
+                <p class="subtle" style="margin-top:8px;">
+                    Already-assigned courses are shown but disabled. A course can only belong to one faculty member.
+                </p>
+            </div>
+            <div class="modal-foot">
+                <button class="button button-light" type="button" data-close="assignModal">Cancel</button>
+                <button class="button button-primary" type="submit" id="saveAssign">Assign selected</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= PASSWORD RESULT ================= -->
+<div class="modal-overlay" id="passwordModal" aria-hidden="true">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+        <div class="modal-head">
+            <div>
+                <h2 id="passwordModalTitle">Temporary password</h2>
+                <p>Share this with the faculty member. It is shown only once.</p>
+            </div>
+            <button class="modal-close" type="button" data-close="passwordModal" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="secret-box">
+                <code id="temporaryPassword">-</code>
+                <button class="button button-light button-sm" type="button" id="copyPassword">Copy</button>
+            </div>
+            <p class="subtle" id="passwordRecipient"></p>
+        </div>
+        <div class="modal-foot">
+            <button class="button button-primary" type="button" data-close="passwordModal">Done</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-faculty.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

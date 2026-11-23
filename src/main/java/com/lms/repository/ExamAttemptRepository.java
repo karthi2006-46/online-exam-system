@@ -58,4 +58,13 @@ public interface ExamAttemptRepository
             @Param("courseId") Long courseId,
             @Param("statuses") List<String> statuses
     );
+
+    long countByStudent_Id(Long studentId);
+
+    long countByStudent_IdAndExam_Id(Long studentId, Long examId);
+
+    long countByStudent_IdAndExam_Course_Id(
+            Long studentId,
+            Long courseId
+    );
 }

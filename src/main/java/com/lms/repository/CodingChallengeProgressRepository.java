@@ -30,4 +30,10 @@ public interface CodingChallengeProgressRepository
             Long courseId,
             Boolean completed
     );
+
+
+    // Used before deleting a challenge so student progress is never orphaned
+    long countByChallenge_Id(Long challengeId);
+
+    long countByStudent_Id(Long studentId);
 }

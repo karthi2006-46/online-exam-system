@@ -74,79 +74,100 @@ public class SecurityConfig {
 
                 // Public frontend pages and static resources.
                 .requestMatchers(
-        "/",
-        "/login.html",
-        "/signup.html",
-        "/forgot-password.html",
-        "/dashboard.html",
-        "/exam.html",
-        "/student/studentdashboard.html",
-        "/student/my-courses.html",
-        "/student/study-material.html",
-        "/faculty/exam-approval-requests.html",
-        "/student/**",
-        "/faculty/**",
-        "/admin/**",
-        "/css/**",
-        "/js/**",
-        "/images/**",
-        "/favicon.ico"
-).permitAll()
+                        "/",
+                        "/login.html",
+                        "/signup.html",
+                        "/forgot-password.html",
+                        "/dashboard.html",
+                        "/exam.html",
+                        "/student/**",
+                        "/faculty/**",
+                        "/admin/**",
+                        "/css/**",
+                        "/js/**",
+                        "/images/**",
+                        "/favicon.ico",
+                        "/error"
+                ).permitAll()
 
-                // Authentication endpoints.
-                .requestMatchers("/api/auth/**").permitAll()
+                // Only these authentication endpoints are public.
+                // Profile and password endpoints need a valid JWT.
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/auth/signup",
+                        "/api/auth/login",
+                        "/api/auth/forgot-password",
+                        "/api/auth/reset-password"
+                ).permitAll()
+
+                .requestMatchers("/api/auth/**").authenticated()
 
                 // Public APIs.
                 .requestMatchers("/api/public/**").permitAll()
 
+                // Public course catalogue (used by the signup page).
                 .requestMatchers(
                         HttpMethod.GET,
-                        "/api/courses/**"
+                        "/api/courses/active",
+                        "/api/courses/*"
                 ).permitAll()
 
-                .requestMatchers("/api/student/courses/**").permitAll()
-                .requestMatchers("/api/materials/course/**").permitAll()
-                .requestMatchers("/api/materials/**").permitAll()
-                // .requestMatchers("/api/exams/**").permitAll()
-                // .requestMatchers("/api/questions/exam/**").permitAll()
-                .requestMatchers("/api/student/dashboard/**").permitAll()
-                .requestMatchers("/api/results/attempt/**").permitAll()
-                .requestMatchers("/api/results/student/**").permitAll()
-                .requestMatchers("/api/coding-challenges/**").permitAll()
-                .requestMatchers("/api/coding-challenge-progress/**").permitAll()
-                .requestMatchers("/api/exam-eligibility/**").permitAll()
-                .requestMatchers("/api/reports/**").authenticated()
-              .requestMatchers(
-        org.springframework.http.HttpMethod.POST,
-        "/api/exam-approval/request"
-).hasRole("STUDENT")
-
-.requestMatchers(
-        org.springframework.http.HttpMethod.GET,
-        "/api/exam-approval/student/**"
-).hasRole("STUDENT")
-
-.requestMatchers(
-        "/api/exam-approval/pending",
-        "/api/exam-approval/*/approve",
-        "/api/exam-approval/*/reject"
-).hasRole("FACULTY")
+                // Role-protected areas are declared before broader rules so that
+                // they can never be shadowed by a previous permitAll().
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/faculty/**").hasRole("FACULTY")
+                .requestMatchers("/api/student/**").hasRole("STUDENT")
 
                 // Student progress requires the STUDENT role.
-                .requestMatchers("/api/material-progress/**")
-                .hasRole("STUDENT")
+                .requestMatchers("/api/material-progress/**").hasRole("STUDENT")
 
-                // Admin endpoints require ADMIN role.
-                .requestMatchers("/api/admin/**")
-                .hasRole("ADMIN")
+                // Exam approval flow.
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/exam-approval/request"
+                ).hasRole("STUDENT")
 
-                // Faculty endpoints require FACULTY role.
-                .requestMatchers("/api/faculty/**")
-                .hasRole("FACULTY")
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/exam-approval/student/**"
+                ).hasRole("STUDENT")
 
-                // Student endpoints require STUDENT role.
-                .requestMatchers("/api/student/**")
-                .hasRole("STUDENT")
+                .requestMatchers(
+                        "/api/exam-approval/pending",
+                        "/api/exam-approval/*/approve",
+                        "/api/exam-approval/*/reject"
+                ).hasRole("FACULTY")
+
+                // Coding challenge authoring is faculty/admin only.
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/coding-challenges/**"
+                ).hasAnyRole("FACULTY", "ADMIN")
+
+                .requestMatchers(
+                        HttpMethod.PUT,
+                        "/api/coding-challenges/**"
+                ).hasAnyRole("FACULTY", "ADMIN")
+
+                .requestMatchers(
+                        HttpMethod.PATCH,
+                        "/api/coding-challenges/**"
+                ).hasAnyRole("FACULTY", "ADMIN")
+
+                .requestMatchers(
+                        HttpMethod.DELETE,
+                        "/api/coding-challenges/**"
+                ).hasAnyRole("FACULTY", "ADMIN")
+
+                // Challenge reads now require a logged-in user.
+                .requestMatchers("/api/coding-challenges/**").authenticated()
+                .requestMatchers("/api/coding-challenge-progress/**").authenticated()
+                .requestMatchers("/api/exam-eligibility/**").authenticated()
+                .requestMatchers("/api/materials/**").authenticated()
+                .requestMatchers("/api/results/**").authenticated()
+
+                // Reports are authenticated; the controllers add role checks.
+                .requestMatchers("/api/reports/**").authenticated()
 
                 // All remaining requests require authentication.
                 .anyRequest()

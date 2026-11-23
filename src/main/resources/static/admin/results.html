@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Examination Results | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb"><a href="/admin/admindashboard.html">Admin Console</a> / Exam Results</p>
+                <h1>Examination results</h1>
+                <p class="subtitle">Filter submitted exams by course, exam, date and outcome.</p>
+            </div>
+
+            <div class="topbar-right">
+                <a href="/admin/performance.html" class="button button-light button-sm hide-mobile">Performance</a>
+                <button class="button button-light button-sm" type="button" id="exportResults">Export Excel</button>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Select a course to load results.
+        </div>
+
+        <section class="panel">
+            <div class="filter-bar">
+                <div class="filter-field">
+                    <label for="resultCourse">Course <b style="color:var(--red)">*</b></label>
+                    <select id="resultCourse">
+                        <option value="">Select a course</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="resultExam">Exam</label>
+                    <select id="resultExam">
+                        <option value="">All exams</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="resultStatus">Outcome</label>
+                    <select id="resultStatus">
+                        <option value="">Any outcome</option>
+                        <option value="PASS">Pass</option>
+                        <option value="FAIL">Fail</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="resultFrom">From</label>
+                    <input type="date" id="resultFrom">
+                </div>
+                <div class="filter-field">
+                    <label for="resultTo">To</label>
+                    <input type="date" id="resultTo">
+                </div>
+                <div class="filter-actions">
+                    <button class="button button-light button-sm" type="button" id="refreshResults">Refresh</button>
+                    <button class="button button-light button-sm" type="button" id="clearResultFilters">Clear</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Exam</th>
+                            <th>Submitted</th>
+                            <th class="num">Marks</th>
+                            <th>Percentage</th>
+                            <th>Status</th>
+                            <th class="num">Correct</th>
+                            <th class="num">Wrong</th>
+                            <th class="num">Skipped</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultTableBody">
+                        <tr><td colspan="10" class="table-state"><strong>Select a course</strong>Results are loaded per course.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pager" id="resultPager"></div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-results.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

@@ -55,4 +55,31 @@ boolean existsByStudent_IdAndChallenge_Id(
         Long challengeId
 );
 
+    // Used before deleting a challenge so student history is never orphaned
+    long countByChallenge_Id(Long challengeId);
+
+    // Admin and faculty detail counts
+    long countByStatus(CodingSubmissionStatus status);
+
+    long countByChallenge_Course_Faculty_IdAndStatus(
+            Long facultyId,
+            CodingSubmissionStatus status
+    );
+
+    long countByChallenge_Course_IdAndStatus(
+            Long courseId,
+            CodingSubmissionStatus status
+    );
+
+    // Admin performance view
+    List<CodingSubmission>
+    findByStudent_IdAndChallenge_Course_IdOrderBySubmittedAtDesc(
+            Long studentId,
+            Long courseId
+    );
+
+    long countByStudent_Id(Long studentId);
+
+    long countByReviewedBy_Id(Long reviewerId);
+
 }

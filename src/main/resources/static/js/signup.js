@@ -8,6 +8,39 @@ const confirmHint = document.getElementById('confirmHint');
 const strengthMeter = document.getElementById('strengthMeter');
 const strengthLabel = document.getElementById('strengthLabel');
 const ruleItems = document.querySelectorAll('#passwordRules li');
+const courseSelect = document.getElementById('courseId');
+
+/* ---------- Course list ---------- */
+async function loadCourses() {
+    try {
+        const response = await api.getCourses();
+        const courses = Array.isArray(response) ? response : (response && response.data);
+
+        if (!Array.isArray(courses) || courses.length === 0) return;
+
+        courseSelect.innerHTML =
+            '<option value="" selected disabled>Select a course</option>' +
+            courses.map((course) =>
+                '<option value="' + course.id + '">' +
+                escapeHtml(course.title || ('Course ' + course.id)) +
+                '</option>'
+            ).join('');
+    } catch (error) {
+        // Keep the static fallback list already present in the HTML.
+        console.warn('Could not load courses, using default list.', error);
+    }
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+loadCourses();
 
 /* ---------- Password rules ---------- */
 const PASSWORD_RULES = {
@@ -85,6 +118,15 @@ signupForm.addEventListener('submit', async (e) => {
         return;
     }
 
+    const courseId = parseInt(courseSelect.value, 10);
+
+    if (!Number.isInteger(courseId)) {
+        showError('Please select a course.');
+        courseSelect.focus();
+        return;
+    }
+
+    // No roleId is sent: the server always creates a STUDENT account.
     const formData = {
         firstName: document.getElementById('firstName').value.trim(),
         lastName: document.getElementById('lastName').value.trim(),
@@ -92,8 +134,7 @@ signupForm.addEventListener('submit', async (e) => {
         password: passwordInput.value,
         phone: document.getElementById('phone').value.trim(),
         address: document.getElementById('address').value.trim(),
-        roleId: parseInt(document.getElementById('roleId').value),
-        courseId: parseInt(document.getElementById('courseId').value)
+        courseId: courseId
     };
 
     let done = false;

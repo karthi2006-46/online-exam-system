@@ -1,11 +1,15 @@
 package com.lms.controller;
 
-import com.lms.entity.CodingChallenge;
-import com.lms.repository.CodingChallengeRepository;
+import com.lms.dto.CodingChallengeDTO;
+import com.lms.dto.CodingChallengeRequest;
+import com.lms.service.CodingChallengeService;
+import com.lms.util.ApiResponseUtil;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,117 +18,144 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/coding-challenges")
 @CrossOrigin
+@RequiredArgsConstructor
 public class CodingChallengeController {
 
-    @Autowired
-    private CodingChallengeRepository codingChallengeRepository;
+    private final CodingChallengeService codingChallengeService;
 
     // ==========================================
-    // GET ALL ACTIVE CHALLENGES FOR A COURSE
+    // STUDENT - GET ACTIVE CHALLENGES FOR A COURSE
     // ==========================================
 
     @GetMapping("/course/{courseId}")
-    public ResponseEntity<List<CodingChallenge>> getChallengesByCourse(
+    public ResponseEntity<List<CodingChallengeDTO>> getChallengesByCourse(
             @PathVariable Long courseId) {
 
-        List<CodingChallenge> challenges =
-                codingChallengeRepository
-                        .findByCourse_IdAndActiveTrue(courseId);
-
-        return ResponseEntity.ok(challenges);
+        return ResponseEntity.ok(
+                codingChallengeService.getActiveChallengesForCourse(courseId)
+        );
     }
 
     // ==========================================
-    // GET A SINGLE CHALLENGE
+    // STUDENT - GET A SINGLE ACTIVE CHALLENGE
     // ==========================================
 
     @GetMapping("/{challengeId}")
-    public ResponseEntity<?> getChallenge(
+    public ResponseEntity<CodingChallengeDTO> getChallenge(
             @PathVariable Long challengeId) {
 
-        return codingChallengeRepository.findById(challengeId)
-                .filter(challenge ->
-                        Boolean.TRUE.equals(challenge.getActive()))
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
-                        .body(Map.of(
-                                "message",
-                                "Active coding challenge not found"
-                        )));
+        return ResponseEntity.ok(
+                codingChallengeService.getActiveChallenge(challengeId)
+        );
     }
 
     // ==========================================
-    // CREATE A CODING CHALLENGE
+    // FACULTY - LIST ALL CHALLENGES OF OWNED COURSE
+    // (includes deactivated ones)
+    // ==========================================
+
+    @GetMapping("/faculty/course/{courseId}")
+    @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
+    public ResponseEntity<?> getCourseChallengesForFaculty(
+            @PathVariable Long courseId,
+            Authentication authentication) {
+
+        List<CodingChallengeDTO> challenges =
+                codingChallengeService.getCourseChallengesForFaculty(
+                        authentication,
+                        courseId
+                );
+
+        return ApiResponseUtil.success(
+                "Course coding challenges retrieved",
+                challenges
+        );
+    }
+
+    // ==========================================
+    // FACULTY - CREATE A CHALLENGE
     // ==========================================
 
     @PostMapping
+    @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
     public ResponseEntity<?> createChallenge(
-            @RequestBody CodingChallenge challenge) {
+            @RequestBody CodingChallengeRequest request,
+            Authentication authentication) {
 
-        if (challenge.getCourse() == null
-                || challenge.getCourse().getId() == null) {
+        CodingChallengeDTO created =
+                codingChallengeService.create(authentication, request);
 
-            return ResponseEntity.badRequest().body(
-                    Map.of("message", "Course ID is required")
-            );
-        }
-
-        if (challenge.getTitle() == null
-                || challenge.getTitle().isBlank()) {
-
-            return ResponseEntity.badRequest().body(
-                    Map.of("message", "Challenge title is required")
-            );
-        }
-
-        if (challenge.getDifficulty() != null
-                && !List.of("EASY", "MEDIUM", "HARD")
-                        .contains(challenge.getDifficulty().toUpperCase())) {
-
-            return ResponseEntity.badRequest().body(
-                    Map.of(
-                            "message",
-                            "Difficulty must be EASY, MEDIUM, or HARD"
-                    )
-            );
-        }
-
-        if (challenge.getDifficulty() != null) {
-            challenge.setDifficulty(
-                    challenge.getDifficulty().toUpperCase()
-            );
-        }
-
-        CodingChallenge saved =
-                codingChallengeRepository.save(challenge);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ApiResponseUtil.created(
+                "Coding challenge created successfully",
+                created
+        );
     }
 
     // ==========================================
-    // DELETE A CODING CHALLENGE
+    // FACULTY - UPDATE A CHALLENGE
+    // ==========================================
+
+    @PutMapping("/{challengeId}")
+    @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
+    public ResponseEntity<?> updateChallenge(
+            @PathVariable Long challengeId,
+            @RequestBody CodingChallengeRequest request,
+            Authentication authentication) {
+
+        CodingChallengeDTO updated =
+                codingChallengeService.update(
+                        authentication,
+                        challengeId,
+                        request
+                );
+
+        return ApiResponseUtil.success(
+                "Coding challenge updated successfully",
+                updated
+        );
+    }
+
+    // ==========================================
+    // FACULTY - ACTIVATE / DEACTIVATE A CHALLENGE
+    // ==========================================
+
+    @PatchMapping("/{challengeId}/active")
+    @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
+    public ResponseEntity<?> setChallengeActive(
+            @PathVariable Long challengeId,
+            @RequestBody(required = false) Map<String, Boolean> body,
+            Authentication authentication) {
+
+        Boolean active = body != null ? body.get("active") : null;
+
+        CodingChallengeDTO updated =
+                codingChallengeService.setActive(
+                        authentication,
+                        challengeId,
+                        active
+                );
+
+        String message = Boolean.TRUE.equals(updated.getActive())
+                ? "Coding challenge activated"
+                : "Coding challenge deactivated";
+
+        return ApiResponseUtil.success(message, updated);
+    }
+
+    // ==========================================
+    // FACULTY - DELETE A CHALLENGE
     // ==========================================
 
     @DeleteMapping("/{challengeId}")
+    @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteChallenge(
-            @PathVariable Long challengeId) {
+            @PathVariable Long challengeId,
+            Authentication authentication) {
 
-        if (!codingChallengeRepository.existsById(challengeId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of(
-                            "message",
-                            "Coding challenge not found"
-                    ));
-        }
+        codingChallengeService.delete(authentication, challengeId);
 
-        codingChallengeRepository.deleteById(challengeId);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "Coding challenge deleted successfully"
-                )
+        return ApiResponseUtil.success(
+                "Coding challenge deleted successfully"
         );
     }
 }

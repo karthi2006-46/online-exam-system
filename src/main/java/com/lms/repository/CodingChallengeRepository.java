@@ -13,4 +13,6 @@ public interface CodingChallengeRepository
     List<CodingChallenge> findByCourse_Id(Long courseId);
 
     long countByCourse_IdAndActive(Long courseId, Boolean active);
+
+    long countByCourse_Id(Long courseId);
 }

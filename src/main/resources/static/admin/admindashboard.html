@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Admin Dashboard | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb">Admin Console / Dashboard</p>
+                <h1>Admin dashboard</h1>
+                <p class="subtitle">Faculty, students and academic health across the platform.</p>
+            </div>
+
+            <div class="topbar-right">
+                <a href="/admin/performance.html" class="button button-primary button-sm hide-mobile">Performance</a>
+                <a href="/admin/faculty.html" class="button button-light button-sm hide-mobile">Manage faculty</a>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading dashboard statistics...
+        </div>
+
+        <!-- PRIMARY KPIs -->
+        <section class="kpi-grid" aria-label="Platform overview">
+            <a class="stat-card stat-link" href="/admin/faculty.html">
+                <div class="stat-icon icon-purple" id="facultyIcon"></div>
+                <div class="stat-body"><p>Faculty</p><h2 id="totalFaculty">&mdash;</h2>
+                    <span class="stat-note" id="facultyNote">&nbsp;</span></div>
+            </a>
+            <a class="stat-card stat-link" href="/admin/students.html">
+                <div class="stat-icon icon-blue" id="studentsIcon"></div>
+                <div class="stat-body"><p>Students</p><h2 id="totalStudents">&mdash;</h2>
+                    <span class="stat-note" id="studentsNote">&nbsp;</span></div>
+            </a>
+            <a class="stat-card stat-link" href="/admin/performance.html">
+                <div class="stat-icon icon-green" id="enrollmentIcon"></div>
+                <div class="stat-body"><p>Active enrollments</p><h2 id="activeEnrollments">&mdash;</h2>
+                    <span class="stat-note" id="enrollmentNote">&nbsp;</span></div>
+            </a>
+            <a class="stat-card stat-link" href="/admin/performance.html">
+                <div class="stat-icon icon-sky" id="passIcon"></div>
+                <div class="stat-body"><p>Pass rate</p><h2 id="passRate">&mdash;</h2>
+                    <span class="stat-note" id="passNote">&nbsp;</span></div>
+            </a>
+        </section>
+
+        <!-- SECONDARY KPIs -->
+        <section class="kpi-grid" aria-label="Workload">
+            <article class="stat-card">
+                <div class="stat-icon icon-blue" id="courseIcon"></div>
+                <div class="stat-body"><p>Courses</p><h2 id="totalCourses">&mdash;</h2>
+                    <span class="stat-note" id="courseNote">&nbsp;</span></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-orange" id="approvalIcon"></div>
+                <div class="stat-body"><p>Pending exam approvals</p><h2 id="pendingApprovals">&mdash;</h2>
+                    <span class="stat-note" id="approvalNote">&nbsp;</span></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-orange" id="extensionIcon"></div>
+                <div class="stat-body"><p>Pending extensions</p><h2 id="pendingExtensions">&mdash;</h2>
+                    <span class="stat-note" id="extensionNote">&nbsp;</span></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-red" id="codingIcon"></div>
+                <div class="stat-body"><p>Coding reviews</p><h2 id="pendingCoding">&mdash;</h2>
+                    <span class="stat-note" id="codingNote">&nbsp;</span></div>
+            </article>
+        </section>
+
+        <!-- CHARTS -->
+        <section class="content-grid even">
+
+            <article class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Enrollment mix</h2>
+                        <p>Every enrollment on the platform by current status.</p>
+                    </div>
+                    <a href="/admin/students.html" class="text-button">Students &rarr;</a>
+                </div>
+
+                <div class="chart-row">
+                    <div class="donut" id="enrollmentDonut" role="img" aria-label="Enrollment status chart">
+                        <div class="donut-center">
+                            <strong id="enrollmentTotal">&mdash;</strong>
+                            <span>enrollments</span>
+                        </div>
+                    </div>
+                    <div class="legend" id="enrollmentLegend"></div>
+                </div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Exam performance</h2>
+                        <p>Pass and fail distribution across all published results.</p>
+                    </div>
+                    <a href="/admin/performance.html" class="text-button">Results &rarr;</a>
+                </div>
+
+                <div class="chart-row">
+                    <div class="donut" id="resultDonut" role="img" aria-label="Exam result chart">
+                        <div class="donut-center">
+                            <strong id="resultTotal">&mdash;</strong>
+                            <span>results</span>
+                        </div>
+                    </div>
+                    <div class="legend" id="resultLegend"></div>
+                </div>
+            </article>
+        </section>
+
+        <!-- FACULTY OVERVIEW + REVIEW QUEUE -->
+        <section class="content-grid">
+
+            <article class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Faculty overview</h2>
+                        <p>Load and outcomes for each faculty member.</p>
+                    </div>
+                    <a href="/admin/faculty.html" class="text-button">All faculty &rarr;</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Faculty</th>
+                                <th>Courses</th>
+                                <th class="num">Students</th>
+                                <th>Pass rate</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="facultyPreviewBody">
+                            <tr><td colspan="5" class="table-state"><strong>Loading faculty...</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Approval workload</h2>
+                        <p>Requests waiting for a decision.</p>
+                    </div>
+                </div>
+
+                <div class="overview-row">
+                    <span class="status-dot dot-yellow"></span>
+                    <span>Exam approvals pending</span>
+                    <strong id="queueExamPending">&mdash;</strong>
+                </div>
+                <div class="overview-row">
+                    <span class="status-dot dot-green"></span>
+                    <span>Exam approvals approved</span>
+                    <strong id="queueExamApproved">&mdash;</strong>
+                </div>
+                <div class="overview-row">
+                    <span class="status-dot dot-yellow"></span>
+                    <span>Extensions pending</span>
+                    <strong id="queueExtensionPending">&mdash;</strong>
+                </div>
+                <div class="overview-row">
+                    <span class="status-dot dot-red"></span>
+                    <span>Extensions rejected</span>
+                    <strong id="queueExtensionRejected">&mdash;</strong>
+                </div>
+                <div class="overview-row">
+                    <span class="status-dot dot-blue"></span>
+                    <span>Coding submissions in review</span>
+                    <strong id="queueCodingPending">&mdash;</strong>
+                </div>
+
+                <a href="/admin/performance.html" class="button button-light full-button"
+                   style="width:100%;margin-top:14px;">Open performance reports</a>
+            </article>
+        </section>
+
+        <!-- QUICK ACTIONS -->
+        <section class="panel">
+            <div class="panel-header">
+                <div><h2>Quick actions</h2></div>
+            </div>
+            <div class="quick-actions">
+                <a href="/admin/faculty.html" class="action-card">
+                    <div class="action-icon icon-purple" id="qaFaculty"></div>
+                    <div><h3>Faculty management</h3><p>Create, assign and deactivate</p></div>
+                </a>
+                <a href="/admin/students.html" class="action-card">
+                    <div class="action-icon icon-blue" id="qaStudents"></div>
+                    <div><h3>Student management</h3><p>Accounts and enrollment history</p></div>
+                </a>
+                <a href="/admin/performance.html" class="action-card">
+                    <div class="action-icon icon-green" id="qaPerformance"></div>
+                    <div><h3>Student performance</h3><p>Progress and exam results</p></div>
+                </a>
+                <a href="/admin/results.html" class="action-card">
+                    <div class="action-icon icon-orange" id="qaResults"></div>
+                    <div><h3>Examination results</h3><p>Filter and export results</p></div>
+                </a>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-dashboard.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    var layout = document.body;
+
+    if (!toggle) return;
+
+    toggle.addEventListener('click', function () {
+        var open = layout.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

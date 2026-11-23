@@ -253,16 +253,30 @@ public class StudentDashboardService {
     private double round(double value) {
         return Math.round(value * 10.0) / 10.0;
     }
-    public double getCourseOverallProgress(Long studentId, Long courseId) {
+    /**
+     * Full material/coding/exam progress for one student in one course.
+     * Reused by the admin performance view.
+     */
+    public CourseProgressDTO getCourseProgress(
+            Long studentId,
+            Long courseId) {
 
-    Enrollment enrollment = enrollmentRepository
-            .findByStudent_IdAndCourse_Id(studentId, courseId)
-            .orElse(null);
+        Enrollment enrollment = enrollmentRepository
+                .findByStudent_IdAndCourse_Id(studentId, courseId)
+                .orElse(null);
 
-    if (enrollment == null) {
-        return 0.0;
+        if (enrollment == null) {
+            return null;
+        }
+
+        return calculateCourseProgress(enrollment);
     }
 
-    return calculateCourseProgress(enrollment).getOverallProgress();
-}
+    public double getCourseOverallProgress(Long studentId, Long courseId) {
+
+        CourseProgressDTO progress =
+                getCourseProgress(studentId, courseId);
+
+        return progress == null ? 0.0 : progress.getOverallProgress();
+    }
 }

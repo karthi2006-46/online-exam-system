@@ -5,6 +5,7 @@ public class FacultyDashboardDTO {
     private long totalStudents;
     private long activeStudents;
     private long inactiveStudents;
+    private long completedStudents;
     private long totalCourses;
     private long totalMaterials;
     private long totalExams;
@@ -27,6 +28,9 @@ public class FacultyDashboardDTO {
 
     public long getInactiveStudents() { return inactiveStudents; }
     public void setInactiveStudents(long value) { inactiveStudents = value; }
+
+    public long getCompletedStudents() { return completedStudents; }
+    public void setCompletedStudents(long value) { completedStudents = value; }
 
     public long getTotalCourses() { return totalCourses; }
     public void setTotalCourses(long value) { totalCourses = value; }

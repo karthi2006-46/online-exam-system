@@ -13,6 +13,7 @@
         approval:   icon('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="m9 14 2 2 4-4"/>'),
         courses:    icon('<path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/>'),
         exams:      icon('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>'),
+        code:       icon('<path d="m9 18-6-6 6-6"/><path d="m15 6 6 6-6 6"/>'),
         materials:  icon('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
         results:    icon('<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M22 20H2"/>'),
         backup:     icon('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>'),
@@ -26,6 +27,7 @@
         { page: "exam-approval-requests.html",   icon: "approval",  full: "Exam Approvals",      short: "Approve", badge: "examApprovalBadge" },
         { page: "manage-courses.html",           icon: "courses",   full: "Manage Courses",      short: "Courses" },
         { page: "manage-exams.html",             icon: "exams",     full: "Manage Exams",        short: "Exams" },
+        { page: "manage-challenges.html",        icon: "code",      full: "Coding Challenges",   short: "Code" },
         { page: "manage-materials.html",         icon: "materials", full: "Study Materials",     short: "Notes" },
         { page: "faculty-results.html",          icon: "results",   full: "Student Results",     short: "Results" },
         { page: "backup.html",                   icon: "backup",    full: "Backup",              short: "Backup" }

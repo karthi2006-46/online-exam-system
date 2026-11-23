@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Manage Coding Challenges | LearnHub LMS</title>
+
+    <link rel="stylesheet" href="/css/faculty/faculty.css">
+    <link rel="stylesheet" href="/css/faculty/manage-challenges.css">
+    <link rel="stylesheet" href="/css/faculty/faculty-sidebar.css">
+</head>
+
+<body>
+<div class="app-layout fs-layout">
+
+    <!-- SIDEBAR (injected by faculty-sidebar.js) -->
+    <div id="facultySidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-title">
+                <p class="breadcrumb">Workspace / Challenges</p>
+                <h1>Manage coding challenges</h1>
+                <p class="subtitle">Add programming tasks to the courses you teach.</p>
+            </div>
+
+            <div class="topbar-right">
+                <button class="primary-button" id="openCreateModal" type="button">+ New challenge</button>
+            </div>
+        </header>
+
+        <section class="toolbar" aria-label="Filter coding challenges">
+            <div class="search-box">
+                <span class="search-icon" aria-hidden="true">⌕</span>
+                <input type="search" id="challengeSearch" placeholder="Search challenges" aria-label="Search challenges">
+            </div>
+
+            <select id="courseFilter" aria-label="Filter by course">
+                <option value="">All assigned courses</option>
+            </select>
+
+            <select id="statusFilter" aria-label="Filter by status">
+                <option value="">All statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </section>
+
+        <div id="challengeMessage" class="state-message" role="status" aria-live="polite">Loading challenges...</div>
+
+        <section id="challengeGrid" class="challenge-grid" aria-label="Coding challenges"></section>
+
+        <footer class="footer">
+            <span>© <span id="year"></span> LearnHub LMS</span>
+            <span>Faculty workspace</span>
+        </footer>
+    </main>
+</div>
+
+<!-- CREATE / EDIT CHALLENGE -->
+<div class="modal" id="challengeModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <div>
+                <h2 id="modalTitle">New coding challenge</h2>
+                <p class="muted" id="modalSubtitle">Enter the challenge details for your course.</p>
+            </div>
+            <button class="close-button" id="closeChallengeModal" type="button" aria-label="Close">&times;</button>
+        </div>
+
+        <form id="challengeForm">
+            <div id="formError" class="form-error" role="alert"></div>
+
+            <input type="hidden" id="challengeId">
+
+            <div class="form-grid">
+
+                <div class="form-group full-width">
+                    <label for="courseId">Course <b>*</b></label>
+                    <select id="courseId" required>
+                        <option value="">Select a course</option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="title">Challenge title <b>*</b></label>
+                    <input id="title" maxlength="255" placeholder="e.g. Find the sum of an array" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="difficulty">Difficulty</label>
+                    <select id="difficulty">
+                        <option value="EASY">Easy</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HARD">Hard</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="marks">Marks</label>
+                    <input type="number" id="marks" min="0" step="1" placeholder="10">
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="description">Short description</label>
+                    <textarea id="description" placeholder="One or two lines shown on the challenge card"></textarea>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="problemStatement">Problem statement</label>
+                    <textarea id="problemStatement" placeholder="Explain the task the student must complete"></textarea>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="starterCode">Starter code</label>
+                    <textarea id="starterCode" class="code-input" spellcheck="false"
+                              placeholder="public class Main {&#10;    public static void main(String[] args) {&#10;        // Write your code here&#10;    }&#10;}"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="sampleInput">Sample input</label>
+                    <textarea id="sampleInput" class="code-input" spellcheck="false"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="sampleOutput">Sample output</label>
+                    <textarea id="sampleOutput" class="code-input" spellcheck="false"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="expectedOutput">Expected output</label>
+                    <textarea id="expectedOutput" class="code-input" spellcheck="false"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="constraints">Constraints</label>
+                    <textarea id="constraints" spellcheck="false" placeholder="e.g. 1 ≤ n ≤ 1000"></textarea>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="checkbox-row" for="active">
+                        <input type="checkbox" id="active" checked>
+                        <span>Visible to students (active)</span>
+                    </label>
+                </div>
+
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="secondary-button" id="cancelChallenge">Cancel</button>
+                <button type="submit" class="primary-button" id="saveChallengeButton">Create challenge</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/faculity/faculty-sidebar.js"></script>
+<script src="/js/faculity/manage-challenges.js"></script>
+</body>
+</html>

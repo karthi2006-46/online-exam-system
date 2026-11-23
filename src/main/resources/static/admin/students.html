@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Student Management | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb"><a href="/admin/admindashboard.html">Admin Console</a> / Students</p>
+                <h1>Student management</h1>
+                <p class="subtitle">Accounts, enrollments and exam outcomes for every learner.</p>
+            </div>
+
+            <div class="topbar-right">
+                <button class="button button-light button-sm" type="button" id="exportStudents">Export Excel</button>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading student accounts...
+        </div>
+
+        <section class="panel">
+            <div class="filter-bar">
+                <div class="filter-field filter-search">
+                    <label for="studentSearch">Search</label>
+                    <input type="search" id="studentSearch" placeholder="Name, email or student ID" autocomplete="off">
+                </div>
+                <div class="filter-field">
+                    <label for="studentStatus">Status</label>
+                    <select id="studentStatus">
+                        <option value="">All accounts</option>
+                        <option value="true">Active only</option>
+                        <option value="false">Inactive only</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="studentCourse">Course</label>
+                    <select id="studentCourse">
+                        <option value="">All courses</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="button button-light button-sm" type="button" id="refreshStudents">Refresh</button>
+                    <button class="button button-light button-sm" type="button" id="clearStudentFilters">Clear</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Contact</th>
+                            <th class="num">Courses</th>
+                            <th class="num">Completed</th>
+                            <th class="num">Results</th>
+                            <th>Outcome</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <tr><td colspan="9" class="table-state"><strong>Loading students...</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pager" id="studentPager"></div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-students.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

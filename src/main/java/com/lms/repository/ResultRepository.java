@@ -1,6 +1,8 @@
 package com.lms.repository;
 
 import com.lms.entity.Result;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -86,5 +88,92 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
     List<Result> findByStudent_IdAndExam_Id(
             Long studentId,
             Long examId
+    );
+
+
+    // ==========================================
+    // ADMIN REPORTING
+    // ==========================================
+
+    long countByStudent_Id(Long studentId);
+
+    long countByStudent_IdAndStatusIgnoreCase(
+            Long studentId,
+            String status
+    );
+
+    long countByExam_Course_Faculty_Id(Long facultyId);
+
+    long countByExam_Course_Id(Long courseId);
+
+    long countByExam_Course_IdAndStatusIgnoreCase(
+            Long courseId,
+            String status
+    );
+
+    long countByStatusIgnoreCase(String status);
+
+    /**
+     * Average percentage for every result in a course.
+     */
+    @Query("""
+            SELECT AVG(r.percentage)
+            FROM Result r
+            WHERE r.exam.course.id = :courseId
+            """)
+    Double averagePercentageByCourse(@Param("courseId") Long courseId);
+
+    /**
+     * Paged version of findFilteredCourseResults for the admin result pages.
+     */
+    @Query(
+            value = """
+                    SELECT r
+                    FROM Result r
+                    JOIN r.exam e
+                    JOIN r.examAttempt a
+                    WHERE e.course.id = :courseId
+                      AND (:examId IS NULL OR e.id = :examId)
+                      AND (
+                          :status IS NULL
+                          OR LOWER(r.status) = LOWER(:status)
+                      )
+                      AND (
+                          CAST(:fromDate AS timestamp) IS NULL
+                          OR COALESCE(a.submissionTime, a.endTime, a.createdAt) >= :fromDate
+                      )
+                      AND (
+                          CAST(:toDate AS timestamp) IS NULL
+                          OR COALESCE(a.submissionTime, a.endTime, a.createdAt) <= :toDate
+                      )
+                    """,
+            countQuery = """
+                    SELECT COUNT(r)
+                    FROM Result r
+                    JOIN r.exam e
+                    JOIN r.examAttempt a
+                    WHERE e.course.id = :courseId
+                      AND (:examId IS NULL OR e.id = :examId)
+                      AND (
+                          :status IS NULL
+                          OR LOWER(r.status) = LOWER(:status)
+                      )
+                      AND (
+                          CAST(:fromDate AS timestamp) IS NULL
+                          OR COALESCE(a.submissionTime, a.endTime, a.createdAt) >= :fromDate
+                      )
+                      AND (
+                          CAST(:toDate AS timestamp) IS NULL
+                          OR COALESCE(a.submissionTime, a.endTime, a.createdAt) <= :toDate
+                      )
+                    """
+    )
+    Page<Result> findFilteredCourseResultsPaged(
+            @Param("courseId") Long courseId,
+            @Param("examId") Long examId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("status") String status,
+            Pageable pageable
     );
 }

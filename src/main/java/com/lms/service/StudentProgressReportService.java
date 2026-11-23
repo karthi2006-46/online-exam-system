@@ -7,6 +7,7 @@ import com.lms.entity.Enrollment;
 import com.lms.entity.ReportMetadata;
 import com.lms.entity.Result;
 import com.lms.entity.User;
+import com.lms.exception.ResourceNotFoundException;
 import com.lms.repository.CourseRepository;
 import com.lms.repository.EnrollmentRepository;
 import com.lms.repository.ReportMetadataRepository;
@@ -136,6 +137,27 @@ public class StudentProgressReportService {
                     "Failed to generate course report ZIP",
                     exception);
         }
+    }
+
+    // ==========================================
+    // BUILD STUDENT PROGRESS REPORT (NO PDF)
+    // ==========================================
+
+    /**
+     * Builds the report payload without generating a PDF.
+     * Reused by the admin module for student performance views.
+     */
+    @Transactional(readOnly = true)
+    public StudentProgressReportDTO buildStudentCourseReport(
+            Long studentId,
+            Long courseId) {
+
+        Enrollment enrollment = enrollmentRepository
+                .findByStudent_IdAndCourse_Id(studentId, courseId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Student is not enrolled in this course"));
+
+        return buildReport(enrollment);
     }
 
     // ==========================================

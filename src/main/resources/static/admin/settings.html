@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Platform Settings | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb"><a href="/admin/admindashboard.html">Admin Console</a> / Settings</p>
+                <h1>Platform settings</h1>
+                <p class="subtitle">Control registration, course defaults and support contacts.</p>
+            </div>
+
+            <div class="topbar-right">
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading platform settings...
+        </div>
+
+        <form id="settingsForm" novalidate>
+
+            <div class="content-grid even">
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Platform identity</h2>
+                            <p>Names and contact details stored for the administrator.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="platformName">Platform name <b>*</b></label>
+                            <input id="platformName" name="platformName" type="text"
+                                   maxlength="80" required>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="supportEmail">Support email</label>
+                            <input id="supportEmail" name="supportEmail" type="email"
+                                   maxlength="120" placeholder="support@example.com">
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="supportPhone">Support phone</label>
+                            <input id="supportPhone" name="supportPhone" type="tel"
+                                   maxlength="20" placeholder="+91 90000 00000">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Access &amp; defaults</h2>
+                            <p>Applied immediately across the platform.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label class="check-row" for="allowStudentSignup">
+                                <input id="allowStudentSignup" type="checkbox">
+                                Allow new student registrations
+                            </label>
+                            <small>When off, the signup page rejects new student accounts.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="defaultCourseDurationDays">Default course duration (days)</label>
+                            <input id="defaultCourseDurationDays" type="number"
+                                   min="1" max="3650" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="defaultCourseFees">Default course fees</label>
+                            <input id="defaultCourseFees" type="number"
+                                   min="0" step="0.01" required>
+                        </div>
+
+                        <div class="form-group span-2">
+                            <small>New courses use these values unless the form sets a
+                                duration or fee.</small>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Save changes</h2>
+                        <p id="settingsMeta">Not loaded yet.</p>
+                    </div>
+                </div>
+
+                <div class="mini-stats">
+                    <div class="mini-stat">
+                        <span>Registration</span>
+                        <strong id="settingsRegistrationState">-</strong>
+                    </div>
+                    <div class="mini-stat">
+                        <span>Default duration</span>
+                        <strong id="settingsDurationState">-</strong>
+                    </div>
+                    <div class="mini-stat">
+                        <span>Default fees</span>
+                        <strong id="settingsFeesState">-</strong>
+                    </div>
+                    <div class="mini-stat">
+                        <span>Support email</span>
+                        <strong id="settingsEmailState">-</strong>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="button button-light" type="button" id="resetSettings">Reset</button>
+                    <button class="button button-primary" type="submit" id="saveSettings">Save changes</button>
+                </div>
+            </section>
+
+        </form>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-settings.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

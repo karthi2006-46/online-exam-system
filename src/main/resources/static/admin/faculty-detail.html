@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Faculty Profile | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb">
+                    <a href="/admin/admindashboard.html">Admin Console</a> /
+                    <a href="/admin/faculty.html">Faculty</a> / Profile
+                </p>
+                <h1 id="pageTitle">Faculty profile</h1>
+                <p class="subtitle">Teaching load, courses and review activity.</p>
+            </div>
+
+            <div class="topbar-right">
+                <a href="/admin/faculty.html" class="button button-light button-sm">Back to faculty</a>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading faculty profile...
+        </div>
+
+        <!-- PROFILE HEADER -->
+        <section class="detail-header" id="profileHeader" hidden>
+            <div class="detail-avatar" id="profileAvatar">F</div>
+            <div class="detail-identity">
+                <h2 id="profileName">Faculty</h2>
+                <p id="profileEmail">-</p>
+                <div class="detail-meta">
+                    <span>Phone <strong id="profilePhone">-</strong></span>
+                    <span>Joined <strong id="profileJoined">-</strong></span>
+                    <span>Faculty ID <strong id="profileId">-</strong></span>
+                    <span id="profileStatus"></span>
+                </div>
+            </div>
+            <div class="detail-actions">
+                <button class="button button-light button-sm" type="button" id="assignCoursesBtn">Assign courses</button>
+                <button class="button button-light button-sm" type="button" id="resetPasswordBtn">Reset password</button>
+                <button class="button button-light button-sm" type="button" id="toggleStatusBtn">Deactivate</button>
+                <button class="button button-danger-light button-sm" type="button" id="deleteFacultyBtn">Delete</button>
+            </div>
+        </section>
+
+        <!-- KPI -->
+        <section class="kpi-grid kpi-grid-5" id="profileStats" hidden>
+            <article class="stat-card">
+                <div class="stat-icon icon-blue" id="kpiCourses"></div>
+                <div class="stat-body"><p>Courses</p><h2 id="kpiCourseCount">&mdash;</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-purple" id="kpiStudents"></div>
+                <div class="stat-body"><p>Students</p><h2 id="kpiStudentCount">&mdash;</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-green" id="kpiActive"></div>
+                <div class="stat-body"><p>Active</p><h2 id="kpiActiveCount">&mdash;</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-orange" id="kpiResults"></div>
+                <div class="stat-body"><p>Results</p><h2 id="kpiResultCount">&mdash;</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-sky" id="kpiPass"></div>
+                <div class="stat-body"><p>Pass rate</p><h2 id="kpiPassRate">&mdash;</h2></div>
+            </article>
+        </section>
+
+        <section class="content-grid" id="profilePanels" hidden>
+
+            <article class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Assigned courses</h2>
+                        <p>Every course currently taught by this faculty member.</p>
+                    </div>
+                </div>
+                <div id="courseList">
+                    <p class="subtle">Loading courses...</p>
+                </div>
+            </article>
+
+            <div>
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Exam approvals</h2>
+                            <p>Requests reviewed across this faculty's courses.</p>
+                        </div>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-yellow"></span><span>Pending</span>
+                        <strong id="examPending">&mdash;</strong>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-green"></span><span>Approved</span>
+                        <strong id="examApproved">&mdash;</strong>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-red"></span><span>Rejected</span>
+                        <strong id="examRejected">&mdash;</strong>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Extension requests</h2>
+                            <p>Course extension decisions.</p>
+                        </div>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-yellow"></span><span>Pending</span>
+                        <strong id="extensionPending">&mdash;</strong>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-green"></span><span>Approved</span>
+                        <strong id="extensionApproved">&mdash;</strong>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-red"></span><span>Rejected</span>
+                        <strong id="extensionRejected">&mdash;</strong>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Coding submissions</h2>
+                            <p>Manual review status.</p>
+                        </div>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-yellow"></span><span>Pending review</span>
+                        <strong id="codingPending">&mdash;</strong>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-green"></span><span>Approved</span>
+                        <strong id="codingApproved">&mdash;</strong>
+                    </div>
+                    <div class="overview-row">
+                        <span class="status-dot dot-red"></span><span>Rejected</span>
+                        <strong id="codingRejected">&mdash;</strong>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ACCOUNT DETAILS -->
+        <section class="panel" id="accountPanel" hidden>
+            <div class="panel-header">
+                <div>
+                    <h2>Account details</h2>
+                    <p>Contact information on file.</p>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item"><span>Email</span><strong id="infoEmail">-</strong></div>
+                <div class="info-item"><span>Phone</span><strong id="infoPhone">-</strong></div>
+                <div class="info-item"><span>Address</span><strong id="infoAddress">-</strong></div>
+                <div class="info-item"><span>Created</span><strong id="infoCreated">-</strong></div>
+                <div class="info-item"><span>Last updated</span><strong id="infoUpdated">-</strong></div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<!-- ================= ASSIGN COURSES ================= -->
+<div class="modal-overlay" id="assignModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="assignModalTitle">
+        <div class="modal-head">
+            <div>
+                <h2 id="assignModalTitle">Assign courses</h2>
+                <p id="assignModalSubtitle">Move courses to this faculty member.</p>
+            </div>
+            <button class="modal-close" type="button" data-close="assignModal" aria-label="Close">&times;</button>
+        </div>
+        <form id="assignForm">
+            <div class="modal-body">
+                <div class="course-picker" id="assignCoursePicker">
+                    <span class="subtle">Loading courses...</span>
+                </div>
+                <p class="subtle" style="margin-top:8px;">
+                    Already-assigned courses are shown but disabled. A course can only belong to one faculty member.
+                </p>
+            </div>
+            <div class="modal-foot">
+                <button class="button button-light" type="button" data-close="assignModal">Cancel</button>
+                <button class="button button-primary" type="submit" id="saveAssign">Assign selected</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= PASSWORD RESULT ================= -->
+<div class="modal-overlay" id="passwordModal" aria-hidden="true">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+        <div class="modal-head">
+            <div>
+                <h2 id="passwordModalTitle">Temporary password</h2>
+                <p>Share this with the faculty member. It is shown only once.</p>
+            </div>
+            <button class="modal-close" type="button" data-close="passwordModal" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="secret-box">
+                <code id="temporaryPassword">-</code>
+                <button class="button button-light button-sm" type="button" id="copyPassword">Copy</button>
+            </div>
+            <p class="subtle" id="passwordRecipient"></p>
+        </div>
+        <div class="modal-foot">
+            <button class="button button-primary" type="button" data-close="passwordModal">Done</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-faculty-detail.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

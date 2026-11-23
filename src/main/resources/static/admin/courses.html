@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Course Management | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb"><a href="/admin/admindashboard.html">Admin Console</a> / Courses</p>
+                <h1>Course management</h1>
+                <p class="subtitle">Create courses, assign faculty and control what learners can enrol in.</p>
+            </div>
+
+            <div class="topbar-right">
+                <button class="button button-primary button-sm" type="button" id="addCourse">Add course</button>
+                <button class="button button-light button-sm" type="button" id="exportCourses">Export Excel</button>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading courses...
+        </div>
+
+        <section class="kpi-grid" aria-label="Course overview">
+            <article class="stat-card">
+                <span class="stat-icon icon-blue" data-icon="courses"></span>
+                <div class="stat-body">
+                    <p>Total courses</p>
+                    <h2 id="courseTotal">-</h2>
+                    <span class="stat-note">Across the platform</span>
+                </div>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon icon-green" data-icon="check"></span>
+                <div class="stat-body">
+                    <p>Active courses</p>
+                    <h2 id="courseActive">-</h2>
+                    <span class="stat-note">Open for enrolment</span>
+                </div>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon icon-purple" data-icon="students"></span>
+                <div class="stat-body">
+                    <p>Enrollments</p>
+                    <h2 id="courseStudents">-</h2>
+                    <span class="stat-note">All time</span>
+                </div>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon icon-orange" data-icon="performance"></span>
+                <div class="stat-body">
+                    <p>Platform pass rate</p>
+                    <h2 id="coursePass">-</h2>
+                    <span class="stat-note">Across all results</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="filter-bar">
+                <div class="filter-field filter-search">
+                    <label for="courseSearch">Search</label>
+                    <input type="search" id="courseSearch" placeholder="Title, code, faculty or course ID" autocomplete="off">
+                </div>
+                <div class="filter-field">
+                    <label for="courseStatus">Status</label>
+                    <select id="courseStatus">
+                        <option value="">All courses</option>
+                        <option value="true">Active only</option>
+                        <option value="false">Inactive only</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="courseFaculty">Faculty</label>
+                    <select id="courseFaculty">
+                        <option value="">All faculty</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="button button-light button-sm" type="button" id="refreshCourses">Refresh</button>
+                    <button class="button button-light button-sm" type="button" id="clearCourseFilters">Clear</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Faculty</th>
+                            <th class="num">Duration</th>
+                            <th class="num">Fees</th>
+                            <th class="num">Students</th>
+                            <th class="num">Exams</th>
+                            <th class="num">Materials</th>
+                            <th>Pass rate</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseTableBody">
+                        <tr><td colspan="10" class="table-state"><strong>Loading courses...</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pager" id="coursePager"></div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<!-- ================= CREATE / EDIT COURSE ================= -->
+<div class="modal-overlay" id="courseModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="courseModalTitle">
+        <div class="modal-head">
+            <div>
+                <h2 id="courseModalTitle">Add course</h2>
+                <p id="courseModalSubtitle">Create a course and assign it to a faculty member.</p>
+            </div>
+            <button class="modal-close" type="button" data-close="courseModal" aria-label="Close">&times;</button>
+        </div>
+
+        <form id="courseForm" novalidate>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group span-2">
+                        <label for="courseTitle">Course title <b>*</b></label>
+                        <input id="courseTitle" name="title" type="text" maxlength="120" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseCode">Course code <b>*</b></label>
+                        <input id="courseCode" name="courseCode" type="text" maxlength="30" required>
+                        <small>Unique, for example JFS101.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseFacultySelect">Faculty <b>*</b></label>
+                        <select id="courseFacultySelect" required>
+                            <option value="">Select faculty</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseDuration">Duration (days) <b>*</b></label>
+                        <input id="courseDuration" name="durationDays" type="number" min="1" max="3650" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseFees">Total fees</label>
+                        <input id="courseFees" name="totalFees" type="number" min="0" step="0.01">
+                    </div>
+                    <div class="form-group span-2">
+                        <label for="courseDescription">Description</label>
+                        <textarea id="courseDescription" name="description" rows="3" maxlength="1000"></textarea>
+                    </div>
+                    <div class="form-group span-2">
+                        <label class="check-row" for="courseActive">
+                            <input id="courseActive" type="checkbox" checked>
+                            Course is active and open for enrolment
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-foot">
+                <button class="button button-light" type="button" data-close="courseModal">Cancel</button>
+                <button class="button button-primary" type="submit" id="saveCourse">Create course</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-courses.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

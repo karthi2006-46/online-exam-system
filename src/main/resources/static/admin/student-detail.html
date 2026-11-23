@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Student Profile | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb">
+                    <a href="/admin/admindashboard.html">Admin Console</a> /
+                    <a href="/admin/students.html">Students</a> / Profile
+                </p>
+                <h1 id="pageTitle">Student profile</h1>
+                <p class="subtitle">Enrollments, progress and examination outcomes.</p>
+            </div>
+
+            <div class="topbar-right">
+                <a href="/admin/students.html" class="button button-light button-sm">Back to students</a>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading student profile...
+        </div>
+
+        <!-- PROFILE HEADER -->
+        <section class="detail-header" id="profileHeader" hidden>
+            <div class="detail-avatar" id="profileAvatar">S</div>
+            <div class="detail-identity">
+                <h2 id="profileName">Student</h2>
+                <p id="profileEmail">-</p>
+                <div class="detail-meta">
+                    <span>Phone <strong id="profilePhone">-</strong></span>
+                    <span>Joined <strong id="profileJoined">-</strong></span>
+                    <span>Student ID <strong id="profileId">-</strong></span>
+                    <span id="profileStatus"></span>
+                </div>
+            </div>
+            <div class="detail-actions">
+                <button class="button button-light button-sm" type="button" id="toggleStatusBtn">Deactivate</button>
+                <button class="button button-danger-light button-sm" type="button" id="deleteStudentBtn">Delete</button>
+            </div>
+        </section>
+
+        <!-- KPI -->
+        <section class="kpi-grid kpi-grid-5" id="profileStats" hidden>
+            <article class="stat-card">
+                <div class="stat-icon icon-blue" id="kpiCourses"></div>
+                <div class="stat-body"><p>Enrolled courses</p><h2 id="kpiEnrolled">&mdash;</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-green" id="kpiCompleted"></div>
+                <div class="stat-body"><p>Completed</p><h2 id="kpiCompletedCount">&mdash;</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-purple" id="kpiResults"></div>
+                <div class="stat-body"><p>Results</p><h2 id="kpiResultCount">&mdash;</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-sky" id="kpiPassed"></div>
+                <div class="stat-body"><p>Passed</p><h2 id="kpiPassedCount">&mdash;</h2></div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon icon-orange" id="kpiAverage"></div>
+                <div class="stat-body"><p>Average score</p><h2 id="kpiAverageValue">&mdash;</h2></div>
+            </article>
+        </section>
+
+        <!-- ACCOUNT DETAILS -->
+        <section class="panel" id="accountPanel" hidden>
+            <div class="panel-header">
+                <div>
+                    <h2>Account details</h2>
+                    <p>Contact information on file.</p>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item"><span>Email</span><strong id="infoEmail">-</strong></div>
+                <div class="info-item"><span>Phone</span><strong id="infoPhone">-</strong></div>
+                <div class="info-item"><span>Address</span><strong id="infoAddress">-</strong></div>
+                <div class="info-item"><span>Registered</span><strong id="infoCreated">-</strong></div>
+                <div class="info-item"><span>Last updated</span><strong id="infoUpdated">-</strong></div>
+            </div>
+        </section>
+
+        <!-- COURSE REPORTS -->
+        <section class="panel" id="reportsPanel" hidden>
+            <div class="panel-header">
+                <div>
+                    <h2>Course performance</h2>
+                    <p>Progress and exam history for every enrollment.</p>
+                </div>
+            </div>
+            <div id="courseReports">
+                <p class="subtle">Loading course reports...</p>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-student-detail.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>

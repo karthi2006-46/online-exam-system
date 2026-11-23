@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -55,7 +56,10 @@ public class AuthController {
     // ==========================================
     @GetMapping("/profile/{userId}")
     public ResponseEntity<?> getUserProfile(
-            @PathVariable Long userId) {
+            @PathVariable Long userId,
+            Authentication authentication) {
+
+        authService.requireSelfOrAdmin(userId, authentication);
 
         UserDTO userDTO = authService.getUserProfile(userId);
 
@@ -71,7 +75,10 @@ public class AuthController {
     @PutMapping("/profile/{userId}")
     public ResponseEntity<?> updateUserProfile(
             @PathVariable Long userId,
-            @RequestBody SignupRequest request) {
+            @RequestBody SignupRequest request,
+            Authentication authentication) {
+
+        authService.requireSelfOrAdmin(userId, authentication);
 
         UserDTO updatedUser =
                 authService.updateUserProfile(userId, request);
@@ -87,14 +94,18 @@ public class AuthController {
     // ==========================================
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
 
         String currentPassword = request.get("currentPassword");
         String newPassword = request.get("newPassword");
         String confirmPassword = request.get("confirmPassword");
 
+        // Always use the JWT identity. A userId in the body is ignored.
+        Long currentUserId = authService.getCurrentUserId(authentication);
+
         authService.changePassword(
-                request.get("userId"),
+                String.valueOf(currentUserId),
                 currentPassword,
                 newPassword,
                 confirmPassword
@@ -112,7 +123,10 @@ public class AuthController {
 
 @GetMapping("/profile/{userId}/complete")
 public ResponseEntity<?> getCompleteStudentProfile(
-        @PathVariable Long userId) {
+        @PathVariable Long userId,
+        Authentication authentication) {
+
+    authService.requireSelfOrAdmin(userId, authentication);
 
     StudentProfileDTO profile =
             authService.getCompleteStudentProfile(userId);

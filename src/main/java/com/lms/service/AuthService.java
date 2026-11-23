@@ -10,6 +10,8 @@ import com.lms.entity.Role;
 import com.lms.entity.User;
 import com.lms.exception.BadRequestException;
 import com.lms.exception.ResourceNotFoundException;
+import com.lms.exception.UnauthorizedException;
+import org.springframework.security.access.AccessDeniedException;
 import com.lms.repository.CourseRepository;
 import com.lms.repository.EnrollmentRepository;
 import com.lms.repository.RoleRepository;
@@ -62,17 +64,43 @@ private EmailService emailService;
 @Autowired
 private PasswordResetOtpRepository passwordResetOtpRepository;
 
+@Autowired
+private AdminSettingsService adminSettingsService;
+
 private final SecureRandom secureRandom = new SecureRandom();
 
 
     public UserDTO signup(SignupRequest request) {
+        if (!adminSettingsService.isStudentSignupAllowed()) {
+            throw new BadRequestException(
+                    "Student registration is currently disabled by the administrator");
+        }
+
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BadRequestException("Email already registered");
         }
-System.out.println("ROLE ID = " + request.getRoleId());
 
-Role role = roleRepository.findById(request.getRoleId())
-        .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+        // Public registration always creates a STUDENT account.
+        // Any roleId sent by the client is ignored on purpose.
+        Role role = roleRepository.findByName("STUDENT")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Student role is not configured"
+                ));
+
+        if (request.getCourseId() == null) {
+            throw new BadRequestException("Course is required");
+        }
+
+        Course course = courseRepository.findById(request.getCourseId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Course not found"
+                ));
+
+        if (!Boolean.TRUE.equals(course.getActive())) {
+            throw new BadRequestException(
+                    "Selected course is not available"
+            );
+        }
 
         User user = new User();
         user.setFirstName(request.getFirstName());
@@ -83,40 +111,31 @@ Role role = roleRepository.findById(request.getRoleId())
         user.setAddress(request.getAddress());
         user.setRole(role);
         user.setActive(true);
-User savedUser = userRepository.save(user);
 
-if (role.getName().equals("STUDENT")) {
+        User savedUser = userRepository.save(user);
 
-    Course course = courseRepository.findById(
-            request.getCourseId()
-        ).orElseThrow(
-            () -> new ResourceNotFoundException("Course not found")
+        Enrollment enrollment = new Enrollment();
+
+        enrollment.setStudent(savedUser);
+        enrollment.setCourse(course);
+        enrollment.setStatus("ACTIVE");
+        enrollment.setCompletionPercentage(0.0);
+
+        enrollment.setEnrollmentDate(LocalDateTime.now());
+
+        enrollment.setDueDate(
+                LocalDateTime.now().plusDays(course.getDurationDays())
         );
 
-    Enrollment enrollment = new Enrollment();
+        enrollmentRepository.save(enrollment);
 
-    enrollment.setStudent(savedUser);
-    enrollment.setCourse(course);
-    enrollment.setStatus("ACTIVE");
-    enrollment.setCompletionPercentage(0.0);
+        // Send welcome email to the new student
+        emailService.sendWelcomeEmail(
+                savedUser.getEmail(),
+                savedUser.getFirstName()
+        );
 
-    enrollment.setEnrollmentDate(LocalDateTime.now());
-
-    enrollment.setDueDate(
-        LocalDateTime.now().plusDays(course.getDurationDays())
-    );
-
-    enrollmentRepository.save(enrollment);
-
-    // Send welcome email only to students
-    emailService.sendWelcomeEmail(
-        savedUser.getEmail(),
-        savedUser.getFirstName()
-    );
-}
-
-return convertToDTO(savedUser);
-
+        return convertToDTO(savedUser);
     }
     public AuthResponse login(AuthRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -198,6 +217,55 @@ response.setRole(user.getRole().getName());
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setActive(false);
         userRepository.save(user);
+    }
+
+    /**
+     * Resolves the authenticated user's id from the JWT principal.
+     * Never trust a user id supplied by the frontend.
+     */
+    public Long getCurrentUserId(Authentication authentication) {
+        return currentUser(authentication).getId();
+    }
+
+    /**
+     * Allows access only to the authenticated user's own record,
+     * or to an ADMIN account.
+     */
+    public void requireSelfOrAdmin(
+            Long targetUserId,
+            Authentication authentication) {
+
+        if (targetUserId == null) {
+            throw new BadRequestException("User ID is required");
+        }
+
+        User current = currentUser(authentication);
+
+        boolean isAdmin = current.getRole() != null
+                && current.getRole().getName() != null
+                && current.getRole().getName().equalsIgnoreCase("ADMIN");
+
+        if (!isAdmin && !current.getId().equals(targetUserId)) {
+            throw new AccessDeniedException(
+                    "You can only access your own profile"
+            );
+        }
+    }
+
+    private User currentUser(Authentication authentication) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+
+            throw new UnauthorizedException(
+                    "Authentication required"
+            );
+        }
+
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UnauthorizedException(
+                        "Authenticated user not found"
+                ));
     }
 
     private UserDTO convertToDTO(User user) {

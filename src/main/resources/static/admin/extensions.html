@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Extension Requests | LearnHub LMS</title>
+    <link rel="stylesheet" href="/css/admin/admin.css">
+    <link rel="stylesheet" href="/css/admin/admin-sidebar.css">
+</head>
+<body>
+
+<div class="app-layout as-layout">
+
+    <div id="adminSidebar"></div>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <button class="menu-toggle" type="button" id="menuToggle"
+                    aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">&#9776;</button>
+
+            <div class="topbar-title">
+                <p class="breadcrumb"><a href="/admin/admindashboard.html">Admin Console</a> / Extensions</p>
+                <h1>Extension requests</h1>
+                <p class="subtitle">Review course deadline extensions requested by learners.</p>
+            </div>
+
+            <div class="topbar-right">
+                <button class="button button-light button-sm" type="button" id="exportExtensions">Export Excel</button>
+                <div class="date-display" id="currentDate"></div>
+                <div class="avatar avatar-large" id="topAvatar">A</div>
+            </div>
+        </header>
+
+        <div id="pageMessage" class="page-message" role="status" aria-live="polite">
+            Loading extension requests...
+        </div>
+
+        <section class="kpi-grid" aria-label="Extension overview">
+            <article class="stat-card">
+                <span class="stat-icon icon-orange" data-icon="clock"></span>
+                <div class="stat-body">
+                    <p>Pending review</p>
+                    <h2 id="extensionPending">-</h2>
+                    <span class="stat-note">Awaiting a decision</span>
+                </div>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon icon-green" data-icon="check"></span>
+                <div class="stat-body">
+                    <p>Approved</p>
+                    <h2 id="extensionApproved">-</h2>
+                    <span class="stat-note">Deadlines extended</span>
+                </div>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon icon-red" data-icon="x"></span>
+                <div class="stat-body">
+                    <p>Rejected</p>
+                    <h2 id="extensionRejected">-</h2>
+                    <span class="stat-note">Deadline unchanged</span>
+                </div>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon icon-blue" data-icon="extensions"></span>
+                <div class="stat-body">
+                    <p>Total requests</p>
+                    <h2 id="extensionTotal">-</h2>
+                    <span class="stat-note">All time</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="filter-bar">
+                <div class="filter-field filter-search">
+                    <label for="extensionSearch">Search</label>
+                    <input type="search" id="extensionSearch" placeholder="Student, email or course" autocomplete="off">
+                </div>
+                <div class="filter-field">
+                    <label for="extensionStatus">Status</label>
+                    <select id="extensionStatus">
+                        <option value="">All statuses</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="extensionCourse">Course</label>
+                    <select id="extensionCourse">
+                        <option value="">All courses</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="extensionFaculty">Faculty</label>
+                    <select id="extensionFaculty">
+                        <option value="">All faculty</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="button button-light button-sm" type="button" id="refreshExtensions">Refresh</button>
+                    <button class="button button-light button-sm" type="button" id="clearExtensionFilters">Clear</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Due date</th>
+                            <th class="num">Days</th>
+                            <th>Requested</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="extensionTableBody">
+                        <tr><td colspan="8" class="table-state"><strong>Loading requests...</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pager" id="extensionPager"></div>
+        </section>
+
+        <footer class="footer">
+            <span>&copy; <span id="year"></span> LearnHub LMS</span>
+            <span>Administrator workspace</span>
+        </footer>
+
+    </main>
+</div>
+
+<!-- ================= REJECT REQUEST ================= -->
+<div class="modal-overlay" id="extensionModal" aria-hidden="true">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="extensionModalTitle">
+        <div class="modal-head">
+            <div>
+                <h2 id="extensionModalTitle">Reject extension</h2>
+                <p id="extensionModalSubtitle">Explain why the deadline cannot be extended.</p>
+            </div>
+            <button class="modal-close" type="button" data-close="extensionModal" aria-label="Close">&times;</button>
+        </div>
+
+        <form id="extensionRejectForm" novalidate>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group span-2">
+                        <label for="extensionReason">Rejection reason <b>*</b></label>
+                        <textarea id="extensionReason" rows="4" maxlength="500" required
+                                  placeholder="Tell the student why this request was rejected"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-foot">
+                <button class="button button-light" type="button" data-close="extensionModal">Cancel</button>
+                <button class="button button-danger" type="submit" id="extensionRejectSubmit">Reject request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/js/api-config.js"></script>
+<script src="/js/admin/admin-common.js"></script>
+<script src="/js/admin/admin-sidebar.js"></script>
+<script src="/js/admin/admin-extensions.js"></script>
+
+<script>
+(function () {
+    var toggle = document.getElementById('menuToggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+        var open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+</script>
+</body>
+</html>
