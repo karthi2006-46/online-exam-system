@@ -82,6 +82,45 @@
 
         </section>
 
+        <section class="panel requests-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Request history</h2>
+                    <p>Every extension request for your courses and its outcome.</p>
+                </div>
+            </div>
+
+            <div id="historyLoading" class="loading">Loading request history...</div>
+
+            <div id="historyEmptyState" class="empty-state" hidden>
+                <div class="empty-icon">✓</div>
+                <h3>No extension requests yet</h3>
+                <p>Student extension requests will appear here once submitted.</p>
+            </div>
+
+            <div class="table-wrapper" id="historyTableWrapper" hidden>
+                <table class="request-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Original due date</th>
+                            <th>Days</th>
+                            <th>Reason</th>
+                            <th>Requested on</th>
+                            <th>Status</th>
+                            <th>Reviewed by</th>
+                            <th>Reviewed on</th>
+                            <th>Rejection reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody"></tbody>
+                </table>
+            </div>
+
+        </section>
+
         <footer class="footer">
             <span>© <span id="year"></span> LearnHub LMS</span>
             <span>Extension management</span>

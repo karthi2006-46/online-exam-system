@@ -102,7 +102,9 @@ public class CourseService {
                 course.getCourseCode(),
                 course.getDurationDays(),
                 course.getTotalFees(),
-                course.getFaculty().getFirstName() + " " + course.getFaculty().getLastName(),
+                course.getFaculty() == null
+                        ? null
+                        : course.getFaculty().getFirstName() + " " + course.getFaculty().getLastName(),
                 course.getActive(),
                 course.getCreatedAt()
         );

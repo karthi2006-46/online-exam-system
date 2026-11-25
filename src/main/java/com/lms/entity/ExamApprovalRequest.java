@@ -27,6 +27,10 @@ public class ExamApprovalRequest {
 
     private LocalDateTime reviewedAt;
 
+    @ManyToOne
+    @JoinColumn(name = "reviewed_by")
+    private User reviewedBy;
+
     private String facultyComment;
 
     public enum Status {
@@ -78,6 +82,14 @@ public class ExamApprovalRequest {
 
     public void setReviewedAt(LocalDateTime reviewedAt) {
         this.reviewedAt = reviewedAt;
+    }
+
+    public User getReviewedBy() {
+        return reviewedBy;
+    }
+
+    public void setReviewedBy(User reviewedBy) {
+        this.reviewedBy = reviewedBy;
     }
 
     public String getFacultyComment() {

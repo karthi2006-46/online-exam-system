@@ -26,6 +26,7 @@
             </div>
 
             <div class="topbar-right">
+                <button class="button button-light button-sm" type="button" id="downloadAllReports">All student reports</button>
                 <button class="button button-primary button-sm" type="button" id="downloadReportPdf">Download PDF</button>
                 <div class="date-display" id="currentDate"></div>
                 <div class="avatar avatar-large" id="topAvatar">A</div>
@@ -159,6 +160,9 @@
                     <p id="courseReportMeta">Generated -</p>
                 </div>
                 <div class="panel-header-actions">
+                    <select id="courseExportSelect" aria-label="Select course to export"
+                            style="height:32px;padding:0 10px;border:1px solid var(--border);border-radius:9px;background:var(--white);color:var(--text);font-size:12px;"></select>
+                    <button class="button button-light button-sm" type="button" id="exportCourseStudents">Course students</button>
                     <button class="button button-light button-sm" type="button" id="exportCourseReport">Export Excel</button>
                 </div>
             </div>

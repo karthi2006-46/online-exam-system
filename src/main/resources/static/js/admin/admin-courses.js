@@ -16,7 +16,8 @@
         search: "",
         active: "",
         facultyId: "",
-        editingId: null
+        editingId: null,
+        editingFacultyId: null
     };
 
     var searchTimer = null;
@@ -106,7 +107,6 @@
 
         } catch (error) {
             if (filter) filter.innerHTML = '<option value="">All faculty</option>';
-            if (select) select.innerHTML = '<option value="">Select faculty</option>';
         }
     }
 
@@ -226,16 +226,16 @@
 
     function resetForm() {
         state.editingId = null;
+        state.editingFacultyId = null;
 
         UI.el("courseForm").reset();
         UI.el("courseActive").checked = true;
         UI.el("courseDuration").value = 30;
         UI.el("courseFees").value = 0;
-        UI.el("courseFacultySelect").value = "";
 
         UI.el("courseModalTitle").textContent = "Add course";
         UI.el("courseModalSubtitle").textContent =
-            "Create a course and assign it to a faculty member.";
+            "Create a course. Faculty can be assigned later.";
         UI.el("saveCourse").textContent = "Create course";
     }
 
@@ -249,10 +249,10 @@
         }
 
         state.editingId = Number(id);
+        state.editingFacultyId = row.facultyId == null ? null : Number(row.facultyId);
 
         UI.el("courseTitle").value = row.title || "";
         UI.el("courseCode").value = row.courseCode || "";
-        UI.el("courseFacultySelect").value = row.facultyId == null ? "" : String(row.facultyId);
         UI.el("courseDuration").value = row.durationDays == null ? 30 : row.durationDays;
         UI.el("courseFees").value = row.totalFees == null ? 0 : row.totalFees;
         UI.el("courseDescription").value = row.description || "";
@@ -271,7 +271,6 @@
 
         var title = UI.el("courseTitle").value.trim();
         var code = UI.el("courseCode").value.trim();
-        var facultyId = UI.el("courseFacultySelect").value;
         var duration = Number(UI.el("courseDuration").value);
         var fees = Number(UI.el("courseFees").value);
 
@@ -284,12 +283,6 @@
         if (!code) {
             UI.toast("Enter a course code.", "error");
             UI.el("courseCode").focus();
-            return;
-        }
-
-        if (!facultyId) {
-            UI.toast("Select the faculty member who will own this course.", "error");
-            UI.el("courseFacultySelect").focus();
             return;
         }
 
@@ -308,7 +301,7 @@
         var payload = {
             title: title,
             courseCode: code.toUpperCase(),
-            facultyId: Number(facultyId),
+            facultyId: state.editingId ? state.editingFacultyId : null,
             durationDays: duration,
             totalFees: fees,
             description: UI.el("courseDescription").value.trim(),

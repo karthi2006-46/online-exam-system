@@ -6,6 +6,55 @@ let courseProgressChart = null;
 const API_BASE_URL = window.API_BASE_URL;
 
 
+/* =========================================================
+   LOAD LOGGED-IN STUDENT NAME
+========================================================= */
+
+async function loadStudentName() {
+    const token = localStorage.getItem("token");
+    const studentId = localStorage.getItem("userId");
+    const nameElement = document.getElementById("studentWelcomeName");
+
+    if (!nameElement) {
+        return;
+    }
+
+    if (!token || !studentId) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/auth/profile/${encodeURIComponent(studentId)}`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            return;
+        }
+
+        const result = await response.json();
+        const profile = result.data || result;
+
+        const fullName = `${profile.firstName || ""} ${profile.lastName || ""}`
+            .replace(/\s+/g, " ")
+            .trim();
+
+        if (fullName) {
+            nameElement.textContent = fullName;
+        }
+    } catch (error) {
+        console.error("Student name error:", error);
+    }
+}
+
+
 async function loadDashboard() {
     const token = localStorage.getItem("token");
     const studentId = localStorage.getItem("userId");
@@ -234,7 +283,7 @@ function renderCourseProgress(courses) {
         const status = document.createElement("p");
 
         status.textContent =
-            `Status: ${course.status ?? "ACTIVE"}`;
+            `Enrollment status: ${course.status ?? "ACTIVE"}`;
 
         card.appendChild(status);
 
@@ -550,6 +599,7 @@ function showTableMessage(tableBody, columnCount, message) {
 ========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
+    loadStudentName();
     loadDashboard();
     loadResults();
     loadStudentCourses();

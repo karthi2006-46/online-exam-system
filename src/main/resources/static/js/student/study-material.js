@@ -5,6 +5,8 @@
 const MATERIALS_API = `${window.API_BASE_URL}/api/materials`;
 const MATERIAL_PROGRESS_API =
     `${window.API_BASE_URL}/api/material-progress`;
+const STUDENT_COURSES_API = `${window.API_BASE_URL}/api/student`;
+const EXTENSIONS_API = `${window.API_BASE_URL}/api/extensions`;
 
 // ---------- Viewer state ----------
 let activeMaterial = null;
@@ -967,6 +969,193 @@ function escapeHtml(value) {
 }
 
 // =====================================================
+// ENROLLMENT STATUS GATE
+// =====================================================
+
+async function findEnrollment(studentId, courseId, token) {
+    const response = await fetch(
+        `${STUDENT_COURSES_API}/courses/${encodeURIComponent(studentId)}`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            }
+        }
+    );
+
+    if (!response.ok) {
+        return null;
+    }
+
+    const result = await response.json();
+
+    const courses = Array.isArray(result)
+        ? result
+        : Array.isArray(result.data)
+            ? result.data
+            : [];
+
+    return courses.find(course =>
+        String(course.courseId) === String(courseId)
+    ) || null;
+}
+
+function fieldStyles() {
+    return [
+        "width:100%",
+        "max-width:360px",
+        "padding:10px 12px",
+        "border:1px solid var(--border-strong, #cfd8e3)",
+        "border-radius:9px",
+        "font-size:13px",
+        "font-family:inherit",
+        "color:inherit",
+        "background:var(--surface, #ffffff)"
+    ].join(";");
+}
+
+function renderBlockedMaterials(container, enrollment) {
+    const status = String(enrollment?.status || "").toUpperCase();
+    const canRequest = status === "INACTIVE";
+
+    container.replaceChildren();
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "empty-state";
+
+    const heading = document.createElement("h3");
+    heading.textContent = "Study materials unavailable";
+
+    const message = document.createElement("p");
+    message.textContent = canRequest
+        ? "Your course due date has expired."
+        : status
+            ? `This course is currently ${status.toLowerCase()}.`
+            : "You are not enrolled in this course.";
+
+    wrapper.append(heading, message);
+
+    if (canRequest && enrollment?.enrollmentId) {
+        const feedback = document.createElement("p");
+        feedback.setAttribute("role", "status");
+        feedback.setAttribute("aria-live", "polite");
+        feedback.style.cssText =
+            "font-size:13px;margin:0;max-width:360px;text-align:center;";
+
+        const form = document.createElement("form");
+        form.style.cssText =
+            "display:flex;flex-direction:column;align-items:center;" +
+            "gap:10px;width:100%;max-width:360px;margin-top:8px;";
+
+        const daysInput = document.createElement("input");
+        daysInput.type = "number";
+        daysInput.min = "1";
+        daysInput.max = "365";
+        daysInput.required = true;
+        daysInput.placeholder = "Extension days (e.g. 7)";
+        daysInput.setAttribute("aria-label", "Extension days");
+        daysInput.style.cssText = fieldStyles();
+
+        const reasonInput = document.createElement("textarea");
+        reasonInput.rows = 3;
+        reasonInput.maxLength = 500;
+        reasonInput.required = true;
+        reasonInput.placeholder = "Reason for the extension";
+        reasonInput.setAttribute("aria-label", "Reason for the extension");
+        reasonInput.style.cssText = fieldStyles() + ";resize:vertical";
+
+        const submit = document.createElement("button");
+        submit.type = "submit";
+        submit.className = "retry-btn";
+        submit.textContent = "Submit request";
+
+        form.append(daysInput, reasonInput, submit);
+
+        const actions = document.createElement("button");
+        actions.type = "button";
+        actions.className = "retry-btn";
+        actions.textContent = "Request Extension";
+
+        actions.addEventListener("click", () => {
+            actions.hidden = true;
+            form.hidden = false;
+            daysInput.focus();
+        });
+
+        form.hidden = true;
+
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const days = Number(daysInput.value);
+
+            if (!Number.isFinite(days) || days < 1) {
+                feedback.style.color = "#b42318";
+                feedback.textContent = "Please enter a valid number of days.";
+                return;
+            }
+
+            const reason = reasonInput.value.trim();
+
+            if (!reason) {
+                feedback.style.color = "#b42318";
+                feedback.textContent = "Please provide a reason for the extension.";
+                return;
+            }
+
+            submit.disabled = true;
+            submit.textContent = "Submitting...";
+            feedback.textContent = "";
+
+            try {
+                const params = new URLSearchParams({
+                    enrollmentId: String(enrollment.enrollmentId),
+                    daysRequested: String(days),
+                    reason
+                });
+
+                const response = await fetch(
+                    `${EXTENSIONS_API}/request?${params.toString()}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization:
+                                `Bearer ${localStorage.getItem("token")}`,
+                            Accept: "application/json"
+                        }
+                    }
+                );
+
+                const result = await response.json().catch(() => null);
+
+                if (!response.ok) {
+                    throw new Error(
+                        result?.message ||
+                        result?.error ||
+                        `Request failed: HTTP ${response.status}`
+                    );
+                }
+
+                form.remove();
+                feedback.style.color = "#0d7a43";
+                feedback.textContent =
+                    "Extension request submitted. Materials will unlock once faculty approves it.";
+            } catch (error) {
+                submit.disabled = false;
+                submit.textContent = "Submit request";
+                feedback.style.color = "#b42318";
+                feedback.textContent =
+                    error.message || "Unable to submit the extension request.";
+            }
+        });
+
+        wrapper.append(actions, form, feedback);
+    }
+
+    container.appendChild(wrapper);
+}
+
+// =====================================================
 // LOAD STUDY MATERIALS
 // =====================================================
 
@@ -1001,6 +1190,21 @@ async function loadMaterials() {
         return;
     }
 
+    let enrollment = null;
+
+    try {
+        enrollment = await findEnrollment(studentId, courseId, token);
+    } catch (error) {
+        console.error("Enrollment status check failed:", error);
+    }
+
+    if (enrollment
+            && String(enrollment.status || "").toUpperCase() !== "ACTIVE") {
+
+        renderBlockedMaterials(container, enrollment);
+        return;
+    }
+
     container.innerHTML = `
         <div class="materials-loading">
             <div class="loading-spinner"></div>
@@ -1018,6 +1222,14 @@ async function loadMaterials() {
                 }
             }
         );
+
+        if (materialsResponse.status === 403) {
+            renderBlockedMaterials(
+                container,
+                enrollment || { status: "INACTIVE", enrollmentId: null }
+            );
+            return;
+        }
 
         if (!materialsResponse.ok) {
             throw new Error(

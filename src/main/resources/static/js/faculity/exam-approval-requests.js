@@ -8,6 +8,8 @@ const CODING_API = `${API_BASE}/coding-submissions`;
 let allRequests = [];
 let codingSubmissions = [];
 let selectedCodingSubmission = null;
+let examHistory = [];
+let codingHistory = [];
 
 // ========================================
 // INITIALIZATION
@@ -19,6 +21,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadApprovalRequests();
     loadCodingSubmissions();
+    loadExamHistory();
+    loadCodingHistory();
 
 });
 
@@ -184,7 +188,9 @@ async function refreshAll() {
     try {
         await Promise.all([
             loadApprovalRequests(),
-            loadCodingSubmissions()
+            loadCodingSubmissions(),
+            loadExamHistory(),
+            loadCodingHistory()
         ]);
     } finally {
         button.disabled = false;
@@ -252,10 +258,132 @@ function updateExamStatistics() {
     ).length;
 
     document.getElementById("totalRequests").textContent =
-        allRequests.length;
+        examHistory.length || allRequests.length;
 
     document.getElementById("pendingRequests").textContent =
         pending;
+
+}
+
+// ========================================
+// EXAM APPROVAL HISTORY
+// ========================================
+
+async function loadExamHistory() {
+
+    const container =
+        document.getElementById("examHistoryContainer");
+
+    if (!container) return;
+
+    try {
+
+        const response = await apiRequest(
+            `${EXAM_API}/faculty/history`
+        );
+
+        const requests = unwrapResponse(response);
+
+        examHistory = Array.isArray(requests) ? requests : [];
+
+        renderExamHistory();
+
+        updateExamStatistics();
+
+    } catch (error) {
+
+        console.error("Exam history error:", error);
+
+        container.innerHTML = `
+            <div class="empty-state">
+                Unable to load exam approval history.
+                <br>
+                ${escapeHtml(error.message)}
+            </div>
+        `;
+
+    }
+
+}
+
+function renderExamHistory() {
+
+    const container =
+        document.getElementById("examHistoryContainer");
+
+    if (!container) return;
+
+    if (!examHistory.length) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                <h3>No exam approval history</h3>
+                <p>Reviewed exam requests will appear here.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = examHistory.map(request => {
+
+        const status =
+            String(request.status || "PENDING").toUpperCase();
+
+        const requested = request.requestedAt
+            ? new Date(request.requestedAt).toLocaleString("en-IN")
+            : "—";
+
+        const reviewed = request.reviewedAt
+            ? new Date(request.reviewedAt).toLocaleString("en-IN")
+            : "—";
+
+        return `
+            <article class="review-card">
+
+                <h3>${escapeHtml(request.studentName || request.studentEmail || "Student")}</h3>
+
+                <div class="review-meta">
+
+                    <span>
+                        <strong>Course:</strong>
+                        ${escapeHtml(request.courseTitle || request.courseCode || "-")}
+                    </span>
+
+                    <span>
+                        <strong>Requested:</strong>
+                        ${escapeHtml(requested)}
+                    </span>
+
+                    <span>
+                        <strong>Reviewed by:</strong>
+                        ${escapeHtml(request.reviewedByName || "—")}
+                    </span>
+
+                    <span>
+                        <strong>Reviewed on:</strong>
+                        ${escapeHtml(reviewed)}
+                    </span>
+
+                    ${
+                        request.comment
+                            ? `<span>
+                                   <strong>Comment:</strong>
+                                   ${escapeHtml(request.comment)}
+                               </span>`
+                            : ""
+                    }
+
+                </div>
+
+                <span class="review-status ${status.toLowerCase()}">
+                    ${escapeHtml(status)}
+                </span>
+
+            </article>
+        `;
+
+    }).join("");
 
 }
 
@@ -409,6 +537,7 @@ async function approveExamRequest(requestId) {
         showToast("Exam request approved successfully.", "success");
 
         await loadApprovalRequests();
+        await loadExamHistory();
 
     } catch (error) {
 
@@ -454,6 +583,7 @@ async function rejectExamRequest(requestId) {
         showToast("Exam request rejected.", "success");
 
         await loadApprovalRequests();
+        await loadExamHistory();
 
     } catch (error) {
 
@@ -524,10 +654,152 @@ function updateCodingStatistics() {
             item => item.status === "PENDING_REVIEW"
         ).length;
 
-    // This endpoint returns pending submissions only.
-    // Approved totals need a separate faculty history endpoint.
     document.getElementById("approvedCoding").textContent =
-        "—";
+        codingHistory.filter(
+            item => String(item.status).toUpperCase() === "APPROVED"
+        ).length;
+
+}
+
+// ========================================
+// CODING SUBMISSION HISTORY
+// ========================================
+
+async function loadCodingHistory() {
+
+    const container =
+        document.getElementById("codingHistoryContainer");
+
+    if (!container) return;
+
+    try {
+
+        const response = await apiRequest(
+            `${CODING_API}/faculty/history`
+        );
+
+        const submissions = unwrapResponse(response);
+
+        codingHistory = Array.isArray(submissions) ? submissions : [];
+
+        renderCodingHistory();
+
+        updateCodingStatistics();
+
+    } catch (error) {
+
+        console.error("Coding history error:", error);
+
+        container.innerHTML = `
+            <div class="empty-state">
+                Unable to load coding submission history.
+                <br>
+                ${escapeHtml(error.message)}
+            </div>
+        `;
+
+    }
+
+}
+
+function renderCodingHistory() {
+
+    const container =
+        document.getElementById("codingHistoryContainer");
+
+    if (!container) return;
+
+    if (!codingHistory.length) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                <h3>No coding submission history</h3>
+                <p>Student coding submissions will appear here.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = codingHistory.map(submission => {
+
+        const status =
+            String(submission.reviewStatus || submission.status || "PENDING_REVIEW")
+                .toUpperCase();
+
+        const submitted = submission.submittedAt
+            ? new Date(submission.submittedAt).toLocaleString("en-IN")
+            : "—";
+
+        const reviewed = submission.reviewedAt
+            ? new Date(submission.reviewedAt).toLocaleString("en-IN")
+            : "—";
+
+        const passed = Number(submission.testCasesPassed || 0);
+        const total = Number(submission.totalTestCases || 0);
+        const percentage = Number(submission.percentage || 0);
+
+        return `
+            <article class="review-card">
+
+                <h3>${escapeHtml(submission.studentName || submission.studentEmail || "Student")}</h3>
+
+                <div class="review-meta">
+
+                    <span>
+                        <strong>Course:</strong>
+                        ${escapeHtml(submission.courseTitle || "-")}
+                    </span>
+
+                    <span>
+                        <strong>Challenge:</strong>
+                        ${escapeHtml(submission.challengeTitle || "-")}
+                    </span>
+
+                    <span>
+                        <strong>Submitted:</strong>
+                        ${escapeHtml(submitted)}
+                    </span>
+
+                    <span>
+                        <strong>Test cases passed:</strong>
+                        ${escapeHtml(`${passed} / ${total}`)}
+                    </span>
+
+                    <span>
+                        <strong>Percentage:</strong>
+                        ${escapeHtml(`${percentage.toFixed(2)}%`)}
+                    </span>
+
+                    <span>
+                        <strong>Reviewed by:</strong>
+                        ${escapeHtml(submission.reviewedByName || "—")}
+                    </span>
+
+                    <span>
+                        <strong>Reviewed on:</strong>
+                        ${escapeHtml(reviewed)}
+                    </span>
+
+                    ${
+                        submission.facultyFeedback
+                            ? `<span>
+                                   <strong>Feedback:</strong>
+                                   ${escapeHtml(submission.facultyFeedback)}
+                               </span>`
+                            : ""
+                    }
+
+                </div>
+
+                <span class="review-status ${status === "APPROVED" ? "" : status.toLowerCase()}">
+                    ${escapeHtml(status.replace("_", " "))}
+                </span>
+
+            </article>
+        `;
+
+    }).join("");
 
 }
 
@@ -796,6 +1068,8 @@ async function reviewCodingSubmission(action) {
 
         await loadCodingSubmissions();
         await loadApprovalRequests();
+        await loadCodingHistory();
+        await loadExamHistory();
 
     } catch (error) {
 

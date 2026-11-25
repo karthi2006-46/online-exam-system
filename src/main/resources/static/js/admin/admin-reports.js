@@ -148,6 +148,25 @@
                 '<td data-label="Status">' + UI.statusPill(row.active) + "</td>" +
                 "</tr>";
         }).join("");
+
+        renderCourseExportOptions(rows);
+    }
+
+    function renderCourseExportOptions(rows) {
+
+        var select = UI.el("courseExportSelect");
+        if (!select) return;
+
+        var previous = select.value;
+
+        select.innerHTML = '<option value="">Select course</option>' +
+            rows.map(function (row) {
+                return '<option value="' + row.courseId + '">' +
+                    UI.escapeHtml(row.title || ("Course " + row.courseId)) +
+                    "</option>";
+            }).join("");
+
+        if (previous) select.value = previous;
     }
 
     function renderFaculty(rows) {
@@ -264,6 +283,40 @@
             await download(
                 "/admin/export/report/courses.xlsx",
                 "course-report.xlsx"
+            );
+        } finally {
+            UI.setBusy(button, false);
+        }
+    });
+
+    UI.el("downloadAllReports").addEventListener("click", async function () {
+        var button = UI.el("downloadAllReports");
+
+        try {
+            UI.setBusy(button, true, "Preparing...");
+            await download(
+                "/admin/export/students/all-reports.zip",
+                "all-student-reports.zip"
+            );
+        } finally {
+            UI.setBusy(button, false);
+        }
+    });
+
+    UI.el("exportCourseStudents").addEventListener("click", async function () {
+        var button = UI.el("exportCourseStudents");
+        var courseId = UI.el("courseExportSelect").value;
+
+        if (!courseId) {
+            UI.toast("Select a course to export its students.", "error");
+            return;
+        }
+
+        try {
+            UI.setBusy(button, true, "Preparing...");
+            await download(
+                "/admin/export/course/" + courseId + "/students.xlsx",
+                "course-" + courseId + "-students.xlsx"
             );
         } finally {
             UI.setBusy(button, false);

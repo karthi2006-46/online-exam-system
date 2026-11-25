@@ -118,6 +118,21 @@ public class CodingSubmissionController {
     }
 
     // ==========================================
+    // FACULTY - VIEW FULL CODING HISTORY
+    // ==========================================
+
+    @GetMapping("/faculty/history")
+    @PreAuthorize("hasRole('FACULTY')")
+    public ResponseEntity<?> getFacultyHistory(
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                submissionService.getFacultyHistory(authentication)
+        );
+    }
+
+    // ==========================================
     // FACULTY - VIEW INDIVIDUAL SUBMISSION
     // ==========================================
 

@@ -269,6 +269,18 @@ function displayCourses(courses) {
 
     container.replaceChildren();
 
+    // Enrollment status summary shown inside Personal Information
+    const statusSummary = courses.length
+        ? courses
+            .map(course =>
+                `${course.title || course.courseTitle || "Course"}: ` +
+                `${String(course.status || "Not specified").toUpperCase()}`
+            )
+            .join(" · ")
+        : "No enrolled courses";
+
+    setText("enrollmentStatusSummary", statusSummary);
+
 
     // No enrolled courses
     if (!courses.length) {

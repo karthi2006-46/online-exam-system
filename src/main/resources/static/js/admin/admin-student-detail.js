@@ -291,10 +291,33 @@
         }
     }
 
+    async function downloadFullReport(format, button) {
+
+        try {
+            UI.setBusy(button, true, "Preparing...");
+            await UI.download(
+                "/admin/export/student/" + studentId + "/report." + format,
+                "student-report-" + studentId + "." + format
+            );
+        } catch (error) {
+            UI.toast(error.message, "error");
+        } finally {
+            UI.setBusy(button, false);
+        }
+    }
+
     /* ---------------- events ---------------- */
 
     UI.el("toggleStatusBtn").addEventListener("click", toggleStatus);
     UI.el("deleteStudentBtn").addEventListener("click", deleteStudent);
+
+    UI.el("downloadFullExcel").addEventListener("click", function () {
+        downloadFullReport("xlsx", UI.el("downloadFullExcel"));
+    });
+
+    UI.el("downloadFullPdf").addEventListener("click", function () {
+        downloadFullReport("pdf", UI.el("downloadFullPdf"));
+    });
 
     UI.el("courseReports").addEventListener("click", function (event) {
         var button = event.target.closest('button[data-act="pdf"]');

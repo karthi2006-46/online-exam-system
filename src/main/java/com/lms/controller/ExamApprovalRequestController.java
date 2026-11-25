@@ -69,6 +69,18 @@ public class ExamApprovalRequestController {
         return ResponseEntity.ok(requests);
     }
 
+    // FACULTY/ADMIN - VIEW FULL APPROVAL HISTORY
+    @GetMapping("/faculty/history")
+    @PreAuthorize("hasAnyRole('FACULTY','ADMIN')")
+    public ResponseEntity<?> getFacultyHistory(
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                service.getFacultyHistory(authentication)
+        );
+    }
+
     // FACULTY - APPROVE
     @PutMapping("/{requestId}/approve")
     @PreAuthorize("hasRole('FACULTY')")

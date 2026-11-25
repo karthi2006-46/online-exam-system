@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.lms.dto.CodingSubmissionResponseDTO;
+import com.lms.dto.CodingSubmissionHistoryDTO;
 import java.util.stream.Collectors;
 
 @Service
@@ -187,6 +188,100 @@ public List<CodingSubmissionResponseDTO> getFacultyPendingSubmissions(
             .map(CodingSubmissionResponseDTO::fromEntity)
             .collect(Collectors.toList());
 }
+
+
+    // =====================================================
+    // 3b. FACULTY - FULL CODING SUBMISSION HISTORY
+    // =====================================================
+
+    @Transactional(readOnly = true)
+    public List<CodingSubmissionHistoryDTO> getFacultyHistory(
+            Authentication authentication
+    ) {
+
+        User faculty = getAuthenticatedFaculty(authentication);
+
+        return submissionRepository
+                .findByChallenge_Course_Faculty_IdOrderBySubmittedAtDesc(
+                        faculty.getId())
+                .stream()
+                .map(this::toHistoryDTO)
+                .collect(Collectors.toList());
+    }
+
+    private CodingSubmissionHistoryDTO toHistoryDTO(
+            CodingSubmission submission
+    ) {
+
+        CodingSubmissionHistoryDTO dto =
+                new CodingSubmissionHistoryDTO();
+
+        dto.setId(submission.getId());
+
+        if (submission.getStudent() != null) {
+            dto.setStudentId(submission.getStudent().getId());
+            dto.setStudentName(joinName(
+                    submission.getStudent().getFirstName(),
+                    submission.getStudent().getLastName()));
+            dto.setStudentEmail(submission.getStudent().getEmail());
+        }
+
+        CodingChallenge challenge = submission.getChallenge();
+
+        if (challenge != null) {
+
+            dto.setChallengeId(challenge.getId());
+            dto.setChallengeTitle(challenge.getTitle());
+
+            if (challenge.getCourse() != null) {
+                dto.setCourseId(challenge.getCourse().getId());
+                dto.setCourseTitle(challenge.getCourse().getTitle());
+            }
+        }
+
+        dto.setSubmittedAt(submission.getSubmittedAt());
+
+        int passed = submission.getTestCasesPassed() == null
+                ? 0
+                : submission.getTestCasesPassed();
+
+        int total = submission.getTotalTestCases() == null
+                ? 0
+                : submission.getTotalTestCases();
+
+        dto.setTestCasesPassed(passed);
+        dto.setTotalTestCases(total);
+        dto.setPercentage(total > 0
+                ? Math.round((passed * 10000.0) / total) / 100.0
+                : 0.0);
+
+        String status = submission.getStatus() != null
+                ? submission.getStatus().name()
+                : null;
+
+        dto.setStatus(status);
+        dto.setReviewStatus(status);
+        dto.setFacultyFeedback(submission.getFacultyFeedback());
+        dto.setReviewedAt(submission.getReviewedAt());
+
+        if (submission.getReviewedBy() != null) {
+            dto.setReviewedByName(joinName(
+                    submission.getReviewedBy().getFirstName(),
+                    submission.getReviewedBy().getLastName()));
+        }
+
+        return dto;
+    }
+
+    private String joinName(String firstName, String lastName) {
+        String name = ((firstName == null ? "" : firstName)
+                + " "
+                + (lastName == null ? "" : lastName))
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        return name.isEmpty() ? null : name;
+    }
 
 
     // =====================================================

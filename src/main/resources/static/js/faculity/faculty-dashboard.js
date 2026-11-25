@@ -284,6 +284,8 @@ function displayFaculty() {
     setValue("avatar", firstLetter);
     setValue("topAvatar", firstLetter);
 
+    loadFacultyIdentity();
+
     setValue(
         "currentDate",
         new Date().toLocaleDateString("en-IN", {
@@ -294,6 +296,58 @@ function displayFaculty() {
     );
 
     setValue("year", new Date().getFullYear());
+}
+
+// ----------------------------------------
+// LOAD FACULTY NAME FROM THE DATABASE
+// ----------------------------------------
+
+async function loadFacultyIdentity() {
+
+    const token = localStorage.getItem("token");
+    const facultyId = localStorage.getItem("userId");
+
+    if (!token || !facultyId) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/auth/profile/${encodeURIComponent(facultyId)}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            return;
+        }
+
+        const result = await response.json();
+        const profile = result.data || result;
+
+        const fullName = `${profile.firstName || ""} ${profile.lastName || ""}`
+            .replace(/\s+/g, " ")
+            .trim();
+
+        if (!fullName) {
+            return;
+        }
+
+        const initial = fullName.charAt(0).toUpperCase();
+
+        setValue("facultyWelcomeName", fullName);
+        setValue("facultyName", fullName);
+        setValue("avatar", initial);
+        setValue("topAvatar", initial);
+
+    } catch (error) {
+        console.error("Faculty identity error:", error);
+    }
 }
 
 // ----------------------------------------

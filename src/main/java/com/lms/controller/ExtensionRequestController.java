@@ -1,5 +1,6 @@
 package com.lms.controller;
 
+import com.lms.dto.ExtensionHistoryDTO;
 import com.lms.dto.ExtensionRequestDTO;
 import com.lms.service.ExtensionRequestService;
 import com.lms.util.ApiResponseUtil;
@@ -74,6 +75,19 @@ public class ExtensionRequestController {
 
         return ApiResponseUtil.success(
                 "Pending extension requests retrieved",
+                requests);
+    }
+
+    // Faculty/Admin: View the full request history for their courses
+    @GetMapping("/faculty/history")
+    @PreAuthorize("hasAnyRole('FACULTY','ADMIN')")
+    public ResponseEntity<?> getFacultyHistory() {
+
+        List<ExtensionHistoryDTO> requests =
+                extensionService.getFacultyHistory();
+
+        return ApiResponseUtil.success(
+                "Extension request history retrieved",
                 requests);
     }
 

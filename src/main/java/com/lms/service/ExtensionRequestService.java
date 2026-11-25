@@ -1,5 +1,6 @@
 package com.lms.service;
 
+import com.lms.dto.ExtensionHistoryDTO;
 import com.lms.dto.ExtensionRequestDTO;
 import com.lms.entity.Enrollment;
 import com.lms.entity.ExtensionRequest;
@@ -179,6 +180,31 @@ if (!"INACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
                 .collect(Collectors.toList());
     }
 
+    // ==========================================
+    // FACULTY - FULL REQUEST HISTORY
+    // ==========================================
+
+    @Transactional(readOnly = true)
+    public List<ExtensionHistoryDTO> getFacultyHistory() {
+
+        User currentUser = getAuthenticatedUser();
+        validateFacultyOrAdmin(currentUser);
+
+        boolean isAdmin = currentUser.getRole() != null
+                && currentUser.getRole().getName() != null
+                && currentUser.getRole().getName().equalsIgnoreCase("ADMIN");
+
+        List<ExtensionRequest> requests = isAdmin
+                ? extensionRepository.findAllByOrderByCreatedAtDesc()
+                : extensionRepository
+                        .findByEnrollment_Course_Faculty_IdOrderByCreatedAtDesc(
+                                currentUser.getId());
+
+        return requests.stream()
+                .map(this::toHistoryDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<ExtensionRequestDTO> getStudentRequests(Long studentId) {
         User currentUser = getAuthenticatedUser();
 
@@ -286,6 +312,57 @@ enrollmentRepository.save(enrollment);
             throw new BadRequestException(
                     "Only faculty or admin users can perform this action");
         }
+    }
+
+    private ExtensionHistoryDTO toHistoryDTO(ExtensionRequest request) {
+
+        ExtensionHistoryDTO dto = new ExtensionHistoryDTO();
+
+        Enrollment enrollment = request.getEnrollment();
+
+        dto.setId(request.getId());
+        dto.setEnrollmentId(enrollment != null ? enrollment.getId() : null);
+
+        if (enrollment != null && enrollment.getStudent() != null) {
+            dto.setStudentId(enrollment.getStudent().getId());
+            dto.setStudentName(joinName(
+                    enrollment.getStudent().getFirstName(),
+                    enrollment.getStudent().getLastName()));
+            dto.setStudentEmail(enrollment.getStudent().getEmail());
+        }
+
+        if (enrollment != null && enrollment.getCourse() != null) {
+            dto.setCourseId(enrollment.getCourse().getId());
+            dto.setCourseTitle(enrollment.getCourse().getTitle());
+        }
+
+        dto.setOriginalDueDate(
+                enrollment != null ? enrollment.getDueDate() : null);
+
+        dto.setDaysRequested(request.getDaysRequested());
+        dto.setReason(request.getReason());
+        dto.setRequestedAt(request.getCreatedAt());
+        dto.setStatus(request.getStatus());
+        dto.setReviewedAt(request.getReviewedAt());
+        dto.setRejectionReason(request.getRejectionReason());
+
+        if (request.getReviewedBy() != null) {
+            dto.setReviewedByName(joinName(
+                    request.getReviewedBy().getFirstName(),
+                    request.getReviewedBy().getLastName()));
+        }
+
+        return dto;
+    }
+
+    private String joinName(String firstName, String lastName) {
+        String name = ((firstName == null ? "" : firstName)
+                + " "
+                + (lastName == null ? "" : lastName))
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        return name.isEmpty() ? null : name;
     }
 
     private ExtensionRequestDTO convertToDTO(ExtensionRequest request) {

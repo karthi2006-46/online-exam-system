@@ -261,6 +261,22 @@
         }
     });
 
+    UI.el("exportAllReports").addEventListener("click", async function () {
+        var button = UI.el("exportAllReports");
+
+        try {
+            UI.setBusy(button, true, "Preparing...");
+            await UI.download(
+                "/admin/export/students/all-reports.zip",
+                "all-student-reports.zip"
+            );
+        } catch (error) {
+            UI.toast(error.message, "error");
+        } finally {
+            UI.setBusy(button, false);
+        }
+    });
+
     UI.el("studentTableBody").addEventListener("click", function (event) {
         var button = event.target.closest("button[data-act]");
         if (!button) return;

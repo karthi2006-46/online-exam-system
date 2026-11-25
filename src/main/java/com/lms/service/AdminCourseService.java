@@ -265,21 +265,25 @@ public class AdminCourseService {
             throw new BadRequestException("Course fees cannot be negative");
         }
 
-        User faculty = userRepository.findById(
-                        request.getFacultyId() == null ? -1L : request.getFacultyId())
-                .orElseThrow(() -> new BadRequestException(
-                        "Select a faculty member for this course"));
+        User faculty = null;
 
-        if (faculty.getRole() == null
-                || faculty.getRole().getName() == null
-                || !faculty.getRole().getName().equalsIgnoreCase(FACULTY)) {
-            throw new BadRequestException(
-                    "Selected user is not a faculty member");
-        }
+        if (request.getFacultyId() != null) {
 
-        if (Boolean.FALSE.equals(faculty.getActive())) {
-            throw new BadRequestException(
-                    "The selected faculty account is inactive");
+            faculty = userRepository.findById(request.getFacultyId())
+                    .orElseThrow(() -> new BadRequestException(
+                            "Selected faculty member was not found"));
+
+            if (faculty.getRole() == null
+                    || faculty.getRole().getName() == null
+                    || !faculty.getRole().getName().equalsIgnoreCase(FACULTY)) {
+                throw new BadRequestException(
+                        "Selected user is not a faculty member");
+            }
+
+            if (Boolean.FALSE.equals(faculty.getActive())) {
+                throw new BadRequestException(
+                        "The selected faculty account is inactive");
+            }
         }
 
         course.setTitle(title);

@@ -186,6 +186,73 @@ public class AdminExportController {
                 .body(pdf);
     }
 
+    // ==========================================
+    // COMPLETE STUDENT REPORTS
+    // ==========================================
+
+    @GetMapping("/student/{studentId}/report")
+    public ResponseEntity<com.lms.dto.admin.AdminStudentReportDTO> studentReport(
+            @PathVariable Long studentId) {
+
+        return ResponseEntity.ok(
+                exportService.studentReport(studentId));
+    }
+
+    @GetMapping("/student/{studentId}/report.xlsx")
+    public ResponseEntity<byte[]> studentReportExcel(
+            @PathVariable Long studentId) {
+
+        return xlsx(
+                exportService.studentFullReportExcel(studentId),
+                "student-report-" + studentId + "-"
+                        + exportService.fileStamp() + ".xlsx"
+        );
+    }
+
+    @GetMapping("/student/{studentId}/report.pdf")
+    public ResponseEntity<byte[]> studentReportPdf(
+            @PathVariable Long studentId) {
+
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename("student-report-" + studentId + "-"
+                        + exportService.fileStamp() + ".pdf")
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        disposition.toString())
+                .body(exportService.studentFullReportPdf(studentId));
+    }
+
+    @GetMapping("/course/{courseId}/students.xlsx")
+    public ResponseEntity<byte[]> courseStudentsExcel(
+            @PathVariable Long courseId) {
+
+        return xlsx(
+                exportService.courseStudentsReportExcel(courseId),
+                "course-" + courseId + "-students-"
+                        + exportService.fileStamp() + ".xlsx"
+        );
+    }
+
+    @GetMapping("/students/all-reports.zip")
+    public ResponseEntity<byte[]> allStudentReportsZip() {
+
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename("all-student-reports-"
+                        + exportService.fileStamp() + ".zip")
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/zip"))
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        disposition.toString())
+                .body(exportService.allStudentReportsZip());
+    }
+
     private ResponseEntity<byte[]> xlsx(byte[] file, String filename) {
 
         ContentDisposition disposition = ContentDisposition.attachment()

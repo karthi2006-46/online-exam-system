@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -113,6 +114,7 @@ public class AdminApprovalService {
         request.setStatus(ExamApprovalRequest.Status.APPROVED);
         request.setFacultyComment(trim(comment));
         request.setReviewedAt(LocalDateTime.now());
+        request.setReviewedBy(currentReviewer());
 
         return toRow(approvalRepository.save(request));
     }
@@ -124,8 +126,24 @@ public class AdminApprovalService {
         request.setStatus(ExamApprovalRequest.Status.REJECTED);
         request.setFacultyComment(trim(comment));
         request.setReviewedAt(LocalDateTime.now());
+        request.setReviewedBy(currentReviewer());
 
         return toRow(approvalRepository.save(request));
+    }
+
+    private User currentReviewer() {
+
+        var authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null
+                || authentication.getName() == null
+                || "anonymousUser".equals(authentication.getName())) {
+            return null;
+        }
+
+        return userRepository.findByEmail(authentication.getName())
+                .orElse(null);
     }
 
     // ==========================================

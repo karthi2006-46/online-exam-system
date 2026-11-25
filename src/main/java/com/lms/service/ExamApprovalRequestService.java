@@ -1,5 +1,6 @@
 package com.lms.service;
 
+import com.lms.dto.ExamApprovalHistoryDTO;
 import com.lms.entity.Course;
 import com.lms.entity.ExamApprovalRequest;
 import com.lms.entity.User;
@@ -126,6 +127,85 @@ public class ExamApprovalRequestService {
     }
 
     // ==========================================
+    // FACULTY - FULL APPROVAL HISTORY
+    // ==========================================
+
+    @Transactional(readOnly = true)
+    public List<ExamApprovalHistoryDTO> getFacultyHistory(
+            Authentication authentication
+    ) {
+
+        User currentUser = getAuthenticatedUser(authentication);
+
+        boolean isAdmin = hasRole(currentUser, "ADMIN");
+        boolean isFaculty = hasRole(currentUser, "FACULTY");
+
+        if (!isAdmin && !isFaculty) {
+            throw new AccessDeniedException(
+                    "Only faculty or admin users can view approval history"
+            );
+        }
+
+        List<ExamApprovalRequest> requests = isAdmin
+                ? requestRepository.findAllByOrderByRequestedAtDesc()
+                : requestRepository
+                        .findByCourse_Faculty_IdOrderByRequestedAtDesc(
+                                currentUser.getId());
+
+        return requests.stream()
+                .map(this::toHistoryDTO)
+                .toList();
+    }
+
+    private ExamApprovalHistoryDTO toHistoryDTO(
+            ExamApprovalRequest request
+    ) {
+
+        ExamApprovalHistoryDTO dto = new ExamApprovalHistoryDTO();
+
+        dto.setId(request.getId());
+
+        if (request.getStudent() != null) {
+            dto.setStudentId(request.getStudent().getId());
+            dto.setStudentName(joinName(
+                    request.getStudent().getFirstName(),
+                    request.getStudent().getLastName()));
+            dto.setStudentEmail(request.getStudent().getEmail());
+        }
+
+        if (request.getCourse() != null) {
+            dto.setCourseId(request.getCourse().getId());
+            dto.setCourseTitle(request.getCourse().getTitle());
+            dto.setCourseCode(request.getCourse().getCourseCode());
+        }
+
+        dto.setRequestedAt(request.getRequestedAt());
+        dto.setStatus(request.getStatus() != null
+                ? request.getStatus().name()
+                : null);
+        dto.setReviewedAt(request.getReviewedAt());
+        dto.setComment(request.getFacultyComment());
+
+        if (request.getReviewedBy() != null) {
+            dto.setReviewedByName(joinName(
+                    request.getReviewedBy().getFirstName(),
+                    request.getReviewedBy().getLastName()));
+        }
+
+        return dto;
+    }
+
+    private String joinName(String firstName, String lastName) {
+        String name = ((firstName == null ? "" : firstName)
+                + " "
+                + (lastName == null ? "" : lastName))
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        return name.isEmpty() ? null : name;
+    }
+
+    // ==========================================
     // FACULTY - APPROVE EXAM REQUEST
     // ==========================================
 
@@ -175,6 +255,7 @@ public class ExamApprovalRequestService {
         request.setStatus(ExamApprovalRequest.Status.APPROVED);
         request.setFacultyComment(comment);
         request.setReviewedAt(java.time.LocalDateTime.now());
+        request.setReviewedBy(faculty);
 
         return requestRepository.save(request);
     }
@@ -208,6 +289,7 @@ public class ExamApprovalRequestService {
         request.setStatus(ExamApprovalRequest.Status.REJECTED);
         request.setFacultyComment(comment);
         request.setReviewedAt(java.time.LocalDateTime.now());
+        request.setReviewedBy(faculty);
 
         return requestRepository.save(request);
     }

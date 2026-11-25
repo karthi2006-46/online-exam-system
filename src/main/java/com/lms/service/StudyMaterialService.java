@@ -178,7 +178,7 @@ if (isStudent(user)) {
 
 if (!"ACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
     throw new AccessDeniedException(
-            "Your course enrollment is inactive. Please request an extension."
+            "Your course due date has expired."
     );
 }
 

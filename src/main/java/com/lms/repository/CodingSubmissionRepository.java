@@ -38,6 +38,12 @@ public interface CodingSubmissionRepository
             Long courseId
     );
 
+    // Full submission history for courses assigned to a faculty member
+    List<CodingSubmission>
+    findByChallenge_Course_Faculty_IdOrderBySubmittedAtDesc(
+            Long facultyId
+    );
+
     // Count approved submissions (we will refine eligibility
     // to count the latest approved submission per challenge)
     long countByStudent_IdAndChallenge_Course_IdAndStatus(

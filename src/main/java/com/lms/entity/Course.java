@@ -34,7 +34,7 @@ public class Course {
     private Double totalFees;
 
     @ManyToOne
-    @JoinColumn(name = "faculty_id", nullable = false)
+    @JoinColumn(name = "faculty_id")
     private User faculty;
 
     @Column(nullable = false)

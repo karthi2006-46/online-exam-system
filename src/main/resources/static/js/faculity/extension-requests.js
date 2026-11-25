@@ -99,8 +99,118 @@ async function loadPendingRequests() {
     }
 }
 
-function renderRequests(requests) {
-    const tbody = document.getElementById("requestTableBody");
+function formatDate(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return date.toLocaleString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+async function loadHistory() {
+    const loading = document.getElementById("historyLoading");
+    const wrapper = document.getElementById("historyTableWrapper");
+    const empty = document.getElementById("historyEmptyState");
+
+    if (!loading) return;
+
+    loading.hidden = false;
+    wrapper.hidden = true;
+    empty.hidden = true;
+
+    try {
+        const response = await apiRequest(`${API_BASE_URL}/faculty/history`);
+        const requests = getRequestArray(response);
+
+        const approved = requests.filter(
+            item => String(item.status).toUpperCase() === "APPROVED"
+        ).length;
+
+        const rejected = requests.filter(
+            item => String(item.status).toUpperCase() === "REJECTED"
+        ).length;
+
+        document.getElementById("approvedTotal").textContent = approved;
+        document.getElementById("rejectedTotal").textContent = rejected;
+
+        renderHistory(requests);
+
+    } catch (error) {
+        console.error("Unable to load extension history:", error);
+
+        empty.hidden = false;
+        empty.querySelector("h3").textContent = "Unable to load history";
+        empty.querySelector("p").textContent = error.message;
+
+    } finally {
+        loading.hidden = true;
+    }
+}
+
+function renderHistory(requests) {
+    const tbody = document.getElementById("historyTableBody");
+    const wrapper = document.getElementById("historyTableWrapper");
+    const empty = document.getElementById("historyEmptyState");
+
+    tbody.replaceChildren();
+
+    if (!requests.length) {
+        wrapper.hidden = true;
+        empty.hidden = false;
+        return;
+    }
+
+    requests.forEach(request => {
+        const row = document.createElement("tr");
+
+        const cells = [
+            request.studentName || request.studentEmail || "—",
+            request.courseTitle || "—",
+            formatDate(request.originalDueDate),
+            request.daysRequested ?? "—",
+            request.reason || "No reason provided",
+            formatDate(request.requestedAt),
+            request.status || "PENDING",
+            request.reviewedByName || "—",
+            formatDate(request.reviewedAt),
+            request.rejectionReason || "—"
+        ];
+
+        cells.forEach((value, index) => {
+            const cell = document.createElement("td");
+
+            if (index === 4 || index === 9) {
+                cell.className = "reason-cell";
+            }
+
+            if (index === 6) {
+                const pill = document.createElement("span");
+                pill.className = "status-pill";
+                pill.textContent = value;
+                cell.appendChild(pill);
+            } else {
+                cell.textContent = value;
+            }
+
+            row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+    });
+
+    wrapper.hidden = false;
+    empty.hidden = true;
+}
+
+function renderRequests(requests) {    const tbody = document.getElementById("requestTableBody");
     tbody.replaceChildren();
 
     if (requests.length === 0) {
@@ -189,6 +299,7 @@ async function approveRequest(requestId) {
         );
 
         await loadPendingRequests();
+        await loadHistory();
 
     } catch (error) {
         console.error("Approval failed:", error);
@@ -244,6 +355,7 @@ async function rejectRequest() {
         );
 
         await loadPendingRequests();
+        await loadHistory();
 
     } catch (error) {
         console.error("Rejection failed:", error);
@@ -259,7 +371,10 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date().getFullYear();
 
     document.getElementById("refreshButton")
-        .addEventListener("click", loadPendingRequests);
+        .addEventListener("click", () => {
+            loadPendingRequests();
+            loadHistory();
+        });
 
     document.getElementById("confirmReject")
         .addEventListener("click", rejectRequest);
@@ -278,4 +393,5 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
     loadPendingRequests();
+    loadHistory();
 });
