@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -165,7 +166,7 @@ public class StudyMaterialService {
             return course;
         }
 
-// STUDENT must have an active enrollment.
+// STUDENT must have an active enrollment and an unexpired due date.
 if (isStudent(user)) {
 
     Enrollment enrollment = enrollmentRepository
@@ -176,11 +177,18 @@ if (isStudent(user)) {
                     new AccessDeniedException(
                             "You are not enrolled in this course"));
 
-if (!"ACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
-    throw new AccessDeniedException(
-            "Your course due date has expired."
-    );
-}
+    if (enrollment.getDueDate() != null
+            && !enrollment.getDueDate()
+                    .isAfter(LocalDateTime.now())) {
+
+        throw new AccessDeniedException(
+                "You can't access the study materials because the course due date has passed.");
+    }
+
+    if (!"ACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
+        throw new AccessDeniedException(
+                "Your course due date has expired.");
+    }
 
     return course;
 }

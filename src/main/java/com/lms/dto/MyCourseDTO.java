@@ -13,4 +13,6 @@ public class MyCourseDTO {
     private Double progress;
     private String status;
     private LocalDateTime dueDate;
+    private Long extensionRequestCount;
+    private Boolean canRequestExtension;
 }

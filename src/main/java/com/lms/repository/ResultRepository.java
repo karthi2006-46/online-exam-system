@@ -27,6 +27,8 @@ public interface ResultRepository extends JpaRepository<Result, Long> {
             Long courseId
     );
 
+    long countByExam_Id(Long examId);
+
     long countByExam_Course_Faculty_IdAndStatusIgnoreCase(
             Long facultyId,
             String status

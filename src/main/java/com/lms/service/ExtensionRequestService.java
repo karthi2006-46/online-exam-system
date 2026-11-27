@@ -34,6 +34,9 @@ public class ExtensionRequestService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private StudentDashboardService studentDashboardService;
+
     private static final int MAX_EXTENSION_REQUESTS = 3;
 
     private User getAuthenticatedUser() {
@@ -107,6 +110,17 @@ if (!"INACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
         if (totalRequests >= MAX_EXTENSION_REQUESTS) {
             throw new BadRequestException(
                     "Maximum of 3 extension requests reached for this enrollment");
+        }
+
+        // Extension requests are not available once the course is complete.
+        double overallProgress =
+                studentDashboardService.getCourseOverallProgress(
+                        student.getId(),
+                        enrollment.getCourse().getId());
+
+        if (overallProgress >= 100.0) {
+            throw new BadRequestException(
+                    "Extension requests are not available after completing 100% of the course");
         }
 
         ExtensionRequest request = new ExtensionRequest();
@@ -248,24 +262,41 @@ if (!"INACTIVE".equalsIgnoreCase(enrollment.getStatus())) {
                     "Enrollment due date is not configured");
         }
 
-// Extend the existing due date
-LocalDateTime newDueDate =
-        enrollment.getDueDate().plusDays(request.getDaysRequested());
+        int daysRequested = request.getDaysRequested() == null
+                ? 0
+                : request.getDaysRequested();
 
-enrollment.setDueDate(newDueDate);
+        if (daysRequested <= 0) {
+            throw new BadRequestException(
+                    "Extension days must be greater than zero");
+        }
 
-// Reactivate enrollment after approval
-if (!"COMPLETED".equalsIgnoreCase(enrollment.getStatus())
-        && !"DROPPED".equalsIgnoreCase(enrollment.getStatus())) {
+        /*
+         * Extend from the later of the current due date and today.
+         *
+         * If the course expired some time ago, adding the requested days
+         * only to the old due date can still leave it in the past. That
+         * would keep the enrollment INACTIVE immediately after approval.
+         * Using "now" as the base guarantees the student receives the full
+         * approved extension and the enrollment becomes ACTIVE again.
+         */
+        LocalDateTime now = LocalDateTime.now();
 
-    if (newDueDate.isAfter(LocalDateTime.now())) {
-        enrollment.setStatus("ACTIVE");
-    } else {
-        enrollment.setStatus("INACTIVE");
-    }
-}
+        LocalDateTime baseDate = enrollment.getDueDate().isAfter(now)
+                ? enrollment.getDueDate()
+                : now;
 
-enrollmentRepository.save(enrollment);
+        LocalDateTime newDueDate = baseDate.plusDays(daysRequested);
+
+        enrollment.setDueDate(newDueDate);
+
+        // Reactivate enrollment after approval
+        if (!"COMPLETED".equalsIgnoreCase(enrollment.getStatus())
+                && !"DROPPED".equalsIgnoreCase(enrollment.getStatus())) {
+            enrollment.setStatus("ACTIVE");
+        }
+
+        enrollmentRepository.save(enrollment);
 
         request.setStatus("APPROVED");
         request.setReviewedBy(reviewer);

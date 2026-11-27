@@ -66,8 +66,10 @@ private ExamApprovalRequestService examApprovalRequestService;
 
     @DeleteMapping("/{examId}")
     @PreAuthorize("hasRole('FACULTY') or hasRole('ADMIN')")
-    public ResponseEntity<?> deleteExam(@PathVariable Long examId) {
-        examService.deleteExam(examId);
+    public ResponseEntity<?> deleteExam(
+            @PathVariable Long examId,
+            Authentication authentication) {
+        examService.deleteExam(examId, authentication);
         return ApiResponseUtil.success("Exam deleted successfully");
     }
     // =====================================================

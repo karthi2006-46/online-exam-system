@@ -3,6 +3,9 @@ const API_BASE = `${window.API_BASE_URL}/api`;
 let assignedCourses = [];
 let exams = [];
 
+// Guards against duplicate in-flight exam actions (e.g. double-click delete).
+let examActionInFlight = false;
+
 let activeQuestionExam = null;
 let currentQuestions = [];
 
@@ -238,7 +241,9 @@ async function loadExams() {
             })
         );
 
-        exams = results.flat();
+        exams = results
+            .flat()
+            .filter(exam => exam.active !== false);
 
         renderExams();
 
@@ -294,9 +299,12 @@ function renderExams() {
             (statusFilter === "published" && isPublished) ||
             (statusFilter === "draft" && !isPublished);
 
+        const matchesActive = exam.active !== false;
+
         return matchesSearch &&
             matchesCourse &&
-            matchesStatus;
+            matchesStatus &&
+            matchesActive;
     });
 
     grid.replaceChildren();
@@ -541,6 +549,9 @@ async function createExam(event) {
 
 async function handleExamAction(action, examId) {
 
+    // Prevent multiple in-flight requests for the same action type.
+    if (examActionInFlight) return;
+
     const exam = exams.find(
         item => String(item.id) === String(examId)
     );
@@ -567,7 +578,7 @@ async function handleExamAction(action, examId) {
 
     } else if (action === "delete") {
 
-        if (!confirm(`Delete exam "${exam.title}"?`)) {
+        if (!window.confirm(`Delete exam "${exam.title}"?`)) {
             return;
         }
 
@@ -582,13 +593,16 @@ async function handleExamAction(action, examId) {
         return;
     }
 
+    examActionInFlight = true;
+
     try {
 
         await apiRequest(endpoint, { method });
 
-        alert(successMessage);
-
+        // Refresh the list from the server; no manual page reload.
         await loadExams();
+
+        alert(successMessage);
 
     } catch (error) {
 
@@ -597,6 +611,10 @@ async function handleExamAction(action, examId) {
         alert(
             error.message || "Unable to complete the action."
         );
+
+    } finally {
+
+        examActionInFlight = false;
     }
 }
 

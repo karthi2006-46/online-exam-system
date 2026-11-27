@@ -5,6 +5,7 @@ import com.lms.dto.MyCourseDTO;
 import com.lms.dto.StudentDashboardProgressDTO;
 import com.lms.entity.Enrollment;
 import com.lms.repository.EnrollmentRepository;
+import com.lms.repository.ExtensionRequestRepository;
 import com.lms.service.StudentDashboardService;
 
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StudentController {
 
+    private static final int MAX_EXTENSION_REQUESTS = 3;
+
     private final EnrollmentRepository enrollmentRepository;
+    private final ExtensionRequestRepository extensionRequestRepository;
     private final StudentDashboardService studentDashboardService;
 
     // STUDENT DASHBOARD
@@ -71,9 +75,17 @@ System.out.println("DEBUG DTO Enrollment ID: " + dto.getEnrollmentId());
                         .findFirst()
                         .orElse(0.0);
 
+                long extensionRequestCount =
+                        extensionRequestRepository
+                                .countByEnrollment_Id(enrollment.getId());
+
                 dto.setProgress(progress);
                 dto.setStatus(enrollment.getStatus());
                 dto.setDueDate(enrollment.getDueDate());
+                dto.setExtensionRequestCount(extensionRequestCount);
+                dto.setCanRequestExtension(
+                        extensionRequestCount < MAX_EXTENSION_REQUESTS
+                                && progress < 100.0);
 
                 // Debug output
                 System.out.println(

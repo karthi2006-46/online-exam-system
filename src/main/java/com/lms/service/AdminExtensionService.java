@@ -109,18 +109,35 @@ public class AdminExtensionService {
                     "Enrollment due date is not configured");
         }
 
-        LocalDateTime newDueDate = enrollment.getDueDate()
-                .plusDays(request.getDaysRequested());
+        int daysRequested = request.getDaysRequested() == null
+                ? 0
+                : request.getDaysRequested();
+
+        if (daysRequested <= 0) {
+            throw new BadRequestException(
+                    "Extension days must be greater than zero");
+        }
+
+        /*
+         * Extend from the later of the current due date and today so an
+         * approval always gives the student the full requested extension.
+         * Extending only an old due date can still leave it in the past,
+         * which keeps the enrollment INACTIVE after approval.
+         */
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime baseDate = enrollment.getDueDate().isAfter(now)
+                ? enrollment.getDueDate()
+                : now;
+
+        LocalDateTime newDueDate = baseDate.plusDays(daysRequested);
 
         enrollment.setDueDate(newDueDate);
 
         if (!"COMPLETED".equalsIgnoreCase(enrollment.getStatus())
                 && !"DROPPED".equalsIgnoreCase(enrollment.getStatus())) {
 
-            enrollment.setStatus(
-                    newDueDate.isAfter(LocalDateTime.now())
-                            ? "ACTIVE"
-                            : "INACTIVE");
+            enrollment.setStatus("ACTIVE");
         }
 
         enrollmentRepository.save(enrollment);

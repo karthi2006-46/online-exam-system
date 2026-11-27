@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setupLogout();
 
+
 });
 
 
@@ -111,7 +112,7 @@ async function loadProfile() {
             ? profile.courses
             : [];
 
-        displayPersonalInformation(user);
+        displayPersonalInformation(user, courses);
 
         displayCourses(courses);
 
@@ -143,7 +144,7 @@ async function loadProfile() {
 // DISPLAY PERSONAL INFORMATION
 // =====================================================
 
-function displayPersonalInformation(user) {
+function displayPersonalInformation(user, courses) {
 
     // Full name
     const fullName =
@@ -196,24 +197,47 @@ function displayPersonalInformation(user) {
     setText("heroRole", role);
 
 
-    // Account status
+    // Account status — reads real-time data from the API response.
+    // First checks the user account status fields, then falls back to
+    // the course enrollment status so it reflects your actual state.
     const activeValue =
         user.active ??
         user.isActive ??
+        user.accountStatus ??
+        user.account_status ??
         user.status ??
-        true;
+        user.isAccountActive ??
+        user.enabled;
 
-    const isActive =
-        typeof activeValue === "string"
-            ? (
-                activeValue.toLowerCase() === "active" ||
-                activeValue.toLowerCase() === "true"
-            )
-            : Boolean(activeValue);
+    let isActive;
 
-    const statusText = isActive
-        ? "Active"
-        : "Inactive";
+    if (typeof activeValue === "string") {
+        const normalized = activeValue.trim().toLowerCase();
+        isActive = normalized === "active" || normalized === "true" || normalized === "1" || normalized === "yes";
+    } else if (typeof activeValue === "number") {
+        isActive = activeValue === 1;
+    } else {
+        isActive = activeValue === true;
+    }
+
+    // If no enrolled courses, account is not active
+    const hasCourses = Array.isArray(courses) && courses.length > 0;
+    if (!hasCourses) {
+        isActive = false;
+    } else {
+        // If any enrolled course has status INACTIVE/inactive, account is not active
+        const anyCourseInactive = courses.some(course => {
+            const courseStatus = course.status || course.enrollmentStatus || course.courseStatus || "";
+            const normalizedCourseStatus = String(courseStatus).trim().toLowerCase();
+            return normalizedCourseStatus === "inactive" || normalizedCourseStatus === "not active";
+        });
+
+        if (anyCourseInactive) {
+            isActive = false;
+        }
+    }
+
+    const statusText = isActive ? "Active" : "Inactive";
 
     setText("status", statusText);
 
@@ -255,7 +279,7 @@ function displayPersonalInformation(user) {
 
 // =====================================================
 // DISPLAY ENROLLED COURSES
-// Course completion and progress bar are removed.
+// Course fees removed. Enrolled course name added as a detail row.
 // =====================================================
 
 function displayCourses(courses) {
@@ -348,16 +372,18 @@ function displayCourses(courses) {
 
         addCourseDetail(
             details,
-            "Duration",
-            course.durationDays != null
-                ? `${course.durationDays} days`
-                : "Not specified"
+            "Enrolled Course",
+            course.courseTitle ||
+            course.title ||
+            "Not specified"
         );
 
         addCourseDetail(
             details,
-            "Course Fees",
-            formatCurrency(course.totalFees)
+            "Duration",
+            course.durationDays != null
+                ? `${course.durationDays} days`
+                : "Not specified"
         );
 
         addCourseDetail(
@@ -377,7 +403,6 @@ function displayCourses(courses) {
             "Enrollment Status",
             course.status || "Not specified"
         );
-
 
         card.appendChild(details);
 
@@ -710,7 +735,7 @@ function formatDate(value) {
 //                     shouldShow ? "text" : "password";
 
 //                 button.textContent =
-//                     shouldShow ? "Hide" : "Show";
+//                     shouldShow ? "Hide" : "Show"
 
 
 //                 button.setAttribute(

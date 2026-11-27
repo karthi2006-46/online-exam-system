@@ -9,9 +9,11 @@ import java.util.List;
 public interface ExamRepository extends JpaRepository<Exam, Long> {
     long countByCourse_IdAndActiveTrueAndPublishedTrue(Long courseId);
     List<Exam> findByCourse_Id(Long courseId);
+    List<Exam> findByCourse_IdAndActiveTrue(Long courseId);
     List<Exam> findByActiveTrue();
     List<Exam> findByPublishedTrue();
     List<Exam> findByCourse_IdAndPublishedTrue(Long courseId);
+    List<Exam> findByCourse_IdAndActiveTrueAndPublishedTrue(Long courseId);
     long countByCourse_Faculty_IdAndActiveTrue(Long facultyId);
 
     long countByCourse_Id(Long courseId);

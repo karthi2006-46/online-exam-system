@@ -8,6 +8,7 @@ import com.lms.repository.CodingChallengeRepository;
 import com.lms.repository.EnrollmentRepository;
 import com.lms.repository.ExamAttemptRepository;
 import com.lms.repository.ExamRepository;
+import com.lms.repository.ExtensionRequestRepository;
 import com.lms.repository.MaterialProgressRepository;
 import com.lms.repository.StudyMaterialRepository;
 
@@ -19,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class StudentDashboardService {
     private final CodingChallengeRepository codingChallengeRepository;
     private final CodingChallengeProgressRepository codingChallengeProgressRepository;
     private final MaterialProgressRepository materialProgressRepository;
+    private final ExtensionRequestRepository extensionRequestRepository;
 
     private static final double DURATION_WEIGHT = 20.0;
     private static final double MATERIAL_WEIGHT = 25.0;
@@ -41,8 +46,7 @@ public class StudentDashboardService {
 
     public StudentDashboardProgressDTO getDashboard(Long studentId) {
 
-        List<Enrollment> enrollments =
-                enrollmentRepository.findByStudent_Id(studentId);
+        List<Enrollment> enrollments = resolveEnrollments(studentId);
 
         StudentDashboardProgressDTO dashboard =
                 new StudentDashboardProgressDTO();
@@ -83,7 +87,7 @@ public class StudentDashboardService {
                     );
 
             long completedExams =
-                    examAttemptRepository.countDistinctCompletedExams(
+                    examAttemptRepository.countDistinctCompletedAssignedExams(
                             studentId,
                             courseId,
                             List.of("SUBMITTED", "AUTO_SUBMITTED")
@@ -106,7 +110,6 @@ public class StudentDashboardService {
 
         dto.setCourseId(courseId);
         dto.setCourseTitle(enrollment.getCourse().getTitle());
-        dto.setCourseDurationDays(enrollment.getCourse().getDurationDays());
         dto.setStatus(enrollment.getStatus());
 
         // 1. Course duration progress
@@ -126,26 +129,57 @@ public class StudentDashboardService {
 
         Integer courseDuration = enrollment.getCourse().getDurationDays();
 
-        int durationDays = courseDuration == null ? 0 : courseDuration;
+        int baseDurationDays = courseDuration == null || courseDuration < 0
+                ? 0
+                : courseDuration;
+
+        /*
+         * Approved extension requests are part of the duration the student
+         * actually has. Reading them from the enrollment (rather than only
+         * the course) keeps the dashboard correct when days are granted or
+         * revoked without changing the course itself.
+         */
+        long extensionDays = enrollment.getId() == null
+                ? 0
+                : Math.max(
+                        0,
+                        extensionRequestRepository
+                                .sumApprovedDaysByEnrollmentId(
+                                        enrollment.getId()
+                                )
+                );
+
+        int durationDays = (int) Math.min(
+                Integer.MAX_VALUE,
+                (long) baseDurationDays + extensionDays
+        );
+
+        long remainingDays = Math.max(
+                0,
+                (long) durationDays - elapsedDays
+        );
 
         double durationProgress = durationDays <= 0
                 ? 0.0
                 : percentage(Math.min(elapsedDays, durationDays), durationDays);
 
+        dto.setCourseDurationDays(baseDurationDays);
+        dto.setExtensionDays(extensionDays);
+        dto.setEffectiveDurationDays(durationDays);
         dto.setElapsedDays(elapsedDays);
+        dto.setRemainingDays(remainingDays);
         dto.setDurationProgress(round(durationProgress));
 
         // 2. Study materials
         long totalMaterials =
                 studyMaterialRepository.countByCourse_IdAndActiveTrue(courseId);
 
-     long completedMaterials =
-        materialProgressRepository
-                .countByStudent_IdAndMaterial_Course_IdAndCompleted(
-                        studentId,
-                        courseId,
-                        true
-                );
+        long completedMaterials =
+                materialProgressRepository
+                        .countCompletedActiveMaterials(
+                                studentId,
+                                courseId
+                        );
 
         completedMaterials = Math.min(completedMaterials, totalMaterials);
 
@@ -166,10 +200,9 @@ public class StudentDashboardService {
 
         long completedChallenges =
                 codingChallengeProgressRepository
-                        .countByStudent_IdAndChallenge_Course_IdAndCompleted(
+                        .countCompletedActiveChallenges(
                                 studentId,
-                                courseId,
-                                true
+                                courseId
                         );
 
         completedChallenges = Math.min(completedChallenges, totalChallenges);
@@ -189,7 +222,7 @@ public class StudentDashboardService {
                 );
 
         long completedExams =
-                examAttemptRepository.countDistinctCompletedExams(
+                examAttemptRepository.countDistinctCompletedAssignedExams(
                         studentId,
                         courseId,
                         List.of("SUBMITTED", "AUTO_SUBMITTED")
@@ -253,6 +286,74 @@ public class StudentDashboardService {
     private double round(double value) {
         return Math.round(value * 10.0) / 10.0;
     }
+
+    /**
+     * Returns one enrollment per course for the student, ignoring dropped
+     * enrollments and duplicate enrollments. When a student has more than
+     * one enrollment for the same course the most relevant one wins
+     * (ACTIVE, then COMPLETED, then the latest INACTIVE record), so a
+     * course is never counted twice on the dashboard.
+     */
+    private List<Enrollment> resolveEnrollments(Long studentId) {
+
+        List<Enrollment> enrollments =
+                enrollmentRepository.findByStudent_Id(studentId);
+
+        Map<Long, Enrollment> byCourse = new LinkedHashMap<>();
+
+        for (Enrollment enrollment : enrollments) {
+
+            if (enrollment.getCourse() == null
+                    || enrollment.getCourse().getId() == null
+                    || "DROPPED".equalsIgnoreCase(enrollment.getStatus())) {
+                continue;
+            }
+
+            Long courseId = enrollment.getCourse().getId();
+
+            Enrollment current = byCourse.get(courseId);
+
+            if (current == null || isPreferred(enrollment, current)) {
+                byCourse.put(courseId, enrollment);
+            }
+        }
+
+        return new ArrayList<>(byCourse.values());
+    }
+
+    private boolean isPreferred(Enrollment candidate, Enrollment current) {
+
+        int candidateRank = statusRank(candidate.getStatus());
+        int currentRank = statusRank(current.getStatus());
+
+        if (candidateRank != currentRank) {
+            return candidateRank < currentRank;
+        }
+
+        LocalDateTime candidateDate = candidate.getEnrollmentDate();
+        LocalDateTime currentDate = current.getEnrollmentDate();
+
+        if (candidateDate == null) {
+            return false;
+        }
+
+        return currentDate == null || candidateDate.isAfter(currentDate);
+    }
+
+    private int statusRank(String status) {
+
+        if (status == null) {
+            return 3;
+        }
+
+        return switch (status.toUpperCase()) {
+            case "ACTIVE" -> 0;
+            case "COMPLETED" -> 1;
+            case "INACTIVE" -> 2;
+            default -> 3;
+        };
+    }
+
     /**
      * Full material/coding/exam progress for one student in one course.
      * Reused by the admin performance view.

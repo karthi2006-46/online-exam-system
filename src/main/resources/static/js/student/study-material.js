@@ -6,7 +6,6 @@ const MATERIALS_API = `${window.API_BASE_URL}/api/materials`;
 const MATERIAL_PROGRESS_API =
     `${window.API_BASE_URL}/api/material-progress`;
 const STUDENT_COURSES_API = `${window.API_BASE_URL}/api/student`;
-const EXTENSIONS_API = `${window.API_BASE_URL}/api/extensions`;
 
 // ---------- Viewer state ----------
 let activeMaterial = null;
@@ -1000,23 +999,33 @@ async function findEnrollment(studentId, courseId, token) {
     ) || null;
 }
 
-function fieldStyles() {
-    return [
-        "width:100%",
-        "max-width:360px",
-        "padding:10px 12px",
-        "border:1px solid var(--border-strong, #cfd8e3)",
-        "border-radius:9px",
-        "font-size:13px",
-        "font-family:inherit",
-        "color:inherit",
-        "background:var(--surface, #ffffff)"
-    ].join(";");
+function getEnrollmentDueDate(enrollment) {
+    if (!enrollment?.dueDate) return null;
+
+    const dueDate = new Date(enrollment.dueDate);
+
+    return Number.isNaN(dueDate.getTime()) ? null : dueDate;
+}
+
+function isCourseOverdue(enrollment) {
+    const dueDate = getEnrollmentDueDate(enrollment);
+
+    return dueDate !== null && Date.now() >= dueDate.getTime();
 }
 
 function renderBlockedMaterials(container, enrollment) {
     const status = String(enrollment?.status || "").toUpperCase();
-    const canRequest = status === "INACTIVE";
+    const overdue = isCourseOverdue(enrollment);
+
+    const progress = Number(enrollment?.progress ?? 0);
+    const requestCount = Number(enrollment?.extensionRequestCount);
+
+    const canRequest =
+        overdue &&
+        Boolean(enrollment?.enrollmentId) &&
+        enrollment?.canRequestExtension !== false &&
+        (!Number.isFinite(requestCount) || requestCount < 3) &&
+        (!Number.isFinite(progress) || progress < 100);
 
     container.replaceChildren();
 
@@ -1027,129 +1036,26 @@ function renderBlockedMaterials(container, enrollment) {
     heading.textContent = "Study materials unavailable";
 
     const message = document.createElement("p");
-    message.textContent = canRequest
-        ? "Your course due date has expired."
+    message.textContent = overdue
+        ? "You can't access the study materials because the course due date has passed."
         : status
             ? `This course is currently ${status.toLowerCase()}.`
             : "You are not enrolled in this course.";
 
     wrapper.append(heading, message);
 
-    if (canRequest && enrollment?.enrollmentId) {
-        const feedback = document.createElement("p");
-        feedback.setAttribute("role", "status");
-        feedback.setAttribute("aria-live", "polite");
-        feedback.style.cssText =
-            "font-size:13px;margin:0;max-width:360px;text-align:center;";
+    if (canRequest) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "retry-btn";
+        button.textContent = "Request Extension";
 
-        const form = document.createElement("form");
-        form.style.cssText =
-            "display:flex;flex-direction:column;align-items:center;" +
-            "gap:10px;width:100%;max-width:360px;margin-top:8px;";
-
-        const daysInput = document.createElement("input");
-        daysInput.type = "number";
-        daysInput.min = "1";
-        daysInput.max = "365";
-        daysInput.required = true;
-        daysInput.placeholder = "Extension days (e.g. 7)";
-        daysInput.setAttribute("aria-label", "Extension days");
-        daysInput.style.cssText = fieldStyles();
-
-        const reasonInput = document.createElement("textarea");
-        reasonInput.rows = 3;
-        reasonInput.maxLength = 500;
-        reasonInput.required = true;
-        reasonInput.placeholder = "Reason for the extension";
-        reasonInput.setAttribute("aria-label", "Reason for the extension");
-        reasonInput.style.cssText = fieldStyles() + ";resize:vertical";
-
-        const submit = document.createElement("button");
-        submit.type = "submit";
-        submit.className = "retry-btn";
-        submit.textContent = "Submit request";
-
-        form.append(daysInput, reasonInput, submit);
-
-        const actions = document.createElement("button");
-        actions.type = "button";
-        actions.className = "retry-btn";
-        actions.textContent = "Request Extension";
-
-        actions.addEventListener("click", () => {
-            actions.hidden = true;
-            form.hidden = false;
-            daysInput.focus();
+        button.addEventListener("click", () => {
+            window.location.href =
+                `my-courses.html?extensionEnrollmentId=${encodeURIComponent(enrollment.enrollmentId)}`;
         });
 
-        form.hidden = true;
-
-        form.addEventListener("submit", async event => {
-            event.preventDefault();
-
-            const days = Number(daysInput.value);
-
-            if (!Number.isFinite(days) || days < 1) {
-                feedback.style.color = "#b42318";
-                feedback.textContent = "Please enter a valid number of days.";
-                return;
-            }
-
-            const reason = reasonInput.value.trim();
-
-            if (!reason) {
-                feedback.style.color = "#b42318";
-                feedback.textContent = "Please provide a reason for the extension.";
-                return;
-            }
-
-            submit.disabled = true;
-            submit.textContent = "Submitting...";
-            feedback.textContent = "";
-
-            try {
-                const params = new URLSearchParams({
-                    enrollmentId: String(enrollment.enrollmentId),
-                    daysRequested: String(days),
-                    reason
-                });
-
-                const response = await fetch(
-                    `${EXTENSIONS_API}/request?${params.toString()}`,
-                    {
-                        method: "POST",
-                        headers: {
-                            Authorization:
-                                `Bearer ${localStorage.getItem("token")}`,
-                            Accept: "application/json"
-                        }
-                    }
-                );
-
-                const result = await response.json().catch(() => null);
-
-                if (!response.ok) {
-                    throw new Error(
-                        result?.message ||
-                        result?.error ||
-                        `Request failed: HTTP ${response.status}`
-                    );
-                }
-
-                form.remove();
-                feedback.style.color = "#0d7a43";
-                feedback.textContent =
-                    "Extension request submitted. Materials will unlock once faculty approves it.";
-            } catch (error) {
-                submit.disabled = false;
-                submit.textContent = "Submit request";
-                feedback.style.color = "#b42318";
-                feedback.textContent =
-                    error.message || "Unable to submit the extension request.";
-            }
-        });
-
-        wrapper.append(actions, form, feedback);
+        wrapper.appendChild(button);
     }
 
     container.appendChild(wrapper);
@@ -1199,7 +1105,8 @@ async function loadMaterials() {
     }
 
     if (enrollment
-            && String(enrollment.status || "").toUpperCase() !== "ACTIVE") {
+            && (String(enrollment.status || "").toUpperCase() !== "ACTIVE"
+                || isCourseOverdue(enrollment))) {
 
         renderBlockedMaterials(container, enrollment);
         return;
@@ -1226,7 +1133,11 @@ async function loadMaterials() {
         if (materialsResponse.status === 403) {
             renderBlockedMaterials(
                 container,
-                enrollment || { status: "INACTIVE", enrollmentId: null }
+                enrollment || {
+                    status: "INACTIVE",
+                    enrollmentId: null,
+                    dueDate: new Date(0).toISOString()
+                }
             );
             return;
         }

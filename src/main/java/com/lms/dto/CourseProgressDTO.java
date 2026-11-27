@@ -9,7 +9,10 @@ public class CourseProgressDTO {
     private String courseTitle;
 
     private Integer courseDurationDays;
+    private Long extensionDays;
+    private Integer effectiveDurationDays;
     private Long elapsedDays;
+    private Long remainingDays;
     private Double durationProgress;
 
     private Long completedMaterials;

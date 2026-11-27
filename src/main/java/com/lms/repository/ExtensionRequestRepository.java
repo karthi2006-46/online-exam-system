@@ -23,6 +23,22 @@ public interface ExtensionRequestRepository
     long countByEnrollment_IdAndStatus(Long enrollmentId, String status);
 
     long countByEnrollment_Id(Long enrollmentId);
+
+    /**
+     * Total number of days granted to one enrollment through approved
+     * extension requests. Used by the student dashboard so that the
+     * displayed course duration follows the extensions the student has
+     * actually received.
+     */
+    @Query("""
+            SELECT COALESCE(SUM(r.daysRequested), 0)
+            FROM ExtensionRequest r
+            WHERE r.enrollment.id = :enrollmentId
+              AND UPPER(r.status) = 'APPROVED'
+            """)
+    long sumApprovedDaysByEnrollmentId(
+            @Param("enrollmentId") Long enrollmentId
+    );
     long countByEnrollment_Course_Faculty_IdAndStatusIgnoreCase(
         Long facultyId,
         String status

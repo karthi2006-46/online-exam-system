@@ -59,7 +59,30 @@ public interface ExamAttemptRepository
             @Param("statuses") List<String> statuses
     );
 
+    /**
+     * Counts distinct exams the student has completed that are still
+     * assigned to the course (active and published). Attempts on exams
+     * that were later unpublished or deleted must not inflate the
+     * dashboard completion count.
+     */
+    @Query("""
+        SELECT COUNT(DISTINCT ea.exam.id)
+        FROM ExamAttempt ea
+        WHERE ea.student.id = :studentId
+          AND ea.exam.course.id = :courseId
+          AND ea.exam.active = true
+          AND ea.exam.published = true
+          AND ea.status IN :statuses
+        """)
+    long countDistinctCompletedAssignedExams(
+            @Param("studentId") Long studentId,
+            @Param("courseId") Long courseId,
+            @Param("statuses") List<String> statuses
+    );
+
     long countByStudent_Id(Long studentId);
+
+    long countByExam_Id(Long examId);
 
     long countByStudent_IdAndExam_Id(Long studentId, Long examId);
 

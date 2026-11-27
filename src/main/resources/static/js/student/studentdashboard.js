@@ -1,4 +1,5 @@
 let courseProgressChart = null;
+let dashboardRequestInFlight = false;
 
 /* =========================================================
    1. LOAD STUDENT DASHBOARD
@@ -64,6 +65,12 @@ async function loadDashboard() {
         return;
     }
 
+    if (dashboardRequestInFlight) {
+        return;
+    }
+
+    dashboardRequestInFlight = true;
+
     try {
         const response = await fetch(
             `${API_BASE_URL}/api/student/dashboard?studentId=${encodeURIComponent(studentId)}`,
@@ -127,6 +134,8 @@ async function loadDashboard() {
             progressElement.textContent =
                 "Unable to load progress.";
         }
+    } finally {
+        dashboardRequestInFlight = false;
     }
 }
 
@@ -239,12 +248,31 @@ function renderCourseProgress(courses) {
 
         card.appendChild(title);
 
-        // Course duration progress
+        // Course duration progress.
+        // Show the duration the student actually has (current course
+        // duration plus approved extensions), not an elapsed/total ratio
+        // that appears to shrink when days are added.
+        const effectiveDurationDays = Number(
+            course.effectiveDurationDays ??
+            course.courseDurationDays ??
+            0
+        );
+
+        const extensionDays = Number(course.extensionDays ?? 0);
+
+        let durationDetail =
+            `${effectiveDurationDays} day${effectiveDurationDays === 1 ? "" : "s"}`;
+
+        if (extensionDays > 0) {
+            durationDetail +=
+                ` · includes ${extensionDays} extension day${extensionDays === 1 ? "" : "s"}`;
+        }
+
         addProgressRow(
             card,
             "Course duration",
             course.durationProgress,
-            `${course.elapsedDays ?? 0}/${course.courseDurationDays ?? 0} days`
+            durationDetail
         );
 
         // Study material progress
@@ -604,3 +632,23 @@ document.addEventListener("DOMContentLoaded", () => {
     loadResults();
     loadStudentCourses();
 });
+
+/*
+ * The dashboard can stay open while a faculty/admin adds or removes
+ * challenges, exams or course days in another tab. Re-fetch the data when
+ * the student returns to this page instead of forcing a full page reload.
+ */
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        loadDashboard();
+    }
+});
+
+window.addEventListener("pageshow", event => {
+    if (event.persisted) {
+        loadDashboard();
+    }
+});
+
+// Allow other student pages to refresh the dashboard without reloading.
+window.refreshStudentDashboard = loadDashboard;

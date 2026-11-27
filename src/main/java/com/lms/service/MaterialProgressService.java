@@ -70,13 +70,25 @@ public class MaterialProgressService {
 
         Long courseId = material.getCourse().getId();
 
-        enrollmentRepo.findByStudent_IdAndCourse_Id(
-                studentId,
-                courseId
-        ).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "You are not enrolled in this course"
-        ));
+        Enrollment enrollment = enrollmentRepo
+                .findByStudent_IdAndCourse_Id(
+                        studentId,
+                        courseId
+                )
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "You are not enrolled in this course"
+                ));
+
+        if (enrollment.getDueDate() != null
+                && !enrollment.getDueDate()
+                        .isAfter(LocalDateTime.now())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You can't access the study materials because the course due date has passed."
+            );
+        }
 
         return progressRepo
                 .findByStudent_IdAndMaterial_Id(

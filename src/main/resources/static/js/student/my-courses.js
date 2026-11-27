@@ -9,7 +9,28 @@ const API_BASE = `${window.API_BASE_URL}`;
 const EXTENSION_API = `${API_BASE}/api/extensions`;
 
 let selectedExtensionEnrollment = null;
+let extensionModalAutoOpened = false;
 const extensionCoursesByEnrollment = new Map();
+
+const MAX_EXTENSION_REQUESTS = 3;
+
+function canRequestExtension(course, progress) {
+
+    if (!course) return false;
+
+    if (course.canRequestExtension === false) return false;
+
+    const requestCount = Number(course.extensionRequestCount);
+
+    if (Number.isFinite(requestCount) && requestCount >= MAX_EXTENSION_REQUESTS) {
+        return false;
+    }
+
+    const overallProgress = Number(progress ?? course.progress ?? 0);
+
+    return !Number.isFinite(overallProgress) || overallProgress < 100;
+
+}
 
 const CHECK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 
@@ -155,6 +176,8 @@ async function loadCourses() {
         container.innerHTML = "";
         cards.forEach(card => container.appendChild(card));
 
+        openExtensionFromQuery(validCourses);
+
     } catch (error) {
 
         console.error("Load Courses Error:", error);
@@ -201,7 +224,7 @@ function buildCourseCard(course, courseId, eligibility, approvalStatus, studentI
                     </li>
                 </ul>
             </div>
-            ${enrollmentId != null && deadlineExpired
+            ${enrollmentId != null && deadlineExpired && canRequestExtension(course, progress)
                 ? `<button type="button" class="extension-btn">Request extension</button>`
                 : ""}
         </div>
@@ -502,6 +525,40 @@ function renderExtensionHistory(requests) {
 // EXTENSION MODAL
 // =====================================================
 
+function openExtensionFromQuery(courses) {
+
+    if (extensionModalAutoOpened) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const enrollmentId = params.get("extensionEnrollmentId");
+    const courseId = params.get("extensionCourseId");
+
+    if (!enrollmentId && !courseId) return;
+
+    const course = courses.find(item =>
+        (enrollmentId && String(item.enrollmentId) === String(enrollmentId)) ||
+        (courseId && String(resolveCourseId(item)) === String(courseId))
+    );
+
+    if (!course) return;
+
+    extensionModalAutoOpened = true;
+
+    params.delete("extensionEnrollmentId");
+    params.delete("extensionCourseId");
+
+    const query = params.toString();
+
+    window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}${query ? `?${query}` : ""}`
+    );
+
+    openExtensionModal(course);
+
+}
+
 function openExtensionModal(course) {
 
     const modal = document.getElementById("extensionModal");
@@ -510,6 +567,11 @@ function openExtensionModal(course) {
 
     if (!course.enrollmentId) {
         alert("Enrollment ID is missing. Please refresh the page.");
+        return;
+    }
+
+    if (!canRequestExtension(course, Number(course.progress ?? 0))) {
+        alert("You can no longer request an extension for this course.");
         return;
     }
 
